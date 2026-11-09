@@ -1,0 +1,8 @@
+<!-- Sur écran large : barre latérale fixe à gauche, contenu qui défile à droite.
+     Sur téléphone : la barre passe au-dessus du contenu. -->
+<div class="flex min-h-screen flex-col md:flex-row">
+  <app-sidebar class="block md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0" />
+  <main class="min-w-0 flex-1 px-6 pb-12 pt-8 md:px-10">
+    <router-outlet />
+  </main>
+</div>

@@ -42,3 +42,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Cache de l'outil nx (utilisé par le CLI de spartan)
+/.nx

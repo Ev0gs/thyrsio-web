@@ -1,0 +1,109 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+
+  @if (isEdit()) {
+    <!-- En modification, le code et l'unité sont affichés mais pas modifiables -->
+    <p class="rounded-md bg-muted px-3 py-2 text-sm">
+      Code <span class="font-mono font-medium">{{ article()?.code }}</span>
+      · unité <span class="font-medium">{{ article()?.unitCode }}</span>
+      <span class="text-muted-foreground">: définitifs</span>
+    </p>
+  }
+
+  @if (!articleForm.code().hidden()) {
+    <div class="flex flex-col gap-1.5">
+      <label for="art-code" class="text-sm font-medium">Code</label>
+      <input id="art-code" hlmInput [formField]="articleForm.code" class="font-mono uppercase"
+             placeholder="BCH-LIE-4924" />
+      <p class="text-xs text-muted-foreground">Mis en majuscules par l'API, et définitif une fois créé.</p>
+      @if (articleForm.code().touched() && articleForm.code().invalid()) {
+        <p class="text-sm text-destructive">{{ articleForm.code().errors()[0].message }}</p>
+      }
+    </div>
+  }
+
+  <div class="flex flex-col gap-1.5">
+    <label for="art-label" class="text-sm font-medium">Libellé</label>
+    <input id="art-label" hlmInput [formField]="articleForm.label" placeholder="Bouchon liège naturel 49×24" />
+    @if (articleForm.label().touched() && articleForm.label().invalid()) {
+      <p class="text-sm text-destructive">{{ articleForm.label().errors()[0].message }}</p>
+    }
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="flex flex-col gap-1.5">
+      <label for="art-category" class="text-sm font-medium">Catégorie</label>
+      <select id="art-category" [formField]="articleForm.categoryCode" [class]="selectClass">
+        <option value="">Choisir…</option>
+        @for (category of categoryOptions(); track category.code) {
+          <option [value]="category.code">{{ category.label }}</option>
+        }
+      </select>
+      @if (selectedCategory(); as category) {
+        <p class="text-xs text-muted-foreground">
+          Unité par défaut : {{ category.defaultUnitCode }}
+          @if (category.lotTracked) { · suivi par lot }
+          @if (category.regulated) { · réglementé }
+        </p>
+      }
+      @if (articleForm.categoryCode().touched() && articleForm.categoryCode().invalid()) {
+        <p class="text-sm text-destructive">{{ articleForm.categoryCode().errors()[0].message }}</p>
+      }
+    </div>
+
+    @if (!articleForm.unitCode().hidden()) {
+      <div class="flex flex-col gap-1.5">
+        <label for="art-unit" class="text-sm font-medium">Unité</label>
+        <select id="art-unit" [formField]="articleForm.unitCode" [class]="selectClass">
+          <option value="">Celle de la catégorie</option>
+          @for (unit of units.hasValue() ? units.value() : []; track unit.code) {
+            <option [value]="unit.code">{{ unit.label }} ({{ unit.code }})</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="flex flex-col gap-1.5">
+      <label for="art-supplier" class="text-sm font-medium">
+        Fournisseur principal <span class="font-normal text-muted-foreground">(facultatif)</span>
+      </label>
+      <select id="art-supplier" [formField]="articleForm.mainSupplierId" [class]="selectClass">
+        <option value="">Aucun</option>
+        @for (supplier of supplierOptions(); track supplier.id) {
+          <option [value]="supplier.id">{{ supplier.name }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="art-ref" class="text-sm font-medium">
+        Référence fournisseur <span class="font-normal text-muted-foreground">(facultatif)</span>
+      </label>
+      <input id="art-ref" hlmInput [formField]="articleForm.supplierReference" />
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="art-threshold" class="text-sm font-medium">
+      Seuil d'alerte <span class="font-normal text-muted-foreground">(facultatif)</span>
+    </label>
+    <input id="art-threshold" hlmInput type="number" step="any" class="sm:w-48"
+           [formField]="articleForm.alertThreshold" />
+    <p class="text-xs text-muted-foreground">En dessous, l'article apparaît « Sous le seuil » dans le stock et le tableau de bord.</p>
+    @if (articleForm.alertThreshold().touched() && articleForm.alertThreshold().invalid()) {
+      <p class="text-sm text-destructive">{{ articleForm.alertThreshold().errors()[0].message }}</p>
+    }
+  </div>
+
+  @for (error of articleForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="articleForm().submitting()">
+      {{ articleForm().submitting() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer l\'article') }}
+    </button>
+  </hlm-dialog-footer>
+</form>

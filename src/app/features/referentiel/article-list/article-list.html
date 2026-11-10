@@ -1,0 +1,150 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Articles</h1>
+    <p class="text-sm text-muted-foreground">Les matières sèches et le vin en vrac que vous achetez et stockez</p>
+  </div>
+  <button hlmBtn size="lg" (click)="openCreate()">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvel article
+  </button>
+</header>
+
+<!-- Filtres -->
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <label class="relative min-w-64 flex-1">
+    <span class="sr-only">Rechercher un article</span>
+    <ng-icon name="lucideSearch" size="16" aria-hidden="true"
+             class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <!-- (change) : la recherche part à la touche Entrée ou en quittant le champ, pas à chaque lettre -->
+    <input hlmInput type="search" #query [value]="q() ?? ''" (change)="setFilter('q', query.value)"
+           placeholder="Code ou libellé, puis Entrée" class="pl-8" />
+  </label>
+
+  <label class="flex items-center gap-2 text-sm text-muted-foreground">
+    Catégorie
+    <select #cat (change)="setFilter('categorie', cat.value)"
+            class="h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+      <option value="">Toutes</option>
+      @for (category of categories.hasValue() ? categories.value() : []; track category.code) {
+        <option [value]="category.code" [selected]="category.code === categorie()">{{ category.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="flex items-center gap-2 text-sm">
+    <input type="checkbox" [checked]="showArchived()" #arch
+           (change)="setFilter('archives', arch.checked ? '1' : '')" class="size-4 accent-primary" />
+    Afficher les archivés
+  </label>
+</div>
+
+@if (actionError(); as message) {
+  <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+}
+
+<!-- Tableau -->
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (articles.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les articles.</p>
+      <button hlmBtn variant="outline" (click)="articles.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="articles.isLoading()">
+      <table hlmTable class="min-w-[900px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Article</th>
+          <th hlmTh>Catégorie</th>
+          <th hlmTh>Unité</th>
+          <th hlmTh>Fournisseur</th>
+          <th hlmTh class="text-right">Seuil</th>
+          <th hlmTh><span class="sr-only">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!articles.hasValue()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr hlmTr>
+                <td hlmTd colspan="6"><div hlmSkeleton class="h-7 w-full"></div></td>
+              </tr>
+            }
+          } @else {
+            @for (article of articles.value().content; track article.id) {
+              <tr hlmTr [class.text-muted-foreground]="!article.active">
+                <td hlmTd>
+                  <div class="flex items-center gap-2 font-medium">
+                    {{ article.label }}
+                    @if (!article.active) {
+                      <span hlmBadge variant="outline">Archivé</span>
+                    }
+                  </div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ article.code }}</div>
+                </td>
+                <td hlmTd>
+                  {{ article.categoryLabel }}
+                  @if (article.lotTracked) {
+                    <div class="text-xs text-muted-foreground">Suivi par lot</div>
+                  }
+                </td>
+                <td hlmTd>{{ article.unitCode }}</td>
+                <td hlmTd class="whitespace-normal">
+                  {{ article.mainSupplierName ?? '—' }}
+                  @if (article.supplierReference) {
+                    <div class="font-mono text-xs text-muted-foreground">{{ article.supplierReference }}</div>
+                  }
+                </td>
+                <td hlmTd class="text-right tabular-nums">
+                  {{ article.alertThreshold !== null ? (article.alertThreshold | number: '1.0-4') : '—' }}
+                </td>
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="ghost" size="sm" (click)="openEdit(article)"
+                          [attr.aria-label]="'Modifier ' + article.label">Modifier</button>
+                  <button hlmBtn variant="ghost" size="sm" (click)="toggleActive(article)"
+                          [attr.aria-label]="(article.active ? 'Archiver ' : 'Réactiver ') + article.label">
+                    {{ article.active ? 'Archiver' : 'Réactiver' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="6" class="py-10 text-center text-muted-foreground">Aucun article ne correspond.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pageInfo(); as info) {
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm text-muted-foreground">
+        <span>{{ info.totalElements | number }} article(s)</span>
+        @if (info.totalPages > 1) {
+          <div class="flex items-center gap-2">
+            <button hlmBtn variant="outline" size="sm" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">
+              <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Précédent
+            </button>
+            <span class="px-2 tabular-nums">Page {{ page() }} sur {{ info.totalPages }}</span>
+            <button hlmBtn variant="outline" size="sm" [disabled]="page() >= info.totalPages" (click)="goToPage(page() + 1)">
+              Suivant <ng-icon name="lucideChevronRight" aria-hidden="true" />
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>
+
+<!-- Le dialogue : piloté par dialogState, sans bouton déclencheur à l'intérieur -->
+<hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>{{ editing() ? 'Modifier l\'article' : 'Nouvel article' }}</h3>
+      <p hlmDialogDescription>
+        {{ editing() ? editing()!.label : 'Une matière sèche ou un vin en vrac que vous stockez.' }}
+      </p>
+    </hlm-dialog-header>
+    <app-article-form [article]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+  </hlm-dialog-content>
+</hlm-dialog>

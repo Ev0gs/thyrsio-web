@@ -194,19 +194,19 @@
         <h3 hlmDialogTitle>Modifier le client</h3>
         <p hlmDialogDescription>{{ c.name }}</p>
       </hlm-dialog-header>
-      <div class="max-h-[70vh] overflow-y-auto pr-1">
+      <div class="dialog-scroll">
         <app-client-form [client]="c" (saved)="ctx.close(); onClientSaved()" (cancelled)="ctx.close()" />
       </div>
     </hlm-dialog-content>
   </hlm-dialog>
 
   <hlm-dialog [state]="addressDialog()" (closed)="addressDialog.set('closed')">
-    <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-2xl">
       <hlm-dialog-header>
         <h3 hlmDialogTitle>{{ editingAddress() ? 'Modifier l\'adresse' : 'Nouvelle adresse de livraison' }}</h3>
         <p hlmDialogDescription>{{ c.name }}</p>
       </hlm-dialog-header>
-      <div class="max-h-[70vh] overflow-y-auto pr-1">
+      <div class="dialog-scroll">
         <app-address-form [clientId]="c.id" [address]="editingAddress()" [defaultCountry]="c.countryCode"
                           (saved)="ctx.close(); onAddressSaved()" (cancelled)="ctx.close()" />
       </div>

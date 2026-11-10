@@ -126,13 +126,15 @@
 
 <!-- Le dialogue : piloté par dialogState, sans bouton déclencheur à l'intérieur -->
 <hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
-  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">
     <hlm-dialog-header>
       <h3 hlmDialogTitle>{{ editing() ? 'Modifier l\'article' : 'Nouvel article' }}</h3>
       <p hlmDialogDescription>
         {{ editing() ? editing()!.label : 'Une matière sèche ou un vin en vrac que vous stockez.' }}
       </p>
     </hlm-dialog-header>
-    <app-article-form [article]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    <div class="dialog-scroll">
+      <app-article-form [article]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    </div>
   </hlm-dialog-content>
 </hlm-dialog>

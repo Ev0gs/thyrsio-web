@@ -15,14 +15,16 @@
     </a>
     <hlm-dialog>
       <button hlmDialogTrigger hlmBtn size="lg">Saisir un mouvement</button>
-      <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+      <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">
         <hlm-dialog-header>
           <h3 hlmDialogTitle>Saisir un mouvement</h3>
           <p hlmDialogDescription>Le stock est mis à jour dès l'enregistrement.</p>
         </hlm-dialog-header>
-        <app-movement-form [articles]="rows()"
-                           (saved)="ctx.close(); onMovementSaved()"
-                           (cancelled)="ctx.close()" />
+        <div class="dialog-scroll">
+          <app-movement-form [articles]="rows()"
+                             (saved)="ctx.close(); onMovementSaved()"
+                             (cancelled)="ctx.close()" />
+        </div>
       </hlm-dialog-content>
     </hlm-dialog>
   </div>

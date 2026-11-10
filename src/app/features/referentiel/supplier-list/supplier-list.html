@@ -93,10 +93,12 @@
 </section>
 
 <hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
-  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">
     <hlm-dialog-header>
       <h3 hlmDialogTitle>{{ editing() ? 'Modifier le fournisseur' : 'Nouveau fournisseur' }}</h3>
     </hlm-dialog-header>
-    <app-supplier-form [supplier]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    <div class="dialog-scroll">
+      <app-supplier-form [supplier]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    </div>
   </hlm-dialog-content>
 </hlm-dialog>

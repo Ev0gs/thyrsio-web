@@ -124,7 +124,7 @@
       }
     </hlm-dialog-header>
     <!-- Formulaire long : il défile à l'intérieur du dialogue -->
-    <div class="max-h-[70vh] overflow-y-auto pr-1">
+    <div class="dialog-scroll">
       <app-client-form [client]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
     </div>
   </hlm-dialog-content>

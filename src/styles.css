@@ -107,3 +107,34 @@
   --radius: 0.5rem;
   --font-sans: 'Inter', system-ui, sans-serif;
 }
+
+/* ===== Dialogues : le corps défile à l'intérieur, sans casser la mise en page ===== */
+
+@layer components {
+  .dialog-scroll {
+    max-height: min(70vh, 44rem);
+    overflow-y: auto;
+    /* La place de la barre de défilement est réservée en permanence :
+       rien ne se décale quand elle apparaît (par exemple quand des erreurs s'affichent) */
+    scrollbar-gutter: stable;
+    /* Une barre fine et discrète, aux couleurs du thème */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    /* On déborde un peu dans la marge du dialogue et on la rend en padding :
+       les contours de focus des champs placés au bord ne sont plus rognés */
+    margin-inline: -0.5rem;
+    padding-inline: 0.5rem;
+    padding-block: 0.25rem;
+  }
+
+  /* Les boutons restent visibles en bas, même au milieu d'un long formulaire */
+  .dialog-scroll [data-slot='dialog-footer'] {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    margin-inline: -0.5rem;
+    padding: 0.75rem 0.5rem 0.25rem;
+    background: var(--popover);
+    border-top: 1px solid var(--border);
+  }
+}

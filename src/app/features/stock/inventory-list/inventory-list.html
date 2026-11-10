@@ -84,6 +84,8 @@
       <h3 hlmDialogTitle>Nouvel inventaire</h3>
       <p hlmDialogDescription>Il reste en brouillon, et sans effet sur le stock, jusqu'à sa validation.</p>
     </hlm-dialog-header>
-    <app-inventory-create-form (created)="onCreated($event)" (cancelled)="ctx.close()" />
+    <div class="dialog-scroll">
+      <app-inventory-create-form (created)="onCreated($event)" (cancelled)="ctx.close()" />
+    </div>
   </hlm-dialog-content>
 </hlm-dialog>

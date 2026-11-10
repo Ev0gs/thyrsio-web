@@ -15,12 +15,16 @@
 
   <fieldset class="flex flex-col gap-3">
     <legend class="mb-1 text-sm font-medium">Adresse</legend>
-    <label for="adr-line1" class="sr-only">Adresse, ligne 1</label>
-    <input id="adr-line1" hlmInput placeholder="Rue, numéro" [formField]="addressForm.addressLine1" />
-    <app-field-error [state]="addressForm.addressLine1()" />
+    <div class="flex flex-col gap-1">
+      <label for="adr-line1" class="sr-only">Adresse, ligne 1</label>
+      <input id="adr-line1" hlmInput placeholder="Rue, numéro" [formField]="addressForm.addressLine1" />
+      <app-field-error [state]="addressForm.addressLine1()" />
+    </div>
     <label for="adr-line2" class="sr-only">Adresse, ligne 2</label>
     <input id="adr-line2" hlmInput placeholder="Complément (bâtiment, quai…)" [formField]="addressForm.addressLine2" />
-    <div class="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
+
+    <!-- Code postal, ville et pays sur une seule ligne quand la place le permet -->
+    <div class="grid gap-3 sm:grid-cols-[8rem_minmax(0,1fr)_minmax(0,14rem)]">
       <div class="flex flex-col gap-1">
         <label for="adr-postal" class="sr-only">Code postal</label>
         <input id="adr-postal" hlmInput placeholder="Code postal" [formField]="addressForm.postalCode" />
@@ -31,30 +35,33 @@
         <input id="adr-city" hlmInput placeholder="Ville" [formField]="addressForm.city" />
         <app-field-error [state]="addressForm.city()" />
       </div>
+      <div class="flex flex-col gap-1">
+        <label for="adr-country" class="sr-only">Pays</label>
+        <select id="adr-country" [class]="selectClass" [formField]="addressForm.countryCode">
+          @for (country of countries(); track country.code) {
+            <option [value]="country.code">{{ country.name }}</option>
+          }
+        </select>
+      </div>
     </div>
-    <label for="adr-country" class="sr-only">Pays</label>
-    <select id="adr-country" [class]="selectClass" [formField]="addressForm.countryCode">
-      @for (country of countries(); track country.code) {
-        <option [value]="country.code">{{ country.name }}</option>
-      }
-    </select>
   </fieldset>
 
-  <div class="flex flex-col gap-1.5">
-    <label for="adr-phone" class="text-sm font-medium">
-      Téléphone sur place <span class="font-normal text-muted-foreground">(facultatif)</span>
-    </label>
-    <input id="adr-phone" hlmInput type="tel" class="sm:w-64" [formField]="addressForm.phone" />
-  </div>
-
-  <div class="flex flex-col gap-1.5">
-    <label for="adr-instructions" class="text-sm font-medium">
-      Instructions de livraison <span class="font-normal text-muted-foreground">(facultatif)</span>
-    </label>
-    <textarea id="adr-instructions" hlmInput rows="2" class="h-auto py-2"
-              placeholder="Horaires, quai, prise de rendez-vous, gabarit maximum…"
-              [formField]="addressForm.deliveryInstructions"></textarea>
-    <app-field-error [state]="addressForm.deliveryInstructions()" />
+  <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+    <div class="flex flex-col gap-1.5">
+      <label for="adr-phone" class="text-sm font-medium">
+        Téléphone sur place <span class="font-normal text-muted-foreground">(facultatif)</span>
+      </label>
+      <input id="adr-phone" hlmInput type="tel" [formField]="addressForm.phone" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="adr-instructions" class="text-sm font-medium">
+        Instructions de livraison <span class="font-normal text-muted-foreground">(facultatif)</span>
+      </label>
+      <textarea id="adr-instructions" hlmInput rows="2" class="h-auto py-2"
+                placeholder="Horaires, quai, prise de rendez-vous, gabarit maximum…"
+                [formField]="addressForm.deliveryInstructions"></textarea>
+      <app-field-error [state]="addressForm.deliveryInstructions()" />
+    </div>
   </div>
 
   <label class="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">

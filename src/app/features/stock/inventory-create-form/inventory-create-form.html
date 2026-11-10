@@ -2,18 +2,14 @@
   <div class="flex flex-col gap-1.5">
     <label for="inv-label" class="text-sm font-medium">Nom</label>
     <input id="inv-label" hlmInput [formField]="createForm.label" />
-    @if (createForm.label().touched() && createForm.label().invalid()) {
-      <p class="text-sm text-destructive">{{ createForm.label().errors()[0].message }}</p>
-    }
+    <app-field-error [state]="createForm.label()" />
   </div>
 
   <div class="flex flex-col gap-1.5">
     <label for="inv-date" class="text-sm font-medium">Date du comptage</label>
     <input id="inv-date" hlmInput type="date" class="sm:w-48" [formField]="createForm.countedOn" />
     <p class="text-xs text-muted-foreground">Les écarts seront enregistrés à cette date.</p>
-    @if (createForm.countedOn().touched() && createForm.countedOn().invalid()) {
-      <p class="text-sm text-destructive">{{ createForm.countedOn().errors()[0].message }}</p>
-    }
+    <app-field-error [state]="createForm.countedOn()" />
   </div>
 
   <label class="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">

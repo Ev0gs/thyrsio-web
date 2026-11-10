@@ -20,9 +20,7 @@
         <option [value]="article.articleId">{{ article.articleLabel }} ({{ article.articleCode }})</option>
       }
     </select>
-    @if (movementForm.articleId().touched() && movementForm.articleId().invalid()) {
-      <p class="text-sm text-destructive">{{ movementForm.articleId().errors()[0].message }}</p>
-    }
+    <app-field-error [state]="movementForm.articleId()" />
     @if (selectedArticle(); as article) {
       <p class="text-xs text-muted-foreground">
         En stock : {{ article.quantity | number: '1.0-4' }} {{ article.unitCode }}
@@ -44,9 +42,7 @@
           <option [value]="NEW_LOT">+ Nouveau lot…</option>
         }
       </select>
-      @if (movementForm.lotId().touched() && movementForm.lotId().invalid()) {
-        <p class="text-sm text-destructive">{{ movementForm.lotId().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="movementForm.lotId()" />
     </div>
   }
 
@@ -55,9 +51,7 @@
       <label for="mv-new-lot" class="text-sm font-medium">Numéro du nouveau lot</label>
       <input id="mv-new-lot" hlmInput [formField]="movementForm.newLotNumber"
              placeholder="Tel qu'il figure sur la livraison" />
-      @if (movementForm.newLotNumber().touched() && movementForm.newLotNumber().invalid()) {
-        <p class="text-sm text-destructive">{{ movementForm.newLotNumber().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="movementForm.newLotNumber()" />
     </div>
   }
 
@@ -71,17 +65,13 @@
         }
       </label>
       <input id="mv-quantity" hlmInput type="number" step="any" [formField]="movementForm.quantity" />
-      @if (movementForm.quantity().touched() && movementForm.quantity().invalid()) {
-        <p class="text-sm text-destructive">{{ movementForm.quantity().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="movementForm.quantity()" />
     </div>
 
     <div class="flex flex-col gap-1.5">
       <label for="mv-date" class="text-sm font-medium">Date</label>
       <input id="mv-date" hlmInput type="date" [formField]="movementForm.occurredOn" />
-      @if (movementForm.occurredOn().touched() && movementForm.occurredOn().invalid()) {
-        <p class="text-sm text-destructive">{{ movementForm.occurredOn().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="movementForm.occurredOn()" />
     </div>
   </div>
 

@@ -1,4 +1,4 @@
-﻿/** La date du jour en heure locale, au format AAAA-MM-JJ (le format suédois est justement celui-là). */
+/** La date du jour en heure locale, au format AAAA-MM-JJ (le format suédois est justement celui-là). */
 export const todayLocal = (): string => new Date().toLocaleDateString('sv-SE');
 
 /** "2026-11-01" → minuit (heure locale) ce jour-là, plus N jours, au format ISO attendu par l'API. */

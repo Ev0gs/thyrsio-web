@@ -119,20 +119,8 @@
 
     <!-- Pagination -->
     @if (pageInfo(); as info) {
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm text-muted-foreground">
-        <span>{{ info.totalElements | number }} mouvement(s)</span>
-        @if (info.totalPages > 1) {
-          <div class="flex items-center gap-2">
-            <button hlmBtn variant="outline" size="sm" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">
-              <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Précédent
-            </button>
-            <span class="px-2 tabular-nums">Page {{ page() }} sur {{ info.totalPages }}</span>
-            <button hlmBtn variant="outline" size="sm" [disabled]="page() >= info.totalPages" (click)="goToPage(page() + 1)">
-              Suivant <ng-icon name="lucideChevronRight" aria-hidden="true" />
-            </button>
-          </div>
-        }
-      </div>
+      <app-pagination [page]="page()" [totalPages]="info.totalPages" [totalElements]="info.totalElements"
+                      itemLabel="mouvement(s)" (pageChange)="goToPage($event)" />
     }
   }
 </section>

@@ -16,6 +16,8 @@ import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { Page } from '../../../core/api/page';
 import { problemMessage } from '../../../core/api/problem';
+import { FieldError } from '../../../shared/ui/field-error/field-error';
+import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { ReferentielApi } from '../referentiel-api';
 import { ArticleRow, CategoryRow, SupplierRow, UnitRow } from '../referentiel.models';
 
@@ -44,7 +46,7 @@ function toModel(article: ArticleRow | null): ArticleModel {
 
 @Component({
   selector: 'app-article-form',
-  imports: [FormField, HlmButtonImports, HlmDialogImports, HlmInputImports],
+  imports: [FormField, FieldError, HlmButtonImports, HlmDialogImports, HlmInputImports],
   templateUrl: './article-form.html',
 })
 export class ArticleForm {
@@ -56,9 +58,7 @@ export class ArticleForm {
   private readonly api = inject(ReferentielApi);
 
   protected readonly isEdit = computed(() => this.article() !== null);
-  protected readonly selectClass =
-    'h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none ' +
-    'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
+  protected readonly selectClass = SELECT_CLASS;
 
   /**
    * linkedSignal : calculé à partir de l'input (comme un computed), MAIS modifiable ensuite
@@ -76,9 +76,7 @@ export class ArticleForm {
       (code) => {
         required(code, { message: 'Indique un code' });
         maxLength(code, 50, { message: '50 caractères au maximum' });
-        pattern(code, /^[A-Za-z0-9_-]+$/, {
-          message: 'Lettres, chiffres, - et _ uniquement, sans espace',
-        });
+        pattern(code, /^[A-Za-z0-9_-]+$/, { message: 'Lettres, chiffres, - et _ uniquement, sans espace' });
       },
     );
 
@@ -112,9 +110,7 @@ export class ArticleForm {
   );
 
   protected readonly selectedCategory = computed(() =>
-    this.categoryOptions().find(
-      (category) => category.code === this.articleForm.categoryCode().value(),
-    ),
+    this.categoryOptions().find((category) => category.code === this.articleForm.categoryCode().value()),
   );
 
   // ---------- Enregistrement ----------
@@ -134,11 +130,7 @@ export class ArticleForm {
           const article = this.article();
           const saved = article
             ? await this.api.updateArticle(article.id, fields)
-            : await this.api.createArticle({
-                ...fields,
-                code: value.code.trim(),
-                unitCode: value.unitCode || null,
-              });
+            : await this.api.createArticle({ ...fields, code: value.code.trim(), unitCode: value.unitCode || null });
           this.saved.emit(saved);
           return undefined;
         } catch (error) {

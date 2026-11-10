@@ -3,7 +3,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronLeft, lucideChevronRight, lucideRotateCw, lucideX } from '@ng-icons/lucide';
+import { lucideRotateCw, lucideX } from '@ng-icons/lucide';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmInputImports } from '@spartan-ng/helm/input';
@@ -12,6 +12,7 @@ import { HlmTableImports } from '@spartan-ng/helm/table';
 import { Page } from '../../../core/api/page';
 import { MOVEMENT_TYPE_LABELS, MovementRow, MovementType, StockOverviewRow } from '../stock.models';
 import { startOfDay } from '../../../core/dates';
+import { Pagination } from '../../../shared/ui/pagination/pagination';
 
 const PAGE_SIZE = 25;
 
@@ -34,8 +35,9 @@ interface Filters {
     HlmInputImports,
     HlmSkeletonImports,
     HlmTableImports,
+    Pagination,
   ],
-  viewProviders: [provideIcons({ lucideChevronLeft, lucideChevronRight, lucideRotateCw, lucideX })],
+  viewProviders: [provideIcons({ lucideRotateCw, lucideX })],
   templateUrl: './stock-movements.html',
 })
 export class StockMovements {

@@ -1,4 +1,4 @@
-﻿/** Une page de résultats, telle que l'API la renvoie (Spring Data, sérialisation VIA_DTO). */
+/** Une page de résultats, telle que l'API la renvoie (Spring Data, sérialisation VIA_DTO). */
 export interface Page<T> {
   content: T[];
   page: {

@@ -24,6 +24,9 @@ import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { Page } from '../../../core/api/page';
 import { problemMessage } from '../../../core/api/problem';
+import { todayLocal, toInstant } from '../../../core/dates';
+import { FieldError } from '../../../shared/ui/field-error/field-error';
+import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { StockApi } from '../stock-api';
 import {
   BalanceRow,
@@ -32,7 +35,6 @@ import {
   MOVEMENT_TYPE_LABELS,
   StockOverviewRow,
 } from '../stock.models';
-import { todayLocal, toInstant } from '../../../core/dates';
 
 /** Valeur spéciale du champ lot : "créer un nouveau lot". */
 const NEW_LOT = '__new__';
@@ -51,7 +53,7 @@ interface MovementModel {
 
 @Component({
   selector: 'app-movement-form',
-  imports: [DecimalPipe, FormField, HlmButtonImports, HlmDialogImports, HlmInputImports],
+  imports: [DecimalPipe, FormField, FieldError, HlmButtonImports, HlmDialogImports, HlmInputImports],
   templateUrl: './movement-form.html',
 })
 export class MovementForm {
@@ -64,22 +66,15 @@ export class MovementForm {
 
   protected readonly NEW_LOT = NEW_LOT;
   protected readonly typeLabels = MOVEMENT_TYPE_LABELS;
+  protected readonly selectClass = SELECT_CLASS;
   /** Les types proposés, dans l'ordre d'affichage. */
-  protected readonly types: ManualMovementType[] = [
-    'RECEPTION',
-    'CONSUMPTION',
-    'LOSS',
-    'ADJUSTMENT',
-  ];
+  protected readonly types: ManualMovementType[] = ['RECEPTION', 'CONSUMPTION', 'LOSS', 'ADJUSTMENT'];
   protected readonly typeHints: Record<ManualMovementType, string> = {
     RECEPTION: 'Marchandise livrée par un fournisseur : le stock augmente.',
     CONSUMPTION: 'Matière utilisée pour une mise : le stock diminue.',
     LOSS: 'Casse ou produit abîmé : le stock diminue.',
     ADJUSTMENT: "Correction d'une erreur : saisis + pour ajouter, − pour retirer.",
   };
-  protected readonly selectClass =
-    'h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none ' +
-    'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
 
   // ---------- Le modèle et ses règles ----------
 
@@ -106,9 +101,7 @@ export class MovementForm {
         return undefined; // déjà signalé par required
       }
       if (valueOf(path.type) === 'ADJUSTMENT') {
-        return quantity === 0
-          ? { kind: 'zero', message: 'Un ajustement ne peut pas être nul' }
-          : undefined;
+        return quantity === 0 ? { kind: 'zero', message: 'Un ajustement ne peut pas être nul' } : undefined;
       }
       return quantity <= 0
         ? { kind: 'positive', message: 'Saisis une quantité positive : le sens vient du type' }
@@ -142,9 +135,7 @@ export class MovementForm {
 
     // AAAA-MM-JJ : la comparaison de chaînes suffit pour comparer deux dates
     validate(path.occurredOn, ({ value }) =>
-      value() > todayLocal()
-        ? { kind: 'future', message: 'La date ne peut pas être dans le futur' }
-        : undefined,
+      value() > todayLocal() ? { kind: 'future', message: 'La date ne peut pas être dans le futur' } : undefined,
     );
   });
 
@@ -163,19 +154,14 @@ export class MovementForm {
   /** Les lots de l'article (undefined : pas d'appel tant qu'aucun article suivi par lot n'est choisi). */
   protected readonly lots = httpResource<LotRow[]>(() => {
     const article = this.selectedArticle();
-    return article?.lotTracked
-      ? { url: '/api/stock/lots', params: { articleId: article.articleId } }
-      : undefined;
+    return article?.lotTracked ? { url: '/api/stock/lots', params: { articleId: article.articleId } } : undefined;
   });
 
   /** Le stock de chaque lot, pour l'afficher dans la liste. */
   private readonly lotBalances = httpResource<Page<BalanceRow>>(() => {
     const article = this.selectedArticle();
     return article?.lotTracked
-      ? {
-          url: '/api/stock/balances',
-          params: { articleId: article.articleId, includeEmpty: true, size: 100 },
-        }
+      ? { url: '/api/stock/balances', params: { articleId: article.articleId, includeEmpty: true, size: 100 } }
       : undefined;
   });
 
@@ -183,11 +169,7 @@ export class MovementForm {
     const lots = this.lots.hasValue() ? this.lots.value() : [];
     const balances = this.lotBalances.hasValue() ? this.lotBalances.value().content : [];
     const stockByLot = new Map(balances.map((balance) => [balance.lotId, balance.quantity]));
-    return lots.map((lot) => ({
-      id: lot.id,
-      lotNumber: lot.lotNumber,
-      quantity: stockByLot.get(lot.id) ?? 0,
-    }));
+    return lots.map((lot) => ({ id: lot.id, lotNumber: lot.lotNumber, quantity: stockByLot.get(lot.id) ?? 0 }));
   });
 
   constructor() {

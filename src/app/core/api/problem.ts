@@ -1,4 +1,4 @@
-﻿import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /** Le format d'erreur de l'API (ProblemDetail, renvoyé par GlobalExceptionHandler). */
 interface ProblemDetail {

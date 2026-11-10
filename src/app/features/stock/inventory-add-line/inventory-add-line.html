@@ -11,9 +11,7 @@
           <option [value]="article.articleId">{{ article.articleLabel }} ({{ article.articleCode }})</option>
         }
       </select>
-      @if (lineForm.articleId().touched() && lineForm.articleId().invalid()) {
-        <p class="text-sm text-destructive">{{ lineForm.articleId().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="lineForm.articleId()" />
     </div>
 
     <div class="flex flex-col gap-1">
@@ -25,9 +23,7 @@
             <option [value]="lot.id">{{ lot.lotNumber }}</option>
           }
         </select>
-        @if (lineForm.lotId().touched() && lineForm.lotId().invalid()) {
-          <p class="text-sm text-destructive">{{ lineForm.lotId().errors()[0].message }}</p>
-        }
+        <app-field-error [state]="lineForm.lotId()" />
       }
     </div>
 
@@ -35,9 +31,7 @@
       <label for="add-qty" class="sr-only">Quantité comptée</label>
       <input id="add-qty" hlmInput type="number" step="any" placeholder="Compté (facultatif)"
              [formField]="lineForm.countedQuantity" />
-      @if (lineForm.countedQuantity().touched() && lineForm.countedQuantity().invalid()) {
-        <p class="text-sm text-destructive">{{ lineForm.countedQuantity().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="lineForm.countedQuantity()" />
     </div>
 
     <button hlmBtn variant="outline" type="submit" [disabled]="lineForm().submitting()">Ajouter</button>

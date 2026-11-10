@@ -1,4 +1,4 @@
-﻿/** Miroir des DTO de l'API (package stock). */
+/** Miroir des DTO de l'API (package stock). */
 
 export type StockStatus = 'OK' | 'BELOW_THRESHOLD' | 'OUT_OF_STOCK';
 

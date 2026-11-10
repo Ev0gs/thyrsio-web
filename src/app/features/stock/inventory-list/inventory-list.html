@@ -72,17 +72,8 @@
     </div>
 
     @if (pageInfo(); as info) {
-      @if (info.totalPages > 1) {
-        <div class="flex items-center justify-end gap-2 border-t border-border px-4 py-3 text-sm text-muted-foreground">
-          <button hlmBtn variant="outline" size="sm" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">
-            <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Précédent
-          </button>
-          <span class="px-2 tabular-nums">Page {{ page() }} sur {{ info.totalPages }}</span>
-          <button hlmBtn variant="outline" size="sm" [disabled]="page() >= info.totalPages" (click)="goToPage(page() + 1)">
-            Suivant <ng-icon name="lucideChevronRight" aria-hidden="true" />
-          </button>
-        </div>
-      }
+      <app-pagination [page]="page()" [totalPages]="info.totalPages" [totalElements]="info.totalElements"
+                      itemLabel="inventaire(s)" (pageChange)="goToPage($event)" />
     }
   }
 </section>

@@ -15,18 +15,14 @@
       <input id="art-code" hlmInput [formField]="articleForm.code" class="font-mono uppercase"
              placeholder="BCH-LIE-4924" />
       <p class="text-xs text-muted-foreground">Mis en majuscules par l'API, et définitif une fois créé.</p>
-      @if (articleForm.code().touched() && articleForm.code().invalid()) {
-        <p class="text-sm text-destructive">{{ articleForm.code().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="articleForm.code()" />
     </div>
   }
 
   <div class="flex flex-col gap-1.5">
     <label for="art-label" class="text-sm font-medium">Libellé</label>
     <input id="art-label" hlmInput [formField]="articleForm.label" placeholder="Bouchon liège naturel 49×24" />
-    @if (articleForm.label().touched() && articleForm.label().invalid()) {
-      <p class="text-sm text-destructive">{{ articleForm.label().errors()[0].message }}</p>
-    }
+    <app-field-error [state]="articleForm.label()" />
   </div>
 
   <div class="grid gap-4 sm:grid-cols-2">
@@ -45,9 +41,7 @@
           @if (category.regulated) { · réglementé }
         </p>
       }
-      @if (articleForm.categoryCode().touched() && articleForm.categoryCode().invalid()) {
-        <p class="text-sm text-destructive">{{ articleForm.categoryCode().errors()[0].message }}</p>
-      }
+      <app-field-error [state]="articleForm.categoryCode()" />
     </div>
 
     @if (!articleForm.unitCode().hidden()) {
@@ -81,6 +75,7 @@
         Référence fournisseur <span class="font-normal text-muted-foreground">(facultatif)</span>
       </label>
       <input id="art-ref" hlmInput [formField]="articleForm.supplierReference" />
+      <app-field-error [state]="articleForm.supplierReference()" />
     </div>
   </div>
 
@@ -91,9 +86,7 @@
     <input id="art-threshold" hlmInput type="number" step="any" class="sm:w-48"
            [formField]="articleForm.alertThreshold" />
     <p class="text-xs text-muted-foreground">En dessous, l'article apparaît « Sous le seuil » dans le stock et le tableau de bord.</p>
-    @if (articleForm.alertThreshold().touched() && articleForm.alertThreshold().invalid()) {
-      <p class="text-sm text-destructive">{{ articleForm.alertThreshold().errors()[0].message }}</p>
-    }
+    <app-field-error [state]="articleForm.alertThreshold()" />
   </div>
 
   @for (error of articleForm().errors(); track error.kind) {

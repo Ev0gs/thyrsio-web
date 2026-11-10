@@ -5,12 +5,13 @@ import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { problemMessage } from '../../../core/api/problem';
 import { todayLocal, toInstant } from '../../../core/dates';
+import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { StockApi } from '../stock-api';
 import { Inventory } from '../stock.models';
 
 @Component({
   selector: 'app-inventory-create-form',
-  imports: [FormField, HlmButtonImports, HlmDialogImports, HlmInputImports],
+  imports: [FormField, FieldError, HlmButtonImports, HlmDialogImports, HlmInputImports],
   templateUrl: './inventory-create-form.html',
 })
 export class InventoryCreateForm {
@@ -31,9 +32,7 @@ export class InventoryCreateForm {
     maxLength(path.label, 100, { message: '100 caractères au maximum' });
     required(path.countedOn, { message: 'Indique la date du comptage' });
     validate(path.countedOn, ({ value }) =>
-      value() > todayLocal()
-        ? { kind: 'future', message: 'La date ne peut pas être dans le futur' }
-        : undefined,
+      value() > todayLocal() ? { kind: 'future', message: 'La date ne peut pas être dans le futur' } : undefined,
     );
   });
 

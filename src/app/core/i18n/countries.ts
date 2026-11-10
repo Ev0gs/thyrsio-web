@@ -1,4 +1,4 @@
-﻿/** Les noms des pays et des langues en français, fournis par le navigateur (aucune table à maintenir). */
+/** Les noms des pays et des langues en français, fournis par le navigateur (aucune table à maintenir). */
 const regionNames = new Intl.DisplayNames(['fr'], { type: 'region' });
 const languageNames = new Intl.DisplayNames(['fr'], { type: 'language' });
 

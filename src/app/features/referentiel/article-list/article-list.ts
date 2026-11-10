@@ -4,8 +4,6 @@ import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideChevronLeft,
-  lucideChevronRight,
   lucidePlus,
   lucideRotateCw,
   lucideSearch,
@@ -21,6 +19,7 @@ import { problemMessage } from '../../../core/api/problem';
 import { ArticleForm } from '../article-form/article-form';
 import { ReferentielApi } from '../referentiel-api';
 import { ArticleRow, CategoryRow } from '../referentiel.models';
+import { Pagination } from '../../../shared/ui/pagination/pagination';
 
 const PAGE_SIZE = 25;
 
@@ -36,11 +35,10 @@ const PAGE_SIZE = 25;
     HlmInputImports,
     HlmSkeletonImports,
     HlmTableImports,
+    Pagination,
   ],
   viewProviders: [
     provideIcons({
-      lucideChevronLeft,
-      lucideChevronRight,
       lucidePlus,
       lucideRotateCw,
       lucideSearch,

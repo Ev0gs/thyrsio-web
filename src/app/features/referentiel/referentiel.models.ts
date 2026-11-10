@@ -1,4 +1,4 @@
-﻿/** Miroir des DTO de l'API (package referentiel). */
+/** Miroir des DTO de l'API (package referentiel). */
 
 export interface ArticleRow {
   id: string;

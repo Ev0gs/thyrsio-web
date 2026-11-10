@@ -4,8 +4,6 @@ import { httpResource } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideChevronLeft,
-  lucideChevronRight,
   lucidePlus,
   lucideRotateCw,
 } from '@ng-icons/lucide';
@@ -17,6 +15,7 @@ import { Page } from '../../../core/api/page';
 import { InventoryCreateForm } from '../inventory-create-form/inventory-create-form';
 import { InventoryStatusBadge } from '../inventory-status-badge/inventory-status-badge';
 import { Inventory, InventoryStatus, InventorySummary } from '../stock.models';
+import { Pagination } from '../../../shared/ui/pagination/pagination';
 
 @Component({
   selector: 'app-inventory-list',
@@ -30,9 +29,10 @@ import { Inventory, InventoryStatus, InventorySummary } from '../stock.models';
     HlmDialogImports,
     HlmSkeletonImports,
     HlmTableImports,
+    Pagination,
   ],
   viewProviders: [
-    provideIcons({ lucideChevronLeft, lucideChevronRight, lucidePlus, lucideRotateCw }),
+    provideIcons({ lucidePlus, lucideRotateCw }),
   ],
   templateUrl: './inventory-list.html',
 })

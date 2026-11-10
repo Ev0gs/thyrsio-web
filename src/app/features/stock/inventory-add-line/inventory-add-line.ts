@@ -13,6 +13,8 @@ import { applyWhen, form, FormField, hidden, min, required, submit } from '@angu
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { problemMessage } from '../../../core/api/problem';
+import { FieldError } from '../../../shared/ui/field-error/field-error';
+import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { StockApi } from '../stock-api';
 import { Inventory, LotRow, StockOverviewRow } from '../stock.models';
 
@@ -21,7 +23,7 @@ const emptyLine = () => ({ articleId: '', lotId: '', countedQuantity: null as nu
 /** Ajoute une ligne à un inventaire en brouillon : un article, ou un lot, absent du pré-remplissage. */
 @Component({
   selector: 'app-inventory-add-line',
-  imports: [FormField, HlmButtonImports, HlmInputImports],
+  imports: [FormField, FieldError, HlmButtonImports, HlmInputImports],
   templateUrl: './inventory-add-line.html',
 })
 export class InventoryAddLine {
@@ -31,9 +33,7 @@ export class InventoryAddLine {
 
   private readonly api = inject(StockApi);
 
-  protected readonly selectClass =
-    'h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm shadow-xs outline-none ' +
-    'focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
+  protected readonly selectClass = SELECT_CLASS;
 
   protected readonly model = signal(emptyLine());
 
@@ -62,9 +62,7 @@ export class InventoryAddLine {
 
   protected readonly lots = httpResource<LotRow[]>(() => {
     const article = this.selectedArticle();
-    return article?.lotTracked
-      ? { url: '/api/stock/lots', params: { articleId: article.articleId } }
-      : undefined;
+    return article?.lotTracked ? { url: '/api/stock/lots', params: { articleId: article.articleId } } : undefined;
   });
 
   constructor() {

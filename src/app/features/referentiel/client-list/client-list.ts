@@ -1,6 +1,6 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucidePlus, lucideRotateCw, lucideSearch } from '@ng-icons/lucide';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
@@ -30,6 +30,7 @@ import { ClientRow } from '../referentiel.models';
     HlmInputImports,
     HlmSkeletonImports,
     HlmTableImports,
+    RouterLink,
   ],
   viewProviders: [provideIcons({ lucidePlus, lucideRotateCw, lucideSearch })],
   templateUrl: './client-list.html',

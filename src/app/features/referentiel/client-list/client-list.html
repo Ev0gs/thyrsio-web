@@ -68,7 +68,9 @@
               <tr hlmTr [class.text-muted-foreground]="!client.active">
                 <td hlmTd>
                   <div class="flex items-center gap-2 font-medium">
-                    {{ client.name }}
+                    <a [routerLink]="['/referentiel/clients', client.id]" class="hover:text-primary hover:underline">
+                      {{ client.name }}
+                    </a>
                     @if (!client.active) {
                       <span hlmBadge variant="outline">Archivé</span>
                     }

@@ -51,6 +51,12 @@ export const routes: Routes = [
           import('./features/referentiel/client-list/client-list').then((m) => m.ClientList),
       },
       {
+        path: 'referentiel/clients/:id',
+        title: 'Client · Thyrsio',
+        loadComponent: () =>
+          import('./features/referentiel/client-detail/client-detail').then((m) => m.ClientDetail),
+      },
+      {
         path: 'referentiel/fournisseurs',
         title: 'Fournisseurs · Thyrsio',
         loadComponent: () =>

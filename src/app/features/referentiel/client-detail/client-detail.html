@@ -1,0 +1,215 @@
+<nav aria-label="Fil d'Ariane" class="flex gap-1.5 text-[13px] text-muted-foreground">
+  <a routerLink="/referentiel/clients" class="hover:text-foreground hover:underline">Clients</a>
+  <span aria-hidden="true">/</span>
+  <span>{{ current()?.name ?? '…' }}</span>
+</nav>
+
+@if (client.error()) {
+  <div class="mt-6 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+    <p class="text-sm font-medium">Impossible de charger ce client.</p>
+    <a hlmBtn variant="outline" routerLink="/referentiel/clients">Retour à la liste</a>
+  </div>
+} @else if (!current()) {
+  <div hlmSkeleton class="mt-6 h-10 w-80"></div>
+  <div hlmSkeleton class="mt-6 h-48 w-full"></div>
+} @else {
+  @let c = current()!;
+
+  <!-- ===== En-tête ===== -->
+  <header class="mt-2 flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-col gap-1.5">
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-[26px] font-semibold tracking-tight">{{ c.name }}</h1>
+        @if (!c.active) {
+          <span hlmBadge variant="outline">Archivé</span>
+        }
+        @if (c.gs1LabelingRequired) {
+          <span hlmBadge variant="secondary">GS1 requis</span>
+        }
+      </div>
+      <p class="font-mono text-sm text-muted-foreground">{{ c.code }}</p>
+    </div>
+    <button hlmBtn variant="outline" size="lg" (click)="clientDialog.set('open')">
+      <ng-icon name="lucidePencil" aria-hidden="true" /> Modifier
+    </button>
+  </header>
+
+  <!-- ===== La fiche ===== -->
+  <section class="mt-6 grid gap-x-8 gap-y-5 rounded-xl border border-border p-5 sm:grid-cols-2 lg:grid-cols-4">
+    <div>
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pays et langue</h2>
+      <p class="mt-1.5 text-sm">{{ countryName(c.countryCode) }}</p>
+      <p class="text-sm text-muted-foreground">Documents en {{ languageName(c.language).toLowerCase() }}</p>
+    </div>
+    <div>
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siège</h2>
+      @if (c.addressLine1 || c.city) {
+        <address class="mt-1.5 text-sm not-italic">
+          @if (c.addressLine1) { {{ c.addressLine1 }}<br /> }
+          @if (c.addressLine2) { {{ c.addressLine2 }}<br /> }
+          {{ c.postalCode }} {{ c.city }}
+        </address>
+      } @else {
+        <p class="mt-1.5 text-sm text-muted-foreground">Non renseigné</p>
+      }
+    </div>
+    <div>
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</h2>
+      @if (c.email) {
+        <a [href]="'mailto:' + c.email" class="mt-1.5 block text-sm hover:text-primary hover:underline">{{ c.email }}</a>
+      }
+      @if (c.phone) {
+        <p class="text-sm">{{ c.phone }}</p>
+      }
+      @if (!c.email && !c.phone) {
+        <p class="mt-1.5 text-sm text-muted-foreground">Non renseigné</p>
+      }
+    </div>
+    <div>
+      <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Commerce et douane</h2>
+      <dl class="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-sm">
+        <dt class="text-muted-foreground">TVA</dt><dd class="font-mono text-[13px]">{{ c.vatNumber ?? '—' }}</dd>
+        <dt class="text-muted-foreground">Accise</dt><dd class="font-mono text-[13px]">{{ c.exciseNumber ?? '—' }}</dd>
+        <dt class="text-muted-foreground">Incoterm</dt><dd>{{ incotermLabel() ?? '—' }}</dd>
+      </dl>
+    </div>
+    @if (c.notes) {
+      <div class="sm:col-span-2 lg:col-span-4">
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</h2>
+        <p class="mt-1.5 whitespace-pre-line text-sm">{{ c.notes }}</p>
+      </div>
+    }
+  </section>
+
+  <!-- ===== Les adresses de livraison ===== -->
+  <section class="mt-8">
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-semibold">Adresses de livraison</h2>
+        <p class="text-sm text-muted-foreground">Là où partent ses commandes. L'adresse par défaut est proposée en premier.</p>
+      </div>
+      @if (c.active) {
+        <button hlmBtn (click)="openAddress(null)">
+          <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvelle adresse
+        </button>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+    }
+
+    @if (addresses.error()) {
+      <div class="mt-4 flex items-center gap-3 rounded-xl border border-border p-5 text-sm">
+        Impossible de charger les adresses.
+        <button hlmBtn variant="outline" size="sm" (click)="addresses.reload()">
+          <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+        </button>
+      </div>
+    } @else if (!addresses.hasValue()) {
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <div hlmSkeleton class="h-40"></div>
+        <div hlmSkeleton class="h-40"></div>
+      </div>
+    } @else {
+      <div class="mt-4 grid gap-4 md:grid-cols-2" [class.opacity-60]="busy()">
+        @for (address of activeAddresses(); track address.id) {
+          <article class="flex flex-col gap-3 rounded-xl border p-5"
+                   [class]="address.defaultAddress ? 'border-primary/40 bg-primary/[0.03]' : 'border-border'">
+            <div class="flex items-start justify-between gap-3">
+              <h3 class="flex items-center gap-2 font-semibold">
+                <ng-icon name="lucideMapPin" size="16" class="text-muted-foreground" aria-hidden="true" />
+                {{ address.label }}
+              </h3>
+              @if (address.defaultAddress) {
+                <span hlmBadge>Par défaut</span>
+              }
+            </div>
+
+            <address class="text-sm not-italic">
+              @if (address.recipientName) { <span class="font-medium">{{ address.recipientName }}</span><br /> }
+              {{ address.addressLine1 }}<br />
+              @if (address.addressLine2) { {{ address.addressLine2 }}<br /> }
+              {{ address.postalCode }} {{ address.city }}<br />
+              {{ countryName(address.countryCode) }}
+            </address>
+
+            @if (address.phone || address.deliveryInstructions) {
+              <div class="flex flex-col gap-1 border-t border-border/60 pt-3 text-sm text-muted-foreground">
+                @if (address.phone) { <span>Tél. {{ address.phone }}</span> }
+                @if (address.deliveryInstructions) { <span class="whitespace-pre-line">{{ address.deliveryInstructions }}</span> }
+              </div>
+            }
+
+            <div class="mt-auto flex flex-wrap gap-1 pt-1">
+              <button hlmBtn variant="ghost" size="sm" [disabled]="busy()" (click)="openAddress(address)"
+                      [attr.aria-label]="'Modifier l\'adresse ' + address.label">Modifier</button>
+              @if (!address.defaultAddress) {
+                <button hlmBtn variant="ghost" size="sm" [disabled]="busy()" (click)="setDefault(address)"
+                        [attr.aria-label]="'Définir ' + address.label + ' comme adresse par défaut'">Définir par défaut</button>
+              }
+              <button hlmBtn variant="ghost" size="sm" [disabled]="busy()" (click)="toggleActive(address)"
+                      [attr.aria-label]="'Archiver l\'adresse ' + address.label">Archiver</button>
+            </div>
+          </article>
+        } @empty {
+          <div class="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground md:col-span-2">
+            Aucune adresse de livraison. La première ajoutée deviendra l'adresse par défaut.
+          </div>
+        }
+      </div>
+
+      @if (archivedAddresses().length > 0) {
+        <div class="mt-6">
+          <button type="button" (click)="showArchived.update((shown) => !shown)"
+                  [attr.aria-expanded]="showArchived()"
+                  class="flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground">
+            <ng-icon name="lucideChevronDown" aria-hidden="true" class="transition-transform"
+                     [class.-rotate-90]="!showArchived()" />
+            Adresses archivées ({{ archivedAddresses().length }})
+          </button>
+          @if (showArchived()) {
+            <ul class="mt-3 divide-y divide-border rounded-xl border border-border">
+              @for (address of archivedAddresses(); track address.id) {
+                <li class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-muted-foreground">
+                  <span>
+                    <span class="font-medium text-foreground">{{ address.label }}</span>
+                    · {{ address.city }}, {{ countryName(address.countryCode) }}
+                  </span>
+                  <button hlmBtn variant="ghost" size="sm" [disabled]="busy()" (click)="toggleActive(address)"
+                          [attr.aria-label]="'Réactiver l\'adresse ' + address.label">Réactiver</button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    }
+  </section>
+
+  <!-- ===== Les dialogues ===== -->
+  <hlm-dialog [state]="clientDialog()" (closed)="clientDialog.set('closed')">
+    <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-2xl">
+      <hlm-dialog-header>
+        <h3 hlmDialogTitle>Modifier le client</h3>
+        <p hlmDialogDescription>{{ c.name }}</p>
+      </hlm-dialog-header>
+      <div class="max-h-[70vh] overflow-y-auto pr-1">
+        <app-client-form [client]="c" (saved)="ctx.close(); onClientSaved()" (cancelled)="ctx.close()" />
+      </div>
+    </hlm-dialog-content>
+  </hlm-dialog>
+
+  <hlm-dialog [state]="addressDialog()" (closed)="addressDialog.set('closed')">
+    <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+      <hlm-dialog-header>
+        <h3 hlmDialogTitle>{{ editingAddress() ? 'Modifier l\'adresse' : 'Nouvelle adresse de livraison' }}</h3>
+        <p hlmDialogDescription>{{ c.name }}</p>
+      </hlm-dialog-header>
+      <div class="max-h-[70vh] overflow-y-auto pr-1">
+        <app-address-form [clientId]="c.id" [address]="editingAddress()" [defaultCountry]="c.countryCode"
+                          (saved)="ctx.close(); onAddressSaved()" (cancelled)="ctx.close()" />
+      </div>
+    </hlm-dialog-content>
+  </hlm-dialog>
+}

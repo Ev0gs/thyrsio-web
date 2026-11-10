@@ -1,0 +1,78 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="flex flex-col gap-1.5">
+      <label for="adr-label" class="text-sm font-medium">Nom de l'adresse</label>
+      <input id="adr-label" hlmInput placeholder="Entrepôt Yokohama" [formField]="addressForm.label" />
+      <app-field-error [state]="addressForm.label()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="adr-recipient" class="text-sm font-medium">
+        Destinataire <span class="font-normal text-muted-foreground">(si différent du client)</span>
+      </label>
+      <input id="adr-recipient" hlmInput [formField]="addressForm.recipientName" />
+    </div>
+  </div>
+
+  <fieldset class="flex flex-col gap-3">
+    <legend class="mb-1 text-sm font-medium">Adresse</legend>
+    <label for="adr-line1" class="sr-only">Adresse, ligne 1</label>
+    <input id="adr-line1" hlmInput placeholder="Rue, numéro" [formField]="addressForm.addressLine1" />
+    <app-field-error [state]="addressForm.addressLine1()" />
+    <label for="adr-line2" class="sr-only">Adresse, ligne 2</label>
+    <input id="adr-line2" hlmInput placeholder="Complément (bâtiment, quai…)" [formField]="addressForm.addressLine2" />
+    <div class="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
+      <div class="flex flex-col gap-1">
+        <label for="adr-postal" class="sr-only">Code postal</label>
+        <input id="adr-postal" hlmInput placeholder="Code postal" [formField]="addressForm.postalCode" />
+        <app-field-error [state]="addressForm.postalCode()" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="adr-city" class="sr-only">Ville</label>
+        <input id="adr-city" hlmInput placeholder="Ville" [formField]="addressForm.city" />
+        <app-field-error [state]="addressForm.city()" />
+      </div>
+    </div>
+    <label for="adr-country" class="sr-only">Pays</label>
+    <select id="adr-country" [class]="selectClass" [formField]="addressForm.countryCode">
+      @for (country of countries(); track country.code) {
+        <option [value]="country.code">{{ country.name }}</option>
+      }
+    </select>
+  </fieldset>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="adr-phone" class="text-sm font-medium">
+      Téléphone sur place <span class="font-normal text-muted-foreground">(facultatif)</span>
+    </label>
+    <input id="adr-phone" hlmInput type="tel" class="sm:w-64" [formField]="addressForm.phone" />
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="adr-instructions" class="text-sm font-medium">
+      Instructions de livraison <span class="font-normal text-muted-foreground">(facultatif)</span>
+    </label>
+    <textarea id="adr-instructions" hlmInput rows="2" class="h-auto py-2"
+              placeholder="Horaires, quai, prise de rendez-vous, gabarit maximum…"
+              [formField]="addressForm.deliveryInstructions"></textarea>
+    <app-field-error [state]="addressForm.deliveryInstructions()" />
+  </div>
+
+  <label class="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
+    <input type="checkbox" class="mt-0.5 size-4 accent-primary" [formField]="addressForm.defaultAddress" />
+    <span class="flex flex-col gap-0.5">
+      <span class="font-medium">Adresse par défaut</span>
+      <span class="text-muted-foreground">Proposée en premier sur les commandes. Remplace l'adresse par défaut actuelle.</span>
+    </span>
+  </label>
+
+  @for (error of addressForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="addressForm().submitting()">
+      {{ addressForm().submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </hlm-dialog-footer>
+</form>

@@ -6,6 +6,8 @@ import {
   ClientRow,
   CreateArticleRequest,
   CreateClientRequest,
+  DeliveryAddress,
+  DeliveryAddressRequest,
   SupplierDetail,
   SupplierRequest,
   UpdateArticleRequest,
@@ -59,6 +61,33 @@ export class ReferentielApi {
     const action = active ? 'reactivate' : 'archive';
     return firstValueFrom(
       this.http.post<void>(`${this.baseUrl}/${resource}/${id}/${action}`, null),
+    );
+  }
+
+  // ---------- Adresses de livraison (sous-ressource d'un client) ----------
+
+  private addressesUrl(clientId: string): string {
+    return `${this.baseUrl}/clients/${clientId}/delivery-addresses`;
+  }
+
+  createAddress(clientId: string, request: DeliveryAddressRequest): Promise<DeliveryAddress> {
+    return firstValueFrom(this.http.post<DeliveryAddress>(this.addressesUrl(clientId), request));
+  }
+
+  updateAddress(
+    clientId: string,
+    addressId: string,
+    request: DeliveryAddressRequest,
+  ): Promise<DeliveryAddress> {
+    return firstValueFrom(
+      this.http.put<DeliveryAddress>(`${this.addressesUrl(clientId)}/${addressId}`, request),
+    );
+  }
+
+  setAddressActive(clientId: string, addressId: string, active: boolean): Promise<void> {
+    const action = active ? 'reactivate' : 'archive';
+    return firstValueFrom(
+      this.http.post<void>(`${this.addressesUrl(clientId)}/${addressId}/${action}`, null),
     );
   }
 }

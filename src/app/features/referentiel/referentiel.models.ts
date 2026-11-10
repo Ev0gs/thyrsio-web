@@ -136,3 +136,41 @@ export interface UpdateClientRequest {
 export interface CreateClientRequest extends UpdateClientRequest {
   code: string;
 }
+
+/** GET /api/referentiel/clients/{id}/delivery-addresses */
+export interface DeliveryAddress {
+  id: string;
+  clientId: string;
+  label: string;
+  recipientName: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  postalCode: string | null;
+  city: string;
+  countryCode: string;
+  phone: string | null;
+  deliveryInstructions: string | null;
+  defaultAddress: boolean;
+  active: boolean;
+  createdAt: string;
+}
+
+/** POST et PUT : la même requête (PUT = remplacement complet). */
+export interface DeliveryAddressRequest {
+  label: string;
+  recipientName: string | null;
+  addressLine1: string;
+  addressLine2: string | null;
+  postalCode: string | null;
+  city: string;
+  countryCode: string;
+  phone: string | null;
+  deliveryInstructions: string | null;
+  defaultAddress: boolean;
+}
+
+/** Une adresse lue → la requête qui la réécrit telle quelle (pour ne changer qu'un champ avec un PUT). */
+export function toAddressRequest(address: DeliveryAddress): DeliveryAddressRequest {
+  const { id, clientId, active, createdAt, ...request } = address;
+  return request;
+}

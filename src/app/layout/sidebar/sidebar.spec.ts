@@ -1,21 +1,28 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { CurrentUser } from '../../core/auth/current-user';
 import { Sidebar } from './sidebar';
 
 describe('Sidebar', () => {
-  let component: Sidebar;
-  let fixture: ComponentFixture<Sidebar>;
-
-  beforeEach(async () => {
+  it('shows the navigation and the connected user', async () => {
     await TestBed.configureTestingModule({
       imports: [Sidebar],
+      providers: [
+        provideRouter([]),
+        // Un faux utilisateur : le vrai service demanderait Keycloak
+        {
+          provide: CurrentUser,
+          useValue: { name: 'Pierre Martin', initials: 'PM', isAdmin: true },
+        },
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Sidebar);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
-  });
+    const fixture = TestBed.createComponent(Sidebar);
+    fixture.detectChanges();
+    const text: string = fixture.nativeElement.textContent;
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(text).toContain('Matières sèches');
+    expect(text).toContain('Pierre Martin');
+    expect(text).toContain('Administrateur');
   });
 });

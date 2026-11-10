@@ -1,21 +1,25 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { CurrentUser } from '../../core/auth/current-user';
 import { Shell } from './shell';
 
 describe('Shell', () => {
-  let component: Shell;
-  let fixture: ComponentFixture<Shell>;
-
-  beforeEach(async () => {
+  it('renders the sidebar next to the page content', async () => {
     await TestBed.configureTestingModule({
       imports: [Shell],
+      providers: [
+        provideRouter([]),
+        {
+          provide: CurrentUser,
+          useValue: { name: 'Pierre Martin', initials: 'PM', isAdmin: false },
+        },
+      ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Shell);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
-  });
+    const fixture = TestBed.createComponent(Shell);
+    fixture.detectChanges();
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('app-sidebar')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('main')).toBeTruthy();
   });
 });

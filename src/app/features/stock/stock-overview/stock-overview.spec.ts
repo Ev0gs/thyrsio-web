@@ -1,21 +1,20 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { StockOverview } from './stock-overview';
 
 describe('StockOverview', () => {
-  let component: StockOverview;
-  let fixture: ComponentFixture<StockOverview>;
+  it('requests the stock overview when it opens', () => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
+    const http = TestBed.inject(HttpTestingController);
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [StockOverview],
-    }).compileComponents();
+    const fixture = TestBed.createComponent(StockOverview);
+    fixture.detectChanges();
+    TestBed.tick();
 
-    fixture = TestBed.createComponent(StockOverview);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
+    http.expectOne('/api/stock/overview');
+    expect(fixture.nativeElement.textContent).toContain('Matières sèches');
   });
 });

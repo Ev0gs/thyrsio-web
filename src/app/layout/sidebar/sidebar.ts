@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
@@ -7,6 +7,7 @@ import {
   lucideContainer,
   lucideFactory,
   lucideLayoutDashboard,
+  lucideLogOut,
   lucidePackage,
   lucideShoppingCart,
   lucideTag,
@@ -14,6 +15,7 @@ import {
   lucideUsers,
   lucideWine,
 } from '@ng-icons/lucide';
+import { CurrentUser } from '../../core/auth/current-user';
 
 interface NavItem {
   label: string;
@@ -49,6 +51,8 @@ interface NavGroup {
   templateUrl: './sidebar.html',
 })
 export class Sidebar {
+  protected readonly user = inject(CurrentUser);
+
   // Les groupes suivent les modules de l'API
   protected readonly groups: NavGroup[] = [
     {

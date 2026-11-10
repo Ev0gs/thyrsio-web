@@ -44,11 +44,25 @@
   }
 
   <div class="mt-auto flex items-center gap-2.5 border-t border-border px-2.5 pt-3">
-    <div aria-hidden="true"
-         class="flex size-8 items-center justify-center rounded-full bg-muted text-[13px] font-semibold">U</div>
-    <div class="flex min-w-0 flex-col leading-tight">
-      <span class="truncate text-[13px] font-medium">[Nom de l'utilisateur]</span>
-      <span class="text-xs text-muted-foreground">Administrateur</span>
-    </div>
+    <button type="button"
+            (click)="user.manageAccount()"
+            title="Gérer mon compte"
+            class="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg py-1 text-left hover:bg-background">
+      <span aria-hidden="true"
+            class="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-[13px] font-semibold">
+        {{ user.initials }}
+      </span>
+      <span class="flex min-w-0 flex-col leading-tight">
+        <span class="truncate text-[13px] font-medium">{{ user.name }}</span>
+        <span class="text-xs text-muted-foreground">{{ user.isAdmin ? 'Administrateur' : 'Utilisateur' }}</span>
+      </span>
+    </button>
+    <button type="button"
+            (click)="user.logout()"
+            aria-label="Se déconnecter"
+            title="Se déconnecter"
+            class="flex size-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-background hover:text-foreground">
+      <ng-icon name="lucideLogOut" size="16" aria-hidden="true" />
+    </button>
   </div>
 </nav>

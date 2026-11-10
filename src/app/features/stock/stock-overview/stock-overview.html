@@ -10,7 +10,9 @@
   </div>
   <div class="flex flex-wrap gap-2">
     <!-- Branchés à l'étape suivante : saisie des mouvements et inventaires -->
-    <button hlmBtn variant="outline" size="lg" disabled>Nouvel inventaire</button>
+    <a hlmBtn variant="outline" size="lg" routerLink="/stock/inventaires" [queryParams]="{ nouveau: 1 }">
+      Nouvel inventaire
+    </a>
     <hlm-dialog>
       <button hlmDialogTrigger hlmBtn size="lg">Saisir un mouvement</button>
       <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">

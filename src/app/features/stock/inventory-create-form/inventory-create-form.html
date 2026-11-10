@@ -1,0 +1,44 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+  <div class="flex flex-col gap-1.5">
+    <label for="inv-label" class="text-sm font-medium">Nom</label>
+    <input id="inv-label" hlmInput [formField]="createForm.label" />
+    @if (createForm.label().touched() && createForm.label().invalid()) {
+      <p class="text-sm text-destructive">{{ createForm.label().errors()[0].message }}</p>
+    }
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="inv-date" class="text-sm font-medium">Date du comptage</label>
+    <input id="inv-date" hlmInput type="date" class="sm:w-48" [formField]="createForm.countedOn" />
+    <p class="text-xs text-muted-foreground">Les écarts seront enregistrés à cette date.</p>
+    @if (createForm.countedOn().touched() && createForm.countedOn().invalid()) {
+      <p class="text-sm text-destructive">{{ createForm.countedOn().errors()[0].message }}</p>
+    }
+  </div>
+
+  <label class="flex items-start gap-3 rounded-lg border border-border p-3 text-sm">
+    <input type="checkbox" class="mt-0.5 size-4 accent-primary" [formField]="createForm.prefill" />
+    <span class="flex flex-col gap-0.5">
+      <span class="font-medium">Pré-remplir avec le stock actuel</span>
+      <span class="text-muted-foreground">Une ligne à compter pour chaque article et chaque lot en stock.</span>
+    </span>
+  </label>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="inv-notes" class="text-sm font-medium">
+      Notes <span class="font-normal text-muted-foreground">(facultatif)</span>
+    </label>
+    <textarea id="inv-notes" hlmInput rows="2" class="h-auto py-2" [formField]="createForm.notes"></textarea>
+  </div>
+
+  @for (error of createForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="createForm().submitting()">
+      {{ createForm().submitting() ? 'Création…' : 'Créer et commencer le comptage' }}
+    </button>
+  </hlm-dialog-footer>
+</form>

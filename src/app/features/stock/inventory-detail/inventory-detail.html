@@ -1,0 +1,179 @@
+<nav aria-label="Fil d'Ariane" class="flex gap-1.5 text-[13px] text-muted-foreground">
+  <a routerLink="/stock/inventaires" class="hover:text-foreground hover:underline">Inventaires</a>
+  <span aria-hidden="true">/</span>
+  <span>{{ current()?.label ?? '…' }}</span>
+</nav>
+
+@if (inventory.error() && !current()) {
+  <div class="mt-6 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+    <p class="text-sm font-medium">Impossible de charger cet inventaire.</p>
+    <button hlmBtn variant="outline" (click)="inventory.reload()">
+      <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+    </button>
+  </div>
+} @else if (!current()) {
+  <div hlmSkeleton class="mt-6 h-10 w-80"></div>
+  <div hlmSkeleton class="mt-6 h-64 w-full"></div>
+} @else {
+  @let inv = current()!;
+
+  <header class="mt-2 flex flex-wrap items-start justify-between gap-4">
+    <div class="flex flex-col gap-1.5">
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-[26px] font-semibold tracking-tight">{{ inv.label }}</h1>
+        <app-inventory-status-badge [status]="inv.status" />
+      </div>
+      <p class="text-sm text-muted-foreground">
+        Comptage du {{ inv.countedAt | date: 'd MMMM y' }}
+        @if (inv.validatedAt) {
+          · validé le {{ inv.validatedAt | date: 'd MMMM y à HH:mm' }}
+        }
+      </p>
+      @if (inv.notes) {
+        <p class="text-sm">{{ inv.notes }}</p>
+      }
+    </div>
+
+    @if (isDraft()) {
+      <div class="flex flex-wrap gap-2">
+        <button hlmBtn variant="outline" size="lg" [disabled]="busy()" (click)="confirm.set('cancel')">
+          Annuler l'inventaire
+        </button>
+        <button hlmBtn size="lg" [disabled]="busy() || !allCounted()" (click)="confirm.set('validate')">
+          Valider l'inventaire
+        </button>
+      </div>
+    }
+  </header>
+
+  @if (isDraft()) {
+    <!-- Progression du comptage -->
+    <div class="mt-6 flex flex-col gap-2">
+      <div class="flex justify-between text-sm">
+        <span class="font-medium">{{ countedCount() }} / {{ lines().length }} lignes comptées</span>
+        @if (!allCounted() && lines().length > 0) {
+          <span class="text-muted-foreground">Toutes les lignes doivent être comptées pour valider (saisis 0 si absent)</span>
+        }
+      </div>
+      <div class="h-2 overflow-hidden rounded-full bg-muted">
+        <div class="h-full rounded-full bg-primary transition-all"
+             [style.width.%]="lines().length ? (countedCount() / lines().length) * 100 : 0"></div>
+      </div>
+    </div>
+  }
+
+  @if (error(); as message) {
+    <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+  }
+
+  <!-- Les lignes -->
+  <section class="mt-4 overflow-hidden rounded-xl border border-border">
+    <div hlmTableContainer [class.opacity-60]="busy()">
+      <table hlmTable class="min-w-[760px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Article</th>
+          <th hlmTh>Lot</th>
+          <th hlmTh class="text-right">{{ isDraft() ? 'Stock théorique' : 'Théorique (à la validation)' }}</th>
+          <th hlmTh class="text-right">Compté</th>
+          <th hlmTh class="text-right">Écart</th>
+          @if (isDraft()) {
+            <th hlmTh><span class="sr-only">Actions</span></th>
+          }
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @for (line of lines(); track line.id) {
+            <tr hlmTr>
+              <td hlmTd>
+                <div class="font-medium">{{ line.articleLabel }}</div>
+                <div class="font-mono text-xs text-muted-foreground">{{ line.articleCode }}</div>
+              </td>
+              <td hlmTd class="font-mono text-[13px] text-muted-foreground">{{ line.lotNumber ?? '—' }}</td>
+              <td hlmTd class="text-right tabular-nums text-muted-foreground">
+                {{ line.theoreticalQuantity | number: '1.0-4' }} {{ line.unitCode }}
+              </td>
+              <td hlmTd class="text-right">
+                @if (isDraft()) {
+                  <!-- (change) : à Entrée ou en quittant le champ, pas à chaque chiffre tapé -->
+                  <input hlmInput type="number" min="0" step="any" #counted
+                         class="ml-auto w-32 text-right tabular-nums"
+                         [value]="line.countedQuantity ?? ''"
+                         [attr.aria-label]="'Quantité comptée pour ' + line.articleLabel + (line.lotNumber ? ', lot ' + line.lotNumber : '')"
+                         (change)="count(line, counted.value)" />
+                } @else {
+                  <span class="tabular-nums">{{ line.countedQuantity | number: '1.0-4' }}</span>
+                }
+              </td>
+              <td hlmTd class="text-right font-medium tabular-nums"
+                  [class.text-emerald-700]="(line.difference ?? 0) > 0"
+                  [class.text-destructive]="(line.difference ?? 0) < 0">
+                @if (line.difference === null) {
+                  <span class="font-normal text-muted-foreground">—</span>
+                } @else {
+                  {{ line.difference > 0 ? '+' : '' }}{{ line.difference | number: '1.0-4' }}
+                }
+              </td>
+              @if (isDraft()) {
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="ghost" size="icon-sm" [disabled]="busy()" (click)="removeLine(line)"
+                          [attr.aria-label]="'Retirer la ligne ' + line.articleLabel">
+                    <ng-icon name="lucideTrash2" aria-hidden="true" />
+                  </button>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr hlmTr>
+              <td hlmTd colspan="6" class="py-10 text-center text-muted-foreground">
+                Aucune ligne. Ajoute les articles comptés ci-dessous.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (isDraft()) {
+    <div class="mt-4">
+      <app-inventory-add-line [inventoryId]="inv.id"
+                              [articles]="overview.hasValue() ? overview.value() : []"
+                              (added)="onLineAdded($event)" />
+    </div>
+  }
+
+  <!-- Confirmation : valider ou annuler, deux actions définitives -->
+  <hlm-dialog [state]="confirm() ? 'open' : 'closed'" (closed)="confirm.set(null)">
+    <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+      @if (confirm() === 'validate') {
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Valider l'inventaire ?</h3>
+          <p hlmDialogDescription>
+            @if (gaps().length === 0) {
+              Aucun écart : le stock compté correspond au stock théorique. L'inventaire sera simplement clôturé.
+            } @else {
+              {{ gaps().length }} écart(s) seront appliqués au stock, à la date du comptage.
+            }
+            Cette action est définitive : l'inventaire ne pourra plus être modifié.
+          </p>
+        </hlm-dialog-header>
+        <hlm-dialog-footer>
+          <button hlmBtn variant="outline" (click)="ctx.close()">Revenir au comptage</button>
+          <button hlmBtn (click)="confirmAction()">Valider et appliquer</button>
+        </hlm-dialog-footer>
+      } @else {
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Annuler l'inventaire ?</h3>
+          <p hlmDialogDescription>
+            Le comptage sera abandonné, sans aucun effet sur le stock. Cette action est définitive.
+          </p>
+        </hlm-dialog-header>
+        <hlm-dialog-footer>
+          <button hlmBtn variant="outline" (click)="ctx.close()">Garder le brouillon</button>
+          <button hlmBtn variant="destructive" (click)="confirmAction()">Annuler l'inventaire</button>
+        </hlm-dialog-footer>
+      }
+    </hlm-dialog-content>
+  </hlm-dialog>
+}

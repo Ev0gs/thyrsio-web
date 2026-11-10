@@ -20,8 +20,9 @@ import { CurrentUser } from '../../core/auth/current-user';
 interface NavItem {
   label: string;
   icon: string;
-  /** Sans route : module pas encore développé, affiché "À venir". */
   route?: string;
+  /** Rester actif sur les sous-pages (/stock/inventaires/123). Pas pour /stock, qui englobe tout le module. */
+  includeSubPaths?: boolean;
 }
 
 interface NavGroup {
@@ -51,15 +52,15 @@ interface NavGroup {
   templateUrl: './sidebar.html',
 })
 export class Sidebar {
-  /**
-   * Un lien est actif si le CHEMIN correspond exactement (/stock ne s'allume pas sur /stock/mouvements),
-   * quels que soient les paramètres après le "?" (filtres, page...).
-   */
-  protected readonly activeOptions: IsActiveMatchOptions = {
-    paths: 'exact',
+  private readonly baseOptions = {
     queryParams: 'ignored',
     matrixParams: 'ignored',
     fragment: 'ignored',
+  } as const;
+  protected readonly exactOptions: IsActiveMatchOptions = { ...this.baseOptions, paths: 'exact' };
+  protected readonly subPathOptions: IsActiveMatchOptions = {
+    ...this.baseOptions,
+    paths: 'subset',
   };
 
   protected readonly user = inject(CurrentUser);
@@ -76,8 +77,18 @@ export class Sidebar {
       label: 'Stock',
       items: [
         { label: 'Matières sèches', icon: 'lucidePackage', route: '/stock' },
-        { label: 'Mouvements', icon: 'lucideArrowUpDown', route: '/stock/mouvements' },
-        { label: 'Inventaires', icon: 'lucideClipboardList', route: '/stock/inventaires' },
+        {
+          label: 'Mouvements',
+          icon: 'lucideArrowUpDown',
+          route: '/stock/mouvements',
+          includeSubPaths: true,
+        },
+        {
+          label: 'Inventaires',
+          icon: 'lucideClipboardList',
+          route: '/stock/inventaires',
+          includeSubPaths: true,
+        },
       ],
     },
     {
@@ -97,9 +108,24 @@ export class Sidebar {
     {
       label: 'Référentiel',
       items: [
-        { label: 'Articles', icon: 'lucideTag', route: '/referentiel/articles' },
-        { label: 'Clients', icon: 'lucideUsers', route: '/referentiel/clients' },
-        { label: 'Fournisseurs', icon: 'lucideFactory', route: '/referentiel/fournisseurs' },
+        {
+          label: 'Articles',
+          icon: 'lucideTag',
+          route: '/referentiel/articles',
+          includeSubPaths: true,
+        },
+        {
+          label: 'Clients',
+          icon: 'lucideUsers',
+          route: '/referentiel/clients',
+          includeSubPaths: true,
+        },
+        {
+          label: 'Fournisseurs',
+          icon: 'lucideFactory',
+          route: '/referentiel/fournisseurs',
+          includeSubPaths: true,
+        },
       ],
     },
   ];

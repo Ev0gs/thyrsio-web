@@ -11,15 +11,9 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { Page } from '../../../core/api/page';
 import { MOVEMENT_TYPE_LABELS, MovementRow, MovementType, StockOverviewRow } from '../stock.models';
+import { startOfDay } from '../../../core/dates';
 
 const PAGE_SIZE = 25;
-
-/** "2026-11-01" → minuit (heure locale) ce jour-là, au format attendu par l'API. */
-function startOfDay(day: string, plusDays = 0): string {
-  const date = new Date(`${day}T00:00:00`);
-  date.setDate(date.getDate() + plusDays);
-  return date.toISOString();
-}
 
 /** Les filtres tels qu'ils apparaissent dans l'URL. */
 interface Filters {

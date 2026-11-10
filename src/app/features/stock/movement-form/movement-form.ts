@@ -32,17 +32,10 @@ import {
   MOVEMENT_TYPE_LABELS,
   StockOverviewRow,
 } from '../stock.models';
+import { todayLocal, toInstant } from '../../../core/dates';
 
 /** Valeur spéciale du champ lot : "créer un nouveau lot". */
 const NEW_LOT = '__new__';
-
-/** La date du jour en heure locale, au format AAAA-MM-JJ (le format suédois est justement celui-là). */
-const todayLocal = () => new Date().toLocaleDateString('sv-SE');
-
-/** Aujourd'hui : l'API met l'heure exacte. Un autre jour : midi, heure locale. */
-function toInstant(day: string): string | null {
-  return !day || day === todayLocal() ? null : new Date(`${day}T12:00:00`).toISOString();
-}
 
 /** Le modèle du formulaire. Pas de null pour les textes : Signal Forms préfère des chaînes vides. */
 interface MovementModel {

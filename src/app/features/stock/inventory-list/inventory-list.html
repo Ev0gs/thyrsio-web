@@ -1,0 +1,98 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Inventaires</h1>
+    <p class="text-sm text-muted-foreground">Compter le stock réel et aligner le stock théorique dessus</p>
+  </div>
+  <button hlmBtn size="lg" (click)="dialogState.set('open')">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvel inventaire
+  </button>
+</header>
+
+<div role="group" aria-label="Filtrer par statut" class="mt-6 inline-flex gap-1 rounded-lg bg-muted p-1">
+  @for (f of statusFilters; track f.value) {
+    <button type="button" (click)="setStatus(f.value)"
+            [attr.aria-pressed]="(statut() ?? '') === f.value"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="(statut() ?? '') === f.value
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground hover:text-foreground'">
+      {{ f.label }}
+    </button>
+  }
+</div>
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (inventories.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les inventaires.</p>
+      <button hlmBtn variant="outline" (click)="inventories.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="inventories.isLoading()">
+      <table hlmTable class="min-w-[700px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Inventaire</th>
+          <th hlmTh>Statut</th>
+          <th hlmTh>Comptage</th>
+          <th hlmTh>Validé le</th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!inventories.hasValue()) {
+            @for (i of [1, 2, 3]; track i) {
+              <tr hlmTr><td hlmTd colspan="4"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (inventory of inventories.value().content; track inventory.id) {
+              <tr hlmTr>
+                <td hlmTd>
+                  <a [routerLink]="['/stock/inventaires', inventory.id]" class="font-medium hover:text-primary hover:underline">
+                    {{ inventory.label }}
+                  </a>
+                </td>
+                <td hlmTd><app-inventory-status-badge [status]="inventory.status" /></td>
+                <td hlmTd class="text-muted-foreground">{{ inventory.countedAt | date: 'd MMM y' }}</td>
+                <td hlmTd class="text-muted-foreground">
+                  {{ inventory.validatedAt ? (inventory.validatedAt | date: 'd MMM y, HH:mm') : '—' }}
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="4" class="py-10 text-center text-muted-foreground">
+                  Aucun inventaire pour l'instant. Commence par « Nouvel inventaire ».
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pageInfo(); as info) {
+      @if (info.totalPages > 1) {
+        <div class="flex items-center justify-end gap-2 border-t border-border px-4 py-3 text-sm text-muted-foreground">
+          <button hlmBtn variant="outline" size="sm" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">
+            <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Précédent
+          </button>
+          <span class="px-2 tabular-nums">Page {{ page() }} sur {{ info.totalPages }}</span>
+          <button hlmBtn variant="outline" size="sm" [disabled]="page() >= info.totalPages" (click)="goToPage(page() + 1)">
+            Suivant <ng-icon name="lucideChevronRight" aria-hidden="true" />
+          </button>
+        </div>
+      }
+    }
+  }
+</section>
+
+<hlm-dialog [state]="dialogState()" (closed)="closeDialog()">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>Nouvel inventaire</h3>
+      <p hlmDialogDescription>Il reste en brouillon, et sans effet sur le stock, jusqu'à sa validation.</p>
+    </hlm-dialog-header>
+    <app-inventory-create-form (created)="onCreated($event)" (cancelled)="ctx.close()" />
+  </hlm-dialog-content>
+</hlm-dialog>

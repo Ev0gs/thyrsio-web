@@ -1,0 +1,52 @@
+<form (submit)="$event.preventDefault(); add()" novalidate
+      class="flex flex-col gap-3 rounded-xl border border-dashed border-border p-4">
+  <h2 class="text-sm font-semibold">Ajouter une ligne</h2>
+
+  <div class="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_10rem_auto] md:items-start">
+    <div class="flex flex-col gap-1">
+      <label for="add-article" class="sr-only">Article</label>
+      <select id="add-article" [formField]="lineForm.articleId" [class]="selectClass">
+        <option value="">Article…</option>
+        @for (article of articleOptions(); track article.articleId) {
+          <option [value]="article.articleId">{{ article.articleLabel }} ({{ article.articleCode }})</option>
+        }
+      </select>
+      @if (lineForm.articleId().touched() && lineForm.articleId().invalid()) {
+        <p class="text-sm text-destructive">{{ lineForm.articleId().errors()[0].message }}</p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      @if (!lineForm.lotId().hidden()) {
+        <label for="add-lot" class="sr-only">Lot</label>
+        <select id="add-lot" [formField]="lineForm.lotId" [class]="selectClass">
+          <option value="">Lot…</option>
+          @for (lot of lots.hasValue() ? lots.value() : []; track lot.id) {
+            <option [value]="lot.id">{{ lot.lotNumber }}</option>
+          }
+        </select>
+        @if (lineForm.lotId().touched() && lineForm.lotId().invalid()) {
+          <p class="text-sm text-destructive">{{ lineForm.lotId().errors()[0].message }}</p>
+        }
+      }
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label for="add-qty" class="sr-only">Quantité comptée</label>
+      <input id="add-qty" hlmInput type="number" step="any" placeholder="Compté (facultatif)"
+             [formField]="lineForm.countedQuantity" />
+      @if (lineForm.countedQuantity().touched() && lineForm.countedQuantity().invalid()) {
+        <p class="text-sm text-destructive">{{ lineForm.countedQuantity().errors()[0].message }}</p>
+      }
+    </div>
+
+    <button hlmBtn variant="outline" type="submit" [disabled]="lineForm().submitting()">Ajouter</button>
+  </div>
+
+  @for (error of lineForm().errors(); track error.kind) {
+    <p role="alert" class="text-sm text-destructive">{{ error.message }}</p>
+  }
+  <p class="text-xs text-muted-foreground">
+    Un lot qui n'existe pas encore se crée par une réception, depuis l'écran Matières sèches.
+  </p>
+</form>

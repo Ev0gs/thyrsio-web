@@ -71,7 +71,7 @@ export interface CreateMovementRequest {
   lotId: string | null;
   type: ManualMovementType;
   quantity: number;
-  occurredAt: string | null;   // null : l'API prend l'heure actuelle
+  occurredAt: string | null; // null : l'API prend l'heure actuelle
   reference: string | null;
   notes: string | null;
 }
@@ -86,4 +86,48 @@ export interface LotRow {
   expiryDate: string | null;
   notes: string | null;
   createdAt: string;
+}
+
+export type InventoryStatus = 'DRAFT' | 'VALIDATED' | 'CANCELLED';
+
+/** GET /api/stock/inventories : une ligne de la liste. */
+export interface InventorySummary {
+  id: string;
+  label: string;
+  status: InventoryStatus;
+  countedAt: string;
+  createdAt: string;
+  validatedAt: string | null;
+}
+
+/**
+ * theoreticalQuantity : en brouillon, le stock actuel ; une fois validé, le stock figé à la validation.
+ * difference : compté − théorique (aperçu en brouillon, écart appliqué une fois validé).
+ */
+export interface InventoryLine {
+  id: string;
+  articleId: string;
+  articleCode: string;
+  articleLabel: string;
+  unitCode: string;
+  lotId: string | null;
+  lotNumber: string | null;
+  theoreticalQuantity: number | null;
+  countedQuantity: number | null;
+  difference: number | null;
+  notes: string | null;
+}
+
+/** GET /api/stock/inventories/{id} : l'inventaire complet, avec ses lignes. */
+export interface Inventory {
+  id: string;
+  label: string;
+  status: InventoryStatus;
+  countedAt: string;
+  notes: string | null;
+  createdBy: string;
+  createdAt: string;
+  validatedBy: string | null;
+  validatedAt: string | null;
+  lines: InventoryLine[];
 }

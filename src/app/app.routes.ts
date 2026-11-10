@@ -35,7 +35,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/stock/stock-movements/stock-movements').then((m) => m.StockMovements),
       },
-      placeholder('stock/inventaires', 'Inventaires'),
+      {
+        path: 'stock/inventaires',
+        title: 'Inventaires · Thyrsio',
+        loadComponent: () =>
+          import('./features/stock/inventory-list/inventory-list').then((m) => m.InventoryList),
+      },
+      {
+        path: 'stock/inventaires/:id',
+        title: 'Inventaire · Thyrsio',
+        loadComponent: () =>
+          import('./features/stock/inventory-detail/inventory-detail').then(
+            (m) => m.InventoryDetail,
+          ),
+      },
       {
         path: 'referentiel/articles',
         title: 'Articles · Thyrsio',

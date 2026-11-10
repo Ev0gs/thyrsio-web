@@ -11,7 +11,18 @@
   <div class="flex flex-wrap gap-2">
     <!-- Branchés à l'étape suivante : saisie des mouvements et inventaires -->
     <button hlmBtn variant="outline" size="lg" disabled>Nouvel inventaire</button>
-    <button hlmBtn size="lg" disabled>Saisir un mouvement</button>
+    <hlm-dialog>
+      <button hlmDialogTrigger hlmBtn size="lg">Saisir un mouvement</button>
+      <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Saisir un mouvement</h3>
+          <p hlmDialogDescription>Le stock est mis à jour dès l'enregistrement.</p>
+        </hlm-dialog-header>
+        <app-movement-form [articles]="rows()"
+                           (saved)="ctx.close(); onMovementSaved()"
+                           (cancelled)="ctx.close()" />
+      </hlm-dialog-content>
+    </hlm-dialog>
   </div>
 </header>
 

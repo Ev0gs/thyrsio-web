@@ -61,3 +61,29 @@ export interface MovementRow {
   createdBy: string;
   createdAt: string;
 }
+
+/** Les types qu'on peut saisir à la main (les autres sont créés par l'application). */
+export type ManualMovementType = 'RECEPTION' | 'CONSUMPTION' | 'LOSS' | 'ADJUSTMENT';
+
+/** POST /api/stock/movements : le corps de la requête (CreateMovementRequest côté API). */
+export interface CreateMovementRequest {
+  articleId: string;
+  lotId: string | null;
+  type: ManualMovementType;
+  quantity: number;
+  occurredAt: string | null;   // null : l'API prend l'heure actuelle
+  reference: string | null;
+  notes: string | null;
+}
+
+/** GET /api/stock/lots?articleId=... */
+export interface LotRow {
+  id: string;
+  articleId: string;
+  articleCode: string;
+  articleLabel: string;
+  lotNumber: string;
+  expiryDate: string | null;
+  notes: string | null;
+  createdAt: string;
+}

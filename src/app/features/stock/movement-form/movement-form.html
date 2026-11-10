@@ -1,0 +1,115 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+
+  <!-- Type -->
+  <div class="flex flex-col gap-1.5">
+    <label for="mv-type" class="text-sm font-medium">Type de mouvement</label>
+    <select id="mv-type" [formField]="movementForm.type" [class]="selectClass">
+      @for (type of types; track type) {
+        <option [value]="type">{{ typeLabels[type] }}</option>
+      }
+    </select>
+    <p class="text-xs text-muted-foreground">{{ typeHints[movementForm.type().value()] }}</p>
+  </div>
+
+  <!-- Article -->
+  <div class="flex flex-col gap-1.5">
+    <label for="mv-article" class="text-sm font-medium">Article</label>
+    <select id="mv-article" [formField]="movementForm.articleId" [class]="selectClass">
+      <option value="">Choisir un article…</option>
+      @for (article of articleOptions(); track article.articleId) {
+        <option [value]="article.articleId">{{ article.articleLabel }} ({{ article.articleCode }})</option>
+      }
+    </select>
+    @if (movementForm.articleId().touched() && movementForm.articleId().invalid()) {
+      <p class="text-sm text-destructive">{{ movementForm.articleId().errors()[0].message }}</p>
+    }
+    @if (selectedArticle(); as article) {
+      <p class="text-xs text-muted-foreground">
+        En stock : {{ article.quantity | number: '1.0-4' }} {{ article.unitCode }}
+        @if (article.lotTracked) { · suivi par lot }
+      </p>
+    }
+  </div>
+
+  <!-- Lot : seulement pour un article suivi par lot -->
+  @if (!movementForm.lotId().hidden()) {
+    <div class="flex flex-col gap-1.5">
+      <label for="mv-lot" class="text-sm font-medium">Lot</label>
+      <select id="mv-lot" [formField]="movementForm.lotId" [class]="selectClass">
+        <option value="">Choisir un lot…</option>
+        @for (lot of lotOptions(); track lot.id) {
+          <option [value]="lot.id">{{ lot.lotNumber }} · {{ lot.quantity | number: '1.0-4' }} en stock</option>
+        }
+        @if (movementForm.type().value() === 'RECEPTION') {
+          <option [value]="NEW_LOT">+ Nouveau lot…</option>
+        }
+      </select>
+      @if (movementForm.lotId().touched() && movementForm.lotId().invalid()) {
+        <p class="text-sm text-destructive">{{ movementForm.lotId().errors()[0].message }}</p>
+      }
+    </div>
+  }
+
+  @if (!movementForm.newLotNumber().hidden()) {
+    <div class="flex flex-col gap-1.5">
+      <label for="mv-new-lot" class="text-sm font-medium">Numéro du nouveau lot</label>
+      <input id="mv-new-lot" hlmInput [formField]="movementForm.newLotNumber"
+             placeholder="Tel qu'il figure sur la livraison" />
+      @if (movementForm.newLotNumber().touched() && movementForm.newLotNumber().invalid()) {
+        <p class="text-sm text-destructive">{{ movementForm.newLotNumber().errors()[0].message }}</p>
+      }
+    </div>
+  }
+
+  <!-- Quantité et date -->
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="flex flex-col gap-1.5">
+      <label for="mv-quantity" class="text-sm font-medium">
+        Quantité
+        @if (selectedArticle(); as article) {
+          <span class="font-normal text-muted-foreground">({{ article.unitCode }})</span>
+        }
+      </label>
+      <input id="mv-quantity" hlmInput type="number" step="any" [formField]="movementForm.quantity" />
+      @if (movementForm.quantity().touched() && movementForm.quantity().invalid()) {
+        <p class="text-sm text-destructive">{{ movementForm.quantity().errors()[0].message }}</p>
+      }
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="mv-date" class="text-sm font-medium">Date</label>
+      <input id="mv-date" hlmInput type="date" [formField]="movementForm.occurredOn" />
+      @if (movementForm.occurredOn().touched() && movementForm.occurredOn().invalid()) {
+        <p class="text-sm text-destructive">{{ movementForm.occurredOn().errors()[0].message }}</p>
+      }
+    </div>
+  </div>
+
+  <!-- Référence et notes -->
+  <div class="flex flex-col gap-1.5">
+    <label for="mv-reference" class="text-sm font-medium">
+      Référence <span class="font-normal text-muted-foreground">(facultatif)</span>
+    </label>
+    <input id="mv-reference" hlmInput [formField]="movementForm.reference"
+           placeholder="N° de bon de livraison, de mise…" />
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="mv-notes" class="text-sm font-medium">
+      Notes <span class="font-normal text-muted-foreground">(facultatif)</span>
+    </label>
+    <textarea id="mv-notes" hlmInput rows="2" class="h-auto py-2" [formField]="movementForm.notes"></textarea>
+  </div>
+
+  <!-- Refus de l'API -->
+  @for (error of movementForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="movementForm().submitting()">
+      {{ movementForm().submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </hlm-dialog-footer>
+</form>

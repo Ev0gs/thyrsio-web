@@ -7,9 +7,11 @@ import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
+import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { ArticleLots } from '../article-lots/article-lots';
 import { StockStatusBadge } from '../stock-status-badge/stock-status-badge';
 import { StockOverviewRow } from '../stock.models';
+import { MovementForm } from '../movement-form/movement-form';
 
 type StateFilter = 'all' | 'alert' | 'lotTracked';
 
@@ -35,6 +37,8 @@ const isAlert = (row: StockOverviewRow) => row.status !== 'OK';
     HlmInputImports,
     HlmSkeletonImports,
     HlmTableImports,
+    HlmDialogImports,
+    MovementForm,
   ],
   viewProviders: [provideIcons({ lucideChevronRight, lucideRotateCw, lucideSearch })],
   templateUrl: './stock-overview.html',
@@ -94,5 +98,11 @@ export class StockOverview {
     if (this.canExpand(row)) {
       this.expandedId.update((id) => (id === row.articleId ? null : row.articleId));
     }
+  }
+
+  /** Après un mouvement enregistré : stock à jour, lignes dépliées refermées (leur détail est périmé). */
+  protected onMovementSaved(): void {
+    this.expandedId.set(null);
+    this.overview.reload();
   }
 }

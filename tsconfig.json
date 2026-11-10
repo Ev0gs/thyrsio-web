@@ -17,7 +17,8 @@
       "@spartan-ng/helm/input": ["./libs/ui/input/src/index.ts"],
       "@spartan-ng/helm/skeleton": ["./libs/ui/skeleton/src/index.ts"],
       "@spartan-ng/helm/table": ["./libs/ui/table/src/index.ts"],
-      "@spartan-ng/helm/utils": ["./libs/ui/utils/src/index.ts"]
+      "@spartan-ng/helm/utils": ["./libs/ui/utils/src/index.ts"],
+      "@spartan-ng/helm/dialog": ["./libs/ui/dialog/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

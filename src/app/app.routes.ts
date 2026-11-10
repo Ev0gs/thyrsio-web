@@ -29,7 +29,12 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/stock/stock-overview/stock-overview').then((m) => m.StockOverview),
       },
-      placeholder('stock/mouvements', 'Mouvements'),
+      {
+        path: 'stock/mouvements',
+        title: 'Mouvements · Thyrsio',
+        loadComponent: () =>
+          import('./features/stock/stock-movements/stock-movements').then((m) => m.StockMovements),
+      },
       placeholder('stock/inventaires', 'Inventaires'),
       placeholder('referentiel/articles', 'Articles'),
       placeholder('referentiel/clients', 'Clients'),

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { IsActiveMatchOptions, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowUpDown,
@@ -51,6 +51,17 @@ interface NavGroup {
   templateUrl: './sidebar.html',
 })
 export class Sidebar {
+  /**
+   * Un lien est actif si le CHEMIN correspond exactement (/stock ne s'allume pas sur /stock/mouvements),
+   * quels que soient les paramètres après le "?" (filtres, page...).
+   */
+  protected readonly activeOptions: IsActiveMatchOptions = {
+    paths: 'exact',
+    queryParams: 'ignored',
+    matrixParams: 'ignored',
+    fragment: 'ignored',
+  };
+
   protected readonly user = inject(CurrentUser);
 
   // Les groupes suivent les modules de l'API

@@ -132,7 +132,11 @@
                 <td hlmTd><app-stock-status-badge [status]="row.status" /></td>
                 <td hlmTd class="text-muted-foreground">
                   @if (row.lastMovementAt) {
-                    {{ row.lastMovementAt | date: 'd MMM y' }}
+                    <a routerLink="/stock/mouvements" [queryParams]="{ article: row.articleId }"
+                       (click)="$event.stopPropagation()"
+                       class="hover:text-foreground hover:underline">
+                      {{ row.lastMovementAt | date: 'd MMM y' }}
+                    </a>
                   } @else {
                     Jamais
                   }

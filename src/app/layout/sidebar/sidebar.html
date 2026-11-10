@@ -22,7 +22,7 @@
           <a [routerLink]="item.route"
              routerLinkActive
              #rla="routerLinkActive"
-             [routerLinkActiveOptions]="{ exact: true }"
+             [routerLinkActiveOptions]="activeOptions"
              ariaCurrentWhenActive="page"
              class="flex min-h-10 items-center gap-2.5 rounded-lg border px-2.5 text-sm transition-colors"
              [class]="rla.isActive

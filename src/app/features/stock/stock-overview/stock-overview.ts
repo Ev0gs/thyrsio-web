@@ -12,6 +12,7 @@ import { ArticleLots } from '../article-lots/article-lots';
 import { StockStatusBadge } from '../stock-status-badge/stock-status-badge';
 import { StockOverviewRow } from '../stock.models';
 import { MovementForm } from '../movement-form/movement-form';
+import { RouterLink } from '@angular/router';
 
 type StateFilter = 'all' | 'alert' | 'lotTracked';
 
@@ -39,6 +40,7 @@ const isAlert = (row: StockOverviewRow) => row.status !== 'OK';
     HlmTableImports,
     HlmDialogImports,
     MovementForm,
+    RouterLink,
   ],
   viewProviders: [provideIcons({ lucideChevronRight, lucideRotateCw, lucideSearch })],
   templateUrl: './stock-overview.html',

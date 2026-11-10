@@ -1,0 +1,138 @@
+<header class="flex flex-col gap-1">
+  <h1 class="text-[28px] font-semibold tracking-tight">Mouvements</h1>
+  <p class="text-sm text-muted-foreground">
+    Toutes les entrées et sorties de stock, de la plus récente à la plus ancienne
+  </p>
+</header>
+
+<!-- Filtres : chaque changement modifie l'URL -->
+<div class="mt-6 flex flex-wrap items-end gap-3">
+  <label class="flex min-w-64 flex-1 flex-col gap-1.5 text-sm font-medium">
+    Article
+    <select #articleSelect (change)="setFilter('article', articleSelect.value)"
+            class="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-normal shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+      <option value="">Tous les articles</option>
+      @for (option of articleOptions(); track option.articleId) {
+        <option [value]="option.articleId" [selected]="option.articleId === article()">
+          {{ option.articleLabel }} ({{ option.articleCode }})
+        </option>
+      }
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm font-medium">
+    Type
+    <select #typeSelect (change)="setFilter('type', typeSelect.value)"
+            class="h-9 rounded-md border border-input bg-background px-2.5 text-sm font-normal shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+      <option value="">Tous les types</option>
+      @for (t of types; track t) {
+        <option [value]="t" [selected]="t === type()">{{ typeLabels[t] }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm font-medium">
+    Du
+    <input hlmInput type="date" #fromInput [value]="from() ?? ''"
+           (change)="setFilter('from', fromInput.value)" class="w-40" />
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm font-medium">
+    Au
+    <input hlmInput type="date" #toInput [value]="to() ?? ''"
+           (change)="setFilter('to', toInput.value)" class="w-40" />
+  </label>
+
+  @if (hasFilters()) {
+    <button hlmBtn variant="ghost" (click)="clearFilters()">
+      <ng-icon name="lucideX" aria-hidden="true" /> Effacer les filtres
+    </button>
+  }
+</div>
+
+<!-- Tableau -->
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (movements.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les mouvements.</p>
+      <button hlmBtn variant="outline" (click)="movements.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <!-- Pendant le chargement d'une autre page, l'ancienne reste visible mais estompée -->
+    <div hlmTableContainer [class.opacity-60]="movements.isLoading()">
+      <table hlmTable class="min-w-[900px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Date</th>
+          <th hlmTh>Type</th>
+          <th hlmTh>Article</th>
+          <th hlmTh>Lot</th>
+          <th hlmTh class="text-right">Quantité</th>
+          <th hlmTh>Référence</th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!movements.hasValue()) {
+            @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+              <tr hlmTr>
+                <td hlmTd colspan="6"><div hlmSkeleton class="h-7 w-full"></div></td>
+              </tr>
+            }
+          } @else {
+            @for (movement of rows(); track movement.id) {
+              <tr hlmTr>
+                <td hlmTd class="tabular-nums text-muted-foreground">
+                  {{ movement.occurredAt | date: 'd MMM y, HH:mm' }}
+                </td>
+                <td hlmTd>
+                  <span hlmBadge variant="secondary">{{ typeLabels[movement.type] }}</span>
+                </td>
+                <td hlmTd>
+                  <div class="font-medium">{{ movement.articleLabel }}</div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ movement.articleCode }}</div>
+                </td>
+                <td hlmTd class="font-mono text-[13px] text-muted-foreground">{{ movement.lotNumber ?? '—' }}</td>
+                <td hlmTd class="text-right font-medium tabular-nums" [class.text-emerald-700]="movement.quantity > 0">
+                  {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity | number: '1.0-4' }}
+                  <span class="text-xs font-normal text-muted-foreground">{{ movement.unitCode }}</span>
+                </td>
+                <td hlmTd class="max-w-64 whitespace-normal">
+                  <div>{{ movement.reference ?? '—' }}</div>
+                  @if (movement.notes) {
+                    <div class="text-xs text-muted-foreground">{{ movement.notes }}</div>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="6" class="py-10 text-center text-muted-foreground">
+                  {{ hasFilters() ? 'Aucun mouvement ne correspond à ces filtres.' : 'Aucun mouvement pour l\'instant.' }}
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (pageInfo(); as info) {
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3 text-sm text-muted-foreground">
+        <span>{{ info.totalElements | number }} mouvement(s)</span>
+        @if (info.totalPages > 1) {
+          <div class="flex items-center gap-2">
+            <button hlmBtn variant="outline" size="sm" [disabled]="page() <= 1" (click)="goToPage(page() - 1)">
+              <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Précédent
+            </button>
+            <span class="px-2 tabular-nums">Page {{ page() }} sur {{ info.totalPages }}</span>
+            <button hlmBtn variant="outline" size="sm" [disabled]="page() >= info.totalPages" (click)="goToPage(page() + 1)">
+              Suivant <ng-icon name="lucideChevronRight" aria-hidden="true" />
+            </button>
+          </div>
+        }
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,154 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Matières sèches</h1>
+    <p class="text-sm text-muted-foreground">
+      Stock actuel par article
+      @if (overview.hasValue()) {
+        · {{ rows().length }} articles suivis
+      }
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <!-- Branchés à l'étape suivante : saisie des mouvements et inventaires -->
+    <button hlmBtn variant="outline" size="lg" disabled>Nouvel inventaire</button>
+    <button hlmBtn size="lg" disabled>Saisir un mouvement</button>
+  </div>
+</header>
+
+<!-- Filtres -->
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <label class="relative min-w-64 flex-1">
+    <span class="sr-only">Rechercher un article</span>
+    <ng-icon name="lucideSearch" size="16" aria-hidden="true"
+             class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <input hlmInput type="search" #query (input)="search.set(query.value)"
+           placeholder="Rechercher un code ou un libellé…" class="pl-8" />
+  </label>
+
+  <label class="flex items-center gap-2 text-sm text-muted-foreground">
+    Catégorie
+    <select #cat (change)="category.set(cat.value)"
+            class="h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+      <option value="">Toutes</option>
+      @for (c of categories(); track c.code) {
+        <option [value]="c.code">{{ c.label }}</option>
+      }
+    </select>
+  </label>
+
+  <div role="group" aria-label="Filtrer par état" class="flex gap-1 rounded-lg bg-muted p-1">
+    @for (f of stateFilters; track f.value) {
+      <button type="button" (click)="stateFilter.set(f.value)"
+              [attr.aria-pressed]="stateFilter() === f.value"
+              class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+              [class]="stateFilter() === f.value
+                ? 'bg-background text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'">
+        {{ f.label }}
+        @if (f.value === 'alert') {
+          ({{ alertCount() }})
+        }
+      </button>
+    }
+  </div>
+</div>
+
+<!-- Tableau -->
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (overview.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger le stock.</p>
+      <p class="text-sm text-muted-foreground">Vérifie que l'API est démarrée, puis réessaie.</p>
+      <button hlmBtn variant="outline" (click)="overview.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer>
+      <table hlmTable class="min-w-[860px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh class="w-12"><span class="sr-only">Détail des lots</span></th>
+          <th hlmTh>Article</th>
+          <th hlmTh>Catégorie</th>
+          <th hlmTh class="text-right">Stock</th>
+          <th hlmTh class="text-right">Seuil</th>
+          <th hlmTh>État</th>
+          <th hlmTh>Dernier mouvement</th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (overview.isLoading() && !overview.hasValue()) {
+            <!-- Premier chargement : des lignes grises animées -->
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr hlmTr>
+                <td hlmTd colspan="7"><div hlmSkeleton class="h-7 w-full"></div></td>
+              </tr>
+            }
+          } @else {
+            @for (row of filtered(); track row.articleId) {
+              <tr hlmTr [class.cursor-pointer]="canExpand(row)" (click)="toggle(row)">
+                <td hlmTd>
+                  @if (canExpand(row)) {
+                    <button hlmBtn variant="ghost" size="icon-sm" type="button"
+                            [attr.aria-expanded]="expandedId() === row.articleId"
+                            [attr.aria-label]="'Voir les lots de ' + row.articleLabel"
+                            (click)="toggle(row); $event.stopPropagation()">
+                      <ng-icon name="lucideChevronRight" aria-hidden="true" class="transition-transform"
+                               [class.rotate-90]="expandedId() === row.articleId" />
+                    </button>
+                  }
+                </td>
+                <td hlmTd>
+                  <div class="font-medium">{{ row.articleLabel }}</div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ row.articleCode }}</div>
+                </td>
+                <td hlmTd class="text-muted-foreground">{{ row.categoryLabel }}</td>
+                <td hlmTd class="text-right font-medium tabular-nums">
+                  {{ row.quantity | number: '1.0-4' }}
+                  <span class="text-xs font-normal text-muted-foreground">{{ row.unitCode }}</span>
+                  @if (row.lotsInStock > 1) {
+                    <div class="text-xs font-normal text-muted-foreground">{{ row.lotsInStock }} lots</div>
+                  }
+                </td>
+                <td hlmTd class="text-right tabular-nums text-muted-foreground">
+                  @if (row.alertThreshold !== null) {
+                    {{ row.alertThreshold | number: '1.0-4' }}
+                  } @else {
+                    —
+                  }
+                </td>
+                <td hlmTd><app-stock-status-badge [status]="row.status" /></td>
+                <td hlmTd class="text-muted-foreground">
+                  @if (row.lastMovementAt) {
+                    {{ row.lastMovementAt | date: 'd MMM y' }}
+                  } @else {
+                    Jamais
+                  }
+                </td>
+              </tr>
+
+              @if (expandedId() === row.articleId) {
+                <tr class="border-b bg-muted/30">
+                  <td colspan="7" class="px-14 py-3">
+                    <app-article-lots [articleId]="row.articleId" [unitCode]="row.unitCode" />
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="7" class="py-10 text-center text-muted-foreground">
+                  @if (rows().length === 0) {
+                    Aucun article dans le référentiel pour l'instant.
+                  } @else {
+                    Aucun article ne correspond à ces filtres.
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

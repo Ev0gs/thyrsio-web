@@ -19,7 +19,12 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
       placeholder('tableau-de-bord', 'Tableau de bord'),
-      placeholder('stock', 'Matières sèches'),
+      {
+        path: 'stock',
+        title: 'Matières sèches · Thyrsio',
+        loadComponent: () =>
+          import('./features/stock/stock-overview/stock-overview').then((m) => m.StockOverview),
+      },
       placeholder('stock/mouvements', 'Mouvements'),
       placeholder('stock/inventaires', 'Inventaires'),
       placeholder('referentiel/articles', 'Articles'),

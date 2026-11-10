@@ -1,0 +1,32 @@
+﻿/** Miroir des DTO de l'API (package stock). */
+
+export type StockStatus = 'OK' | 'BELOW_THRESHOLD' | 'OUT_OF_STOCK';
+
+/** GET /api/stock/overview : une ligne par article, tous lots confondus. */
+export interface StockOverviewRow {
+  articleId: string;
+  articleCode: string;
+  articleLabel: string;
+  categoryCode: string;
+  categoryLabel: string;
+  unitCode: string;
+  lotTracked: boolean;
+  quantity: number;
+  alertThreshold: number | null;
+  lotsInStock: number;
+  status: StockStatus;
+  lastMovementAt: string | null; // date ISO-8601
+  active: boolean;
+}
+
+/** GET /api/stock/balances : un solde par article et par lot. */
+export interface BalanceRow {
+  articleId: string;
+  articleCode: string;
+  articleLabel: string;
+  unitCode: string;
+  lotId: string | null;
+  lotNumber: string | null;
+  quantity: number;
+  updatedAt: string;
+}

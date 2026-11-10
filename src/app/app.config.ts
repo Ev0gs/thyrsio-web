@@ -2,6 +2,7 @@ import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { registerLocaleData } from '@angular/common';
+import { provideSpartanHlm } from '@spartan-ng/helm/utils';
 import localeFr from '@angular/common/locales/fr';
 import {
   AutoRefreshTokenService,
@@ -28,6 +29,7 @@ const apiCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideSpartanHlm(),
     provideBrowserGlobalErrorListeners(),
 
     // Keycloak est initialisé AVANT le démarrage de l'application.

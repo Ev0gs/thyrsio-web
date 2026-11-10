@@ -1,0 +1,44 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+  <div class="flex flex-col gap-1.5">
+    <label for="sup-name" class="text-sm font-medium">Nom</label>
+    <input id="sup-name" hlmInput [formField]="supplierForm.name" />
+    <app-field-error [state]="supplierForm.name()" />
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="flex flex-col gap-1.5">
+      <label for="sup-email" class="text-sm font-medium">E-mail <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+      <input id="sup-email" hlmInput type="email" [formField]="supplierForm.email" placeholder="commandes@exemple.fr" />
+      <app-field-error [state]="supplierForm.email()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="sup-phone" class="text-sm font-medium">Téléphone <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+      <input id="sup-phone" hlmInput type="tel" [formField]="supplierForm.phone" />
+      <app-field-error [state]="supplierForm.phone()" />
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="sup-address" class="text-sm font-medium">Adresse <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+    <textarea id="sup-address" hlmInput rows="2" class="h-auto py-2" [formField]="supplierForm.address"></textarea>
+    <app-field-error [state]="supplierForm.address()" />
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="sup-lead" class="text-sm font-medium">Délai de livraison moyen <span class="font-normal text-muted-foreground">(jours, facultatif)</span></label>
+    <input id="sup-lead" hlmInput type="number" step="1" class="sm:w-32" [formField]="supplierForm.averageLeadTimeDays" />
+    <p class="text-xs text-muted-foreground">Servira à anticiper les commandes de matières sèches.</p>
+    <app-field-error [state]="supplierForm.averageLeadTimeDays()" />
+  </div>
+
+  @for (error of supplierForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="supplierForm().submitting()">
+      {{ supplierForm().submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </hlm-dialog-footer>
+</form>

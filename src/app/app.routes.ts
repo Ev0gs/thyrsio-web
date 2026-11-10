@@ -1,16 +1,5 @@
-import { Route, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { Shell } from './layout/shell/shell';
-
-/**
- * Tant qu'un écran n'existe pas, sa route affiche la page "en construction".
- * On remplacera chaque ligne par le vrai composant au fil des étapes.
- */
-const placeholder = (path: string, heading: string): Route => ({
-  path,
-  title: `${heading} · Thyrsio`, // titre de l'onglet du navigateur
-  data: { heading }, // arrive dans l'input "heading"
-  loadComponent: () => import('./pages/placeholder/placeholder').then((m) => m.Placeholder),
-});
 
 export const routes: Routes = [
   {
@@ -55,8 +44,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/referentiel/article-list/article-list').then((m) => m.ArticleList),
       },
-      placeholder('referentiel/clients', 'Clients'),
-      placeholder('referentiel/fournisseurs', 'Fournisseurs'),
+      {
+        path: 'referentiel/clients',
+        title: 'Clients · Thyrsio',
+        loadComponent: () =>
+          import('./features/referentiel/client-list/client-list').then((m) => m.ClientList),
+      },
+      {
+        path: 'referentiel/fournisseurs',
+        title: 'Fournisseurs · Thyrsio',
+        loadComponent: () =>
+          import('./features/referentiel/supplier-list/supplier-list').then((m) => m.SupplierList),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

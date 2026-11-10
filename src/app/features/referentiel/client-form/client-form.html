@@ -1,0 +1,126 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-5">
+
+  <!-- Identité -->
+  <fieldset class="flex flex-col gap-4">
+    <legend class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Identité</legend>
+
+    @if (isEdit()) {
+      <p class="rounded-md bg-muted px-3 py-2 text-sm">
+        Code <span class="font-mono font-medium">{{ client()?.code }}</span>
+        <span class="text-muted-foreground">: définitif</span>
+      </p>
+    }
+
+    <div class="grid gap-4 sm:grid-cols-[12rem_minmax(0,1fr)]">
+      @if (!clientForm.code().hidden()) {
+        <div class="flex flex-col gap-1.5">
+          <label for="cli-code" class="text-sm font-medium">Code</label>
+          <input id="cli-code" hlmInput class="font-mono uppercase" placeholder="TOKYO-WINE" [formField]="clientForm.code" />
+          <app-field-error [state]="clientForm.code()" />
+        </div>
+      }
+      <div class="flex flex-col gap-1.5" [class.sm:col-span-2]="isEdit()">
+        <label for="cli-name" class="text-sm font-medium">Raison sociale</label>
+        <input id="cli-name" hlmInput [formField]="clientForm.name" />
+        <app-field-error [state]="clientForm.name()" />
+      </div>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label for="cli-country" class="text-sm font-medium">Pays</label>
+        <select id="cli-country" [class]="selectClass" [formField]="clientForm.countryCode">
+          @for (country of countries(); track country.code) {
+            <option [value]="country.code">{{ country.name }}</option>
+          }
+        </select>
+        <p class="text-xs text-muted-foreground">Décidera plus tard du régime fiscal à l'expédition.</p>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="cli-language" class="text-sm font-medium">Langue des documents</label>
+        <select id="cli-language" [class]="selectClass" [formField]="clientForm.language">
+          @for (language of languages(); track language.code) {
+            <option [value]="language.code">{{ language.name }}</option>
+          }
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- Adresse du siège -->
+  <fieldset class="flex flex-col gap-3">
+    <legend class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Siège (facturation)</legend>
+    <label for="cli-line1" class="sr-only">Adresse, ligne 1</label>
+    <input id="cli-line1" hlmInput placeholder="Adresse" [formField]="clientForm.addressLine1" />
+    <label for="cli-line2" class="sr-only">Adresse, ligne 2</label>
+    <input id="cli-line2" hlmInput placeholder="Complément d'adresse" [formField]="clientForm.addressLine2" />
+    <div class="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
+      <label for="cli-postal" class="sr-only">Code postal</label>
+      <input id="cli-postal" hlmInput placeholder="Code postal" [formField]="clientForm.postalCode" />
+      <label for="cli-city" class="sr-only">Ville</label>
+      <input id="cli-city" hlmInput placeholder="Ville" [formField]="clientForm.city" />
+    </div>
+  </fieldset>
+
+  <!-- Contact -->
+  <fieldset class="grid gap-4 sm:grid-cols-2">
+    <legend class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:col-span-2">Contact</legend>
+    <div class="flex flex-col gap-1.5">
+      <label for="cli-email" class="text-sm font-medium">E-mail</label>
+      <input id="cli-email" hlmInput type="email" [formField]="clientForm.email" />
+      <app-field-error [state]="clientForm.email()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="cli-phone" class="text-sm font-medium">Téléphone</label>
+      <input id="cli-phone" hlmInput type="tel" [formField]="clientForm.phone" />
+    </div>
+  </fieldset>
+
+  <!-- Commerce et douane -->
+  <fieldset class="grid gap-4 sm:grid-cols-2">
+    <legend class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:col-span-2">Commerce et douane</legend>
+    <div class="flex flex-col gap-1.5">
+      <label for="cli-vat" class="text-sm font-medium">N° de TVA intracommunautaire</label>
+      <input id="cli-vat" hlmInput class="font-mono uppercase" placeholder="FR12345678901" [formField]="clientForm.vatNumber" />
+      <app-field-error [state]="clientForm.vatNumber()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="cli-excise" class="text-sm font-medium">N° d'accise <span class="font-normal text-muted-foreground">(entrepositaire agréé)</span></label>
+      <input id="cli-excise" hlmInput class="font-mono uppercase" [formField]="clientForm.exciseNumber" />
+      <app-field-error [state]="clientForm.exciseNumber()" />
+    </div>
+    <div class="flex flex-col gap-1.5 sm:col-span-2">
+      <label for="cli-incoterm" class="text-sm font-medium">Incoterm par défaut</label>
+      <select id="cli-incoterm" [class]="selectClass" [formField]="clientForm.defaultIncoterm">
+        <option value="">Aucun</option>
+        @for (incoterm of incoterms; track incoterm.code) {
+          <option [value]="incoterm.code">{{ incoterm.label }}</option>
+        }
+      </select>
+    </div>
+    <label class="flex items-start gap-3 rounded-lg border border-border p-3 text-sm sm:col-span-2">
+      <input type="checkbox" class="mt-0.5 size-4 accent-primary" [formField]="clientForm.gs1LabelingRequired" />
+      <span class="flex flex-col gap-0.5">
+        <span class="font-medium">Étiquetage GS1 requis</span>
+        <span class="text-muted-foreground">Gencodes sur les produits et SSCC sur les palettes. Prérempli sur ses commandes, modifiable.</span>
+      </span>
+    </label>
+  </fieldset>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="cli-notes" class="text-sm font-medium">Notes</label>
+    <textarea id="cli-notes" hlmInput rows="2" class="h-auto py-2" [formField]="clientForm.notes"></textarea>
+    <app-field-error [state]="clientForm.notes()" />
+  </div>
+
+  @for (error of clientForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="clientForm().submitting()">
+      {{ clientForm().submitting() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer le client') }}
+    </button>
+  </hlm-dialog-footer>
+</form>

@@ -112,7 +112,7 @@ export class ArticleList {
   protected async toggleActive(article: ArticleRow): Promise<void> {
     this.actionError.set(null);
     try {
-      await this.api.setArticleActive(article.id, !article.active);
+      await this.api.setActive('articles', article.id, !article.active);
       this.articles.reload();
     } catch (error) {
       this.actionError.set(problemMessage(error));

@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, linkedSignal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -22,7 +22,6 @@ import { Inventory, InventoryStatus, InventorySummary } from '../stock.models';
   selector: 'app-inventory-list',
   imports: [
     DatePipe,
-    DecimalPipe,
     NgIcon,
     RouterLink,
     InventoryCreateForm,

@@ -1,0 +1,102 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Fournisseurs</h1>
+    <p class="text-sm text-muted-foreground">Ceux qui vous livrent bouteilles, bouchons, capsules, étiquettes et emballages</p>
+  </div>
+  <button hlmBtn size="lg" (click)="open(null)">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouveau fournisseur
+  </button>
+</header>
+
+<label class="mt-6 inline-flex items-center gap-2 text-sm">
+  <input type="checkbox" #arch [checked]="archives() === '1'" (change)="setShowArchived(arch.checked)"
+         class="size-4 accent-primary" />
+  Afficher les archivés
+</label>
+
+@if (actionError(); as message) {
+  <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+}
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (suppliers.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les fournisseurs.</p>
+      <button hlmBtn variant="outline" (click)="suppliers.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="suppliers.isLoading()">
+      <table hlmTable class="min-w-[760px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Fournisseur</th>
+          <th hlmTh>Contact</th>
+          <th hlmTh class="text-right">Délai moyen</th>
+          <th hlmTh><span class="sr-only">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!suppliers.hasValue()) {
+            @for (i of [1, 2, 3]; track i) {
+              <tr hlmTr><td hlmTd colspan="4"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (supplier of suppliers.value().content; track supplier.id) {
+              <tr hlmTr [class.text-muted-foreground]="!supplier.active">
+                <td hlmTd class="whitespace-normal">
+                  <div class="flex items-center gap-2 font-medium">
+                    {{ supplier.name }}
+                    @if (!supplier.active) {
+                      <span hlmBadge variant="outline">Archivé</span>
+                    }
+                  </div>
+                  @if (supplier.address) {
+                    <div class="text-xs text-muted-foreground">{{ supplier.address }}</div>
+                  }
+                </td>
+                <td hlmTd>
+                  @if (supplier.email) {
+                    <a [href]="'mailto:' + supplier.email" class="hover:text-primary hover:underline">{{ supplier.email }}</a>
+                  }
+                  @if (supplier.phone) {
+                    <div class="text-xs text-muted-foreground">{{ supplier.phone }}</div>
+                  }
+                  @if (!supplier.email && !supplier.phone) { — }
+                </td>
+                <td hlmTd class="text-right tabular-nums">
+                  {{ supplier.averageLeadTimeDays !== null ? supplier.averageLeadTimeDays + ' j' : '—' }}
+                </td>
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="ghost" size="sm" (click)="open(supplier)"
+                          [attr.aria-label]="'Modifier ' + supplier.name">Modifier</button>
+                  <button hlmBtn variant="ghost" size="sm" (click)="toggleActive(supplier)"
+                          [attr.aria-label]="(supplier.active ? 'Archiver ' : 'Réactiver ') + supplier.name">
+                    {{ supplier.active ? 'Archiver' : 'Réactiver' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr><td hlmTd colspan="4" class="py-10 text-center text-muted-foreground">Aucun fournisseur.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (suppliers.hasValue()) {
+      <app-pagination [page]="page()" [totalPages]="suppliers.value().page.totalPages"
+                      [totalElements]="suppliers.value().page.totalElements" itemLabel="fournisseur(s)"
+                      (pageChange)="goToPage($event)" />
+    }
+  }
+</section>
+
+<hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>{{ editing() ? 'Modifier le fournisseur' : 'Nouveau fournisseur' }}</h3>
+    </hlm-dialog-header>
+    <app-supplier-form [supplier]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+  </hlm-dialog-content>
+</hlm-dialog>

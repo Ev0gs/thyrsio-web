@@ -53,3 +53,86 @@ export interface CreateArticleRequest extends UpdateArticleRequest {
   code: string;
   unitCode: string | null; // null : l'unité par défaut de la catégorie
 }
+
+export interface SupplierRow {
+  id: string;
+  name: string;
+  active: boolean;
+}
+
+export interface SupplierDetail extends SupplierRow {
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  averageLeadTimeDays: number | null;
+  createdAt: string;
+}
+
+/** POST et PUT /api/referentiel/suppliers : la même requête (aucun champ définitif). */
+export interface SupplierRequest {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  averageLeadTimeDays: number | null;
+}
+
+export type Incoterm =
+  'EXW' | 'FCA' | 'CPT' | 'CIP' | 'DAP' | 'DPU' | 'DDP' | 'FAS' | 'FOB' | 'CFR' | 'CIF';
+
+export const INCOTERMS: { code: Incoterm; label: string }[] = [
+  { code: 'EXW', label: "EXW — À l'usine (enlèvement par le client)" },
+  { code: 'FCA', label: 'FCA — Franco transporteur' },
+  { code: 'CPT', label: "CPT — Port payé jusqu'à" },
+  { code: 'CIP', label: 'CIP — Port payé, assurance comprise' },
+  { code: 'DAP', label: 'DAP — Rendu au lieu de destination' },
+  { code: 'DPU', label: 'DPU — Rendu déchargé' },
+  { code: 'DDP', label: 'DDP — Rendu droits acquittés' },
+  { code: 'FAS', label: 'FAS — Franco le long du navire' },
+  { code: 'FOB', label: 'FOB — Franco à bord' },
+  { code: 'CFR', label: 'CFR — Coût et fret' },
+  { code: 'CIF', label: 'CIF — Coût, assurance et fret' },
+];
+
+export interface ClientRow {
+  id: string;
+  code: string;
+  name: string;
+  countryCode: string;
+  language: string;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  postalCode: string | null;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  vatNumber: string | null;
+  exciseNumber: string | null;
+  defaultIncoterm: Incoterm | null;
+  gs1LabelingRequired: boolean;
+  notes: string | null;
+  active: boolean;
+  createdAt: string;
+}
+
+/** PUT /api/referentiel/clients/{id} : tout sauf le code, définitif. */
+export interface UpdateClientRequest {
+  name: string;
+  countryCode: string;
+  language: string;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  postalCode: string | null;
+  city: string | null;
+  email: string | null;
+  phone: string | null;
+  vatNumber: string | null;
+  exciseNumber: string | null;
+  defaultIncoterm: Incoterm | null;
+  gs1LabelingRequired: boolean;
+  notes: string | null;
+}
+
+export interface CreateClientRequest extends UpdateClientRequest {
+  code: string;
+}

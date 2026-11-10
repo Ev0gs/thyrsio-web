@@ -1,0 +1,129 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Clients</h1>
+    <p class="text-sm text-muted-foreground">Importateurs, distributeurs et cavistes</p>
+  </div>
+  <button hlmBtn size="lg" (click)="open(null)">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouveau client
+  </button>
+</header>
+
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <label class="relative min-w-64 flex-1">
+    <span class="sr-only">Rechercher un client</span>
+    <ng-icon name="lucideSearch" size="16" aria-hidden="true"
+             class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <input hlmInput type="search" #query [value]="q() ?? ''" (change)="setFilter('q', query.value)"
+           placeholder="Code ou raison sociale, puis Entrée" class="pl-8" />
+  </label>
+
+  <label class="flex items-center gap-2 text-sm text-muted-foreground">
+    Pays
+    <select #country (change)="setFilter('pays', country.value)" [class]="selectClass + ' w-48 text-foreground'">
+      <option value="">Tous</option>
+      @for (c of countries; track c.code) {
+        <option [value]="c.code" [selected]="c.code === pays()">{{ c.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="flex items-center gap-2 text-sm">
+    <input type="checkbox" #arch [checked]="archives() === '1'"
+           (change)="setFilter('archives', arch.checked ? '1' : '')" class="size-4 accent-primary" />
+    Afficher les archivés
+  </label>
+</div>
+
+@if (actionError(); as message) {
+  <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+}
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (clients.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les clients.</p>
+      <button hlmBtn variant="outline" (click)="clients.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="clients.isLoading()">
+      <table hlmTable class="min-w-[860px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Client</th>
+          <th hlmTh>Pays</th>
+          <th hlmTh>Incoterm</th>
+          <th hlmTh>Étiquetage</th>
+          <th hlmTh><span class="sr-only">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!clients.hasValue()) {
+            @for (i of [1, 2, 3]; track i) {
+              <tr hlmTr><td hlmTd colspan="5"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (client of clients.value().content; track client.id) {
+              <tr hlmTr [class.text-muted-foreground]="!client.active">
+                <td hlmTd>
+                  <div class="flex items-center gap-2 font-medium">
+                    {{ client.name }}
+                    @if (!client.active) {
+                      <span hlmBadge variant="outline">Archivé</span>
+                    }
+                  </div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ client.code }}</div>
+                </td>
+                <td hlmTd>
+                  {{ countryName(client.countryCode) }}
+                  @if (client.city) {
+                    <div class="text-xs text-muted-foreground">{{ client.city }}</div>
+                  }
+                </td>
+                <td hlmTd class="font-mono text-[13px]">{{ client.defaultIncoterm ?? '—' }}</td>
+                <td hlmTd>
+                  @if (client.gs1LabelingRequired) {
+                    <span hlmBadge variant="secondary">GS1 requis</span>
+                  } @else {
+                    <span class="text-muted-foreground">—</span>
+                  }
+                </td>
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="ghost" size="sm" (click)="open(client)"
+                          [attr.aria-label]="'Modifier ' + client.name">Modifier</button>
+                  <button hlmBtn variant="ghost" size="sm" (click)="toggleActive(client)"
+                          [attr.aria-label]="(client.active ? 'Archiver ' : 'Réactiver ') + client.name">
+                    {{ client.active ? 'Archiver' : 'Réactiver' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr><td hlmTd colspan="5" class="py-10 text-center text-muted-foreground">Aucun client ne correspond.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (clients.hasValue()) {
+      <app-pagination [page]="page()" [totalPages]="clients.value().page.totalPages"
+                      [totalElements]="clients.value().page.totalElements" itemLabel="client(s)"
+                      (pageChange)="goToPage($event)" />
+    }
+  }
+</section>
+
+<hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-2xl">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>{{ editing() ? 'Modifier le client' : 'Nouveau client' }}</h3>
+      @if (editing(); as client) {
+        <p hlmDialogDescription>{{ client.name }}</p>
+      }
+    </hlm-dialog-header>
+    <!-- Formulaire long : il défile à l'intérieur du dialogue -->
+    <div class="max-h-[70vh] overflow-y-auto pr-1">
+      <app-client-form [client]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    </div>
+  </hlm-dialog-content>
+</hlm-dialog>

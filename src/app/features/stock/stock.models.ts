@@ -30,3 +30,34 @@ export interface BalanceRow {
   quantity: number;
   updatedAt: string;
 }
+
+export type MovementType =
+  'RECEPTION' | 'CONSUMPTION' | 'LOSS' | 'ADJUSTMENT' | 'PRODUCTION' | 'SHIPMENT' | 'INVENTORY';
+
+/** Le libellé affiché pour chaque type de mouvement. */
+export const MOVEMENT_TYPE_LABELS: Record<MovementType, string> = {
+  RECEPTION: 'Réception',
+  CONSUMPTION: 'Consommation',
+  LOSS: 'Perte',
+  ADJUSTMENT: 'Ajustement',
+  PRODUCTION: 'Production',
+  SHIPMENT: 'Expédition',
+  INVENTORY: 'Inventaire',
+};
+
+/** GET /api/stock/movements : un mouvement (quantité signée : + entrée, − sortie). */
+export interface MovementRow {
+  id: string;
+  articleId: string;
+  articleCode: string;
+  unitCode: string;
+  lotId: string | null;
+  lotNumber: string | null;
+  type: MovementType;
+  quantity: number;
+  occurredAt: string;
+  reference: string | null;
+  notes: string | null;
+  createdBy: string;
+  createdAt: string;
+}

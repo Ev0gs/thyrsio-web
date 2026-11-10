@@ -1,0 +1,176 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Tableau de bord</h1>
+    <p class="text-sm text-muted-foreground">
+      Bonjour {{ firstName() }} · {{ today | date: 'EEEE d MMMM y' }}
+    </p>
+  </div>
+  <a hlmBtn variant="outline" size="lg" routerLink="/stock">Voir le stock</a>
+</header>
+
+<!-- ===== Indicateurs ===== -->
+<section aria-label="Indicateurs" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <a routerLink="/stock"
+     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-muted-foreground">Articles sous le seuil</span>
+      <span hlmBadge variant="secondary" class="bg-amber-50 text-amber-700">À commander</span>
+    </div>
+    @if (overview.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ belowCount() }}</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-16"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Stock total inférieur au seuil d'alerte</span>
+  </a>
+
+  <a routerLink="/stock"
+     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-muted-foreground">Ruptures</span>
+      <span hlmBadge variant="destructive">Stock à zéro</span>
+    </div>
+    @if (overview.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ outCount() }}</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-16"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Articles sans aucun stock</span>
+  </a>
+
+  @for (kpi of upcomingKpis; track kpi.label) {
+    <div class="flex flex-col gap-2.5 rounded-xl border border-dashed border-border p-5">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-medium text-muted-foreground">{{ kpi.label }}</span>
+        <span hlmBadge variant="outline">À venir</span>
+      </div>
+      <span class="text-3xl font-semibold tracking-tight text-muted-foreground/50">—</span>
+      <span class="text-[13px] text-muted-foreground">{{ kpi.hint }}</span>
+    </div>
+  }
+</section>
+
+<!-- ===== Mises et alertes ===== -->
+<div class="mt-4 grid gap-4 lg:grid-cols-2">
+  <section class="flex flex-col gap-3 rounded-xl border border-dashed border-border p-5">
+    <div class="flex items-center justify-between gap-2">
+      <h2 class="text-base font-semibold">Prochaines mises</h2>
+      <span hlmBadge variant="outline">À venir</span>
+    </div>
+    <p class="text-sm text-muted-foreground">
+      Le planning des mises en bouteille apparaîtra ici avec le module Production :
+      produits, quantités, et manquants en matières sèches.
+    </p>
+  </section>
+
+  <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+    <div class="flex items-center justify-between gap-2">
+      <h2 class="text-base font-semibold">Alertes de stock</h2>
+      <a routerLink="/stock" class="text-sm font-medium text-primary hover:underline">Voir le stock</a>
+    </div>
+
+    @if (overview.error()) {
+      <p class="text-sm text-muted-foreground">Impossible de charger le stock.</p>
+    } @else if (!overview.hasValue()) {
+      @for (i of [1, 2, 3]; track i) {
+        <div hlmSkeleton class="h-10 w-full"></div>
+      }
+    } @else {
+      @for (alert of alerts(); track alert.articleId) {
+        <div class="flex flex-col gap-1.5 border-b border-border/60 pb-3 last:border-0 last:pb-0">
+          <div class="flex items-center justify-between gap-3 text-sm">
+            <span class="truncate font-medium">{{ alert.articleLabel }}</span>
+            <span class="flex shrink-0 items-center gap-2">
+              <span class="tabular-nums text-muted-foreground">
+                {{ alert.quantity | number: '1.0-4' }}
+                @if (alert.alertThreshold !== null) {
+                  / {{ alert.alertThreshold | number: '1.0-4' }}
+                }
+              </span>
+              <app-stock-status-badge [status]="alert.status" />
+            </span>
+          </div>
+          <div class="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div class="h-full rounded-full"
+                 [class]="alert.status === 'OUT_OF_STOCK' ? 'bg-destructive' : 'bg-amber-500'"
+                 [style.width.%]="alert.fill"></div>
+          </div>
+        </div>
+      } @empty {
+        <p class="text-sm text-muted-foreground">Aucune alerte : tous les articles sont au-dessus de leur seuil.</p>
+      }
+    }
+  </section>
+</div>
+
+<!-- ===== Consommations et mouvements ===== -->
+<div class="mt-4 grid gap-4 lg:grid-cols-2">
+  <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+    <div class="flex flex-col gap-0.5">
+      <h2 class="text-base font-semibold">Consommations des 30 derniers jours</h2>
+      <span class="text-[13px] text-muted-foreground">Matières sèches sorties par les mises, par catégorie</span>
+    </div>
+
+    @if (consumptions.error()) {
+      <p class="text-sm text-muted-foreground">Impossible de charger les consommations.</p>
+    } @else if (!consumptions.hasValue()) {
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div hlmSkeleton class="h-4 w-full"></div>
+      }
+    } @else {
+      @for (category of consumptionByCategory(); track category.label) {
+        <div class="grid grid-cols-[8rem_minmax(0,1fr)_5rem] items-center gap-3 text-sm">
+          <span class="truncate text-foreground/80">{{ category.label }}</span>
+          <div class="h-2.5 rounded bg-muted">
+            <div class="h-full rounded bg-primary" [style.width.%]="category.width"></div>
+          </div>
+          <span class="text-right tabular-nums text-muted-foreground">{{ category.total | number: '1.0-0' }}</span>
+        </div>
+      } @empty {
+        <p class="text-sm text-muted-foreground">Aucune consommation sur la période.</p>
+      }
+    }
+  </section>
+
+  <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-5">
+    <div class="flex items-center justify-between gap-2">
+      <h2 class="text-base font-semibold">Derniers mouvements</h2>
+      <a routerLink="/stock/mouvements" class="text-sm font-medium text-primary hover:underline">Historique</a>
+    </div>
+
+    @if (recentMovements.error()) {
+      <p class="text-sm text-muted-foreground">Impossible de charger les mouvements.</p>
+    } @else if (!recentMovements.hasValue()) {
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div hlmSkeleton class="h-10 w-full"></div>
+      }
+    } @else {
+      <ul class="divide-y divide-border/60">
+        @for (movement of movements(); track movement.id) {
+          <li class="flex items-center gap-3 py-2.5 text-sm">
+            <span hlmBadge variant="secondary" class="w-28 justify-center">{{ typeLabels[movement.type] }}</span>
+            <div class="flex min-w-0 flex-1 flex-col">
+              <span class="truncate font-medium">
+                {{ movement.articleLabel }}
+                @if (movement.lotNumber) {
+                  <span class="font-normal text-muted-foreground">· lot {{ movement.lotNumber }}</span>
+                }
+              </span>
+              <span class="text-xs text-muted-foreground">
+                {{ movement.occurredAt | date: 'd MMM, HH:mm' }}
+                @if (movement.reference) {
+                  · {{ movement.reference }}
+                }
+              </span>
+            </div>
+            <span class="shrink-0 font-medium tabular-nums" [class.text-emerald-700]="movement.quantity > 0">
+              {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity | number: '1.0-4' }}
+            </span>
+          </li>
+        } @empty {
+          <li class="py-2.5 text-sm text-muted-foreground">Aucun mouvement pour l'instant.</li>
+        }
+      </ul>
+    }
+  </section>
+</div>

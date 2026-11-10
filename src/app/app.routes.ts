@@ -18,7 +18,11 @@ export const routes: Routes = [
     component: Shell, // la mise en page commune : barre latérale + contenu
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'tableau-de-bord' },
-      placeholder('tableau-de-bord', 'Tableau de bord'),
+      {
+        path: 'tableau-de-bord',
+        title: 'Tableau de bord · Thyrsio',
+        loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
+      },
       {
         path: 'stock',
         title: 'Matières sèches · Thyrsio',

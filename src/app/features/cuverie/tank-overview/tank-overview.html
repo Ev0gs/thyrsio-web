@@ -102,33 +102,41 @@
     @for (tank of filtered(); track tank.id) {
       <li>
         <a [routerLink]="['/cuverie/cuves', tank.id]"
-           class="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
+           class="flex h-full gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
            [class.opacity-70]="tank.state === 'OUT_OF_SERVICE'">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex min-w-0 flex-col">
-              <span class="text-base font-semibold">{{ tank.code }}</span>
-              <span class="truncate text-xs text-muted-foreground">{{ tank.label ?? 'Sans libellé' }}</span>
+          <app-tank-illustration class="w-16 shrink-0 self-center" [compact]="true"
+                                 [volumeHl]="tank.volumeHl" [capacityHl]="tank.capacityHl"
+                                 [color]="tank.wineLot?.color ?? null" [state]="tank.state" />
+          <div class="flex min-w-0 flex-1 flex-col gap-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex min-w-0 flex-col">
+                <span class="text-base font-semibold">{{ tank.code }}</span>
+                <span class="truncate text-xs text-muted-foreground">{{ tank.label ?? 'Sans libellé' }}</span>
+              </div>
+              <app-tank-state-badge [state]="tank.state" />
             </div>
-            <app-tank-state-badge [state]="tank.state" />
-          </div>
 
-          <div class="min-h-5 text-sm">
-            @if (tank.wineLot; as lot) {
-              <app-wine-label [lot]="lot" />
-            } @else {
-              <span class="text-muted-foreground">
-                @switch (tank.state) {
-                  @case ('CLEANING') { Nettoyage en cours }
-                  @case ('OUT_OF_SERVICE') { Indisponible }
-                  @default { Prête à recevoir du vin }
-                }
+            <div class="min-h-5 text-sm">
+              @if (tank.wineLot; as lot) {
+                <app-wine-label [lot]="lot" />
+              } @else {
+                <span class="text-muted-foreground">
+                  @switch (tank.state) {
+                    @case ('CLEANING') { Nettoyage en cours }
+                    @case ('OUT_OF_SERVICE') { Indisponible }
+                    @default { Prête à recevoir du vin }
+                  }
+                </span>
+              }
+            </div>
+
+            <div class="mt-auto flex items-baseline justify-between gap-2 text-sm">
+              <span class="font-medium tabular-nums">
+                {{ tank.volumeHl | number: '1.0-2' }}
+                <span class="font-normal text-muted-foreground">/ {{ tank.capacityHl | number: '1.0-2' }} hl</span>
               </span>
-            }
-          </div>
-
-          <div class="mt-auto">
-            <app-tank-gauge [volumeHl]="tank.volumeHl" [capacityHl]="tank.capacityHl"
-                            [color]="tank.wineLot?.color ?? null" />
+              <span class="text-xs tabular-nums text-muted-foreground">{{ fill(tank) | number: '1.0-0' }} %</span>
+            </div>
           </div>
         </a>
       </li>

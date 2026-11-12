@@ -68,7 +68,7 @@ let nextId = 0;
   `,
   template: `
     <svg
-      viewBox="0 0 190 260"
+      [attr.viewBox]="compact() ? '18 8 138 246' : '0 0 190 260'"
       class="h-auto w-full"
       role="meter"
       [attr.aria-label]="ariaLabel()"
@@ -127,7 +127,7 @@ let nextId = 0;
         <rect x="29" y="18" width="102" height="200" [attr.fill]="'url(#' + ids.inside + ')'" />
         @if (shade()) {
           <g class="level" [style.transform]="'translateY(' + levelY() + 'px)'">
-            <g class="wave">
+            <g [class.wave]="!compact()">
               <path [attr.d]="wave" [attr.fill]="'url(#' + ids.wine + ')'" />
               <path
                 [attr.d]="wave"
@@ -149,8 +149,21 @@ let nextId = 0;
         <line x1="25" y1="148" x2="135" y2="148" />
       </g>
 
-      <!-- Les graduations -->
-      @for (mark of marks; track mark.percent) {
+      <!-- Les graduations (sans libellés sur une petite cuve) -->
+      @if (compact()) {
+        @for (mark of marks; track mark.percent) {
+          <line
+            x1="29"
+            x2="36"
+            [attr.y1]="mark.y"
+            [attr.y2]="mark.y"
+            stroke="#6b7280"
+            stroke-opacity="0.5"
+            stroke-width="1.5"
+          />
+        }
+      }
+      @for (mark of compact() ? [] : marks; track mark.percent) {
         <line
           [attr.x1]="137"
           [attr.x2]="143"
@@ -170,7 +183,9 @@ let nextId = 0;
         </text>
       }
 
-      @if (emptyLabel(); as label) {
+      @if (compact()) {
+        <!-- Petite cuve : le pourcentage et l'état s'écrivent à côté, pas dessus -->
+      } @else if (emptyLabel(); as label) {
         <text x="80" y="122" text-anchor="middle" font-size="12" font-weight="600" fill="#6b7280">
           {{ label }}
         </text>
@@ -197,6 +212,8 @@ export class TankIllustration {
   /** null : pas de vin, la cuve est dessinée vide. */
   readonly color = input<WineColor | null>(null);
   readonly state = input<TankState>('EMPTY');
+  /** Petite cuve (cartes) : sans libellés ni texte sur le dessin, surface immobile. */
+  readonly compact = input(false);
 
   private readonly id = nextId++;
   /** Des identifiants propres à chaque dessin : plusieurs cuves peuvent cohabiter sur une page. */

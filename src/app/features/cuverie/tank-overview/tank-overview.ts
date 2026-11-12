@@ -14,10 +14,10 @@ import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
-import { roundHl, Tank, TankState } from '../cuverie.models';
+import { fillPercent, roundHl, Tank, TankState } from '../cuverie.models';
 import { ReceptionForm } from '../reception-form/reception-form';
 import { TankForm } from '../tank-form/tank-form';
-import { TankGauge } from '../tank-gauge/tank-gauge';
+import { TankIllustration } from '../tank-illustration/tank-illustration';
 import { TankStateBadge } from '../tank-state-badge/tank-state-badge';
 import { TransferForm } from '../transfer-form/transfer-form';
 import { WineLabel } from '../wine-label/wine-label';
@@ -52,7 +52,7 @@ const MATCHES: Record<StateFilter, (state: TankState) => boolean> = {
     HlmSkeletonImports,
     ReceptionForm,
     TankForm,
-    TankGauge,
+    TankIllustration,
     TankStateBadge,
     TransferForm,
     WineLabel,
@@ -95,6 +95,8 @@ export class TankOverview {
     { value: 'empty' as const, label: 'Vides', count: this.stats().empty },
     { value: 'unavailable' as const, label: 'Indisponibles', count: this.stats().unavailable },
   ]);
+
+  protected readonly fill = (tank: Tank) => fillPercent(tank.volumeHl, tank.capacityHl);
 
   protected readonly filtered = computed(() => {
     const query = normalize(this.search());

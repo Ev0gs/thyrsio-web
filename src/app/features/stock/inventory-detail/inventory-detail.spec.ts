@@ -57,6 +57,11 @@ describe('InventoryDetail', () => {
     fixture.detectChanges();
     TestBed.tick();
     http.expectOne('/api/stock/inventories/inv-1').flush(draft);
+    // Un brouillon charge aussi les articles (pour l'ajout de ligne) : sans réponse, whenStable() attendrait sans fin.
+    // Cette requête part une fois l'inventaire reçu : on laisse d'abord passer un tour.
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+    http.expectOne('/api/stock/overview').flush([]);
 
     await fixture.whenStable();
     fixture.detectChanges();

@@ -9,6 +9,12 @@ export interface GeoLocation {
   approximate: boolean;
 }
 
+/**
+ * Où en est la localisation : LOCATED (trouvée), PENDING (en cours, quelques secondes),
+ * NOT_FOUND (introuvable : ville ou code postal à vérifier), NO_ADDRESS (pas de ville).
+ */
+export type LocationStatus = 'LOCATED' | 'PENDING' | 'NOT_FOUND' | 'NO_ADDRESS';
+
 /** Le lien vers OpenStreetMap, centré sur le point. */
 export const openStreetMapUrl = (location: GeoLocation) =>
   `https://www.openstreetmap.org/?mlat=${location.latitude}&mlon=${location.longitude}` +

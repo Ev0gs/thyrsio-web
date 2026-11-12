@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -20,6 +20,9 @@ import { AddressForm } from '../address-form/address-form';
 import { ClientForm } from '../client-form/client-form';
 import { ReferentielApi } from '../referentiel-api';
 import { ClientRow, DeliveryAddress, INCOTERMS, toAddressRequest } from '../referentiel.models';
+
+const POLL_INTERVAL_MS = 5000;
+const MAX_POLLS = 24;
 
 @Component({
   selector: 'app-client-detail',
@@ -101,17 +104,43 @@ export class ClientDetail {
     return points;
   });
 
-  /** Des adresses existent, mais aucune n'est encore sur la carte. */
-  protected readonly waitingForMap = computed(
+  /** Les adresses que l'API est en train de localiser (quelques secondes chacune). */
+  protected readonly pendingCount = computed(
     () =>
-      this.mapPoints().length === 0 &&
-      (!!this.current()?.city || this.activeAddresses().length > 0),
+      (this.current()?.locationStatus === 'PENDING' ? 1 : 0) +
+      this.activeAddresses().filter((address) => address.locationStatus === 'PENDING').length,
   );
+
+  /** Les adresses cherchées mais introuvables : la ville ou le code postal sont à vérifier. */
+  protected readonly notFound = computed(() => [
+    ...(this.current()?.locationStatus === 'NOT_FOUND' ? ['le siège'] : []),
+    ...this.activeAddresses()
+      .filter((address) => address.locationStatus === 'NOT_FOUND')
+      .map((address) => address.label),
+  ]);
+
+  /** Tant que des adresses sont en cours de localisation, la fiche se recharge toute seule (2 min au plus). */
+  private readonly polls = signal(0);
+  protected readonly pollingGaveUp = computed(() => this.polls() >= MAX_POLLS);
 
   protected readonly incotermLabel = computed(() => {
     const code = this.current()?.defaultIncoterm;
     return code ? (INCOTERMS.find((incoterm) => incoterm.code === code)?.label ?? code) : null;
   });
+
+  constructor() {
+    effect((onCleanup) => {
+      if (this.pendingCount() === 0 || this.pollingGaveUp()) {
+        return;
+      }
+      const timer = setTimeout(() => {
+        this.polls.update((count) => count + 1);
+        this.client.reload();
+        this.addresses.reload();
+      }, POLL_INTERVAL_MS);
+      onCleanup(() => clearTimeout(timer));
+    });
+  }
 
   // ---------- L'état de l'écran ----------
 

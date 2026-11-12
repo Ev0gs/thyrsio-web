@@ -93,11 +93,27 @@
         </p>
       }
     </section>
-  } @else if (waitingForMap()) {
-    <p class="mt-6 flex items-center gap-2 rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-      <ng-icon name="lucideMapPin" aria-hidden="true" />
-      Les adresses apparaissent sur la carte quelques minutes après leur enregistrement, le temps de les localiser.
-    </p>
+  }
+  @if (pendingCount() > 0 || notFound().length > 0) {
+    <div class="mt-3 flex flex-col gap-1.5 rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground" role="status">
+      @if (pendingCount() > 0) {
+        <p class="flex items-center gap-2">
+          <ng-icon name="lucideMapPin" aria-hidden="true" />
+          @if (!pollingGaveUp()) {
+            {{ pendingCount() }} adresse(s) en cours de localisation : elles apparaissent sur la carte dans quelques secondes.
+          } @else {
+            {{ pendingCount() }} adresse(s) toujours pas localisée(s) : le service de cartes ne répond pas.
+            Vérifie que l'API tourne avec le profil dev, et regarde ses journaux (lignes « Géocodage »).
+          }
+        </p>
+      }
+      @if (notFound().length > 0) {
+        <p class="flex items-center gap-2">
+          <ng-icon name="lucideMapPin" aria-hidden="true" />
+          Introuvable sur la carte : {{ notFound().join(', ') }}. Vérifie la ville et le code postal.
+        </p>
+      }
+    </div>
   }
 
   <!-- ===== Les adresses de livraison ===== -->

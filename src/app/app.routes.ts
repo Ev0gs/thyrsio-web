@@ -96,6 +96,32 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'ventes/commandes',
+        title: 'Commandes clients · Thyrsio',
+        loadComponent: () =>
+          import('./features/sales/order-list/order-list').then((m) => m.OrderList),
+      },
+      {
+        path: 'ventes/commandes/:id',
+        title: 'Commande · Thyrsio',
+        loadComponent: () =>
+          import('./features/sales/order-detail/order-detail').then((m) => m.OrderDetail),
+      },
+      {
+        path: 'ventes/expeditions',
+        title: 'Expéditions · Thyrsio',
+        loadComponent: () =>
+          import('./features/shipping/shipment-list/shipment-list').then((m) => m.ShipmentList),
+      },
+      {
+        path: 'ventes/expeditions/:id',
+        title: 'Expédition · Thyrsio',
+        loadComponent: () =>
+          import('./features/shipping/shipment-detail/shipment-detail').then(
+            (m) => m.ShipmentDetail,
+          ),
+      },
+      {
         path: 'referentiel/articles',
         title: 'Articles · Thyrsio',
         loadComponent: () =>
@@ -120,6 +146,13 @@ export const routes: Routes = [
           import('./features/referentiel/supplier-list/supplier-list').then((m) => m.SupplierList),
       },
     ],
+  },
+  // Hors de la mise en page : une page à imprimer
+  {
+    path: 'impression/bon-de-livraison/:id',
+    title: 'Bon de livraison · Thyrsio',
+    loadComponent: () =>
+      import('./features/shipping/delivery-note/delivery-note').then((m) => m.DeliveryNote),
   },
   { path: '**', redirectTo: '' },
 ];

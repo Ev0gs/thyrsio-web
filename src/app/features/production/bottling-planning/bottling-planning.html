@@ -26,6 +26,30 @@
   </section>
 }
 
+<!-- ===== Les commandes à couvrir ===== -->
+@if (toPlanRows().length > 0) {
+  <section class="mt-6 flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+    <div class="flex flex-col gap-0.5">
+      <h2 class="text-sm font-semibold text-amber-900">À planifier · {{ toPlanRows().length }} ligne(s) de commande sans bouteilles</h2>
+      <span class="text-[13px] text-amber-900/80">Ni le stock ni les mises planifiées ne les couvrent, de la plus urgente à la moins urgente</span>
+    </div>
+    <ul class="flex flex-col divide-y divide-amber-200/60 text-sm">
+      @for (line of toPlanRows(); track line.lineId) {
+        <li class="flex flex-wrap items-center gap-3 py-2">
+          <span class="w-32 shrink-0 tabular-nums text-amber-900/80">
+            {{ line.requestedLoadingDate ? (line.requestedLoadingDate | date: 'EEE d MMM') : 'Sans date' }}
+          </span>
+          <a [routerLink]="['/ventes/commandes', line.orderId]" class="w-24 shrink-0 font-mono font-medium hover:underline">{{ line.orderCode }}</a>
+          <span class="w-44 truncate">{{ line.clientName }}</span>
+          <span class="min-w-48 flex-1 font-medium">{{ line.articleLabel }}</span>
+          <span class="tabular-nums font-semibold text-red-700">manque {{ line.missing | number }} bt</span>
+          <button hlmBtn variant="outline" size="sm" (click)="planFor(line)">Planifier</button>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
 <!-- ===== Navigation entre les semaines ===== -->
 <div class="mt-6 flex flex-wrap items-center justify-between gap-3">
   <div class="flex items-center gap-2">
@@ -93,6 +117,9 @@
                     }
                   </span>
                 </div>
+                @if (entry.bottling.allocations.length > 0) {
+                  <span class="truncate text-xs text-sky-700">Pour {{ orderCodes(entry.bottling) }}</span>
+                }
                 @if (entry.bottling.shortageCount > 0 && entry.bottling.status === 'PLANNED') {
                   <span class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
                     {{ entry.bottling.shortageCount }} matière(s) en manque
@@ -152,7 +179,7 @@
       <p hlmDialogDescription>Les manquants sont calculés dès l'enregistrement, en tenant compte des mises déjà planifiées avant.</p>
     </hlm-dialog-header>
     <div class="dialog-scroll">
-      <app-bottling-form [day]="newDay()" (saved)="ctx.close(); onSaved($event)" (cancelled)="ctx.close()" />
+      <app-bottling-form [day]="newDay()" [prefill]="prefill()" (saved)="ctx.close(); onSaved($event)" (cancelled)="ctx.close()" />
     </div>
   </hlm-dialog-content>
 </hlm-dialog>

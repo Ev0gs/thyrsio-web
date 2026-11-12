@@ -1,0 +1,84 @@
+<header class="flex flex-col gap-1">
+  <h1 class="text-[28px] font-semibold tracking-tight">Expéditions</h1>
+  <p class="text-sm text-muted-foreground">Les chargements : on les prépare depuis une commande, le stock ne bouge qu'au départ validé</p>
+</header>
+
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <div role="group" aria-label="Filtrer les expéditions" class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+    @for (v of views; track v.value) {
+      <button type="button" (click)="setView(v.value)" [attr.aria-pressed]="view() === v.value"
+              class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+              [class]="view() === v.value ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+        {{ v.label }}
+      </button>
+    }
+  </div>
+  <a routerLink="/ventes/commandes" class="text-sm font-medium text-primary hover:underline">Préparer depuis une commande →</a>
+</div>
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (shipments.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les expéditions.</p>
+      <button hlmBtn variant="outline" (click)="shipments.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="shipments.isLoading()">
+      <table hlmTable class="min-w-[860px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Expédition</th>
+          <th hlmTh>Commande</th>
+          <th hlmTh>Client</th>
+          <th hlmTh>Chargement</th>
+          <th hlmTh>Transporteur</th>
+          <th hlmTh class="text-right">Bouteilles</th>
+          <th hlmTh>Statut</th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!shipments.hasValue()) {
+            @for (i of [1, 2, 3]; track i) {
+              <tr hlmTr><td hlmTd colspan="7"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (shipment of rows(); track shipment.id) {
+              <tr hlmTr>
+                <td hlmTd>
+                  <a [routerLink]="['/ventes/expeditions', shipment.id]" class="font-mono font-medium hover:underline">{{ shipment.code }}</a>
+                </td>
+                <td hlmTd>
+                  <a [routerLink]="['/ventes/commandes', shipment.orderId]" class="font-mono text-muted-foreground hover:underline">{{ shipment.orderCode }}</a>
+                </td>
+                <td hlmTd>
+                  <div class="font-medium">{{ shipment.clientName }}</div>
+                  @if (shipment.clientCountryCode) {
+                    <div class="text-xs text-muted-foreground">{{ countryName(shipment.clientCountryCode) }}</div>
+                  }
+                </td>
+                <td hlmTd class="tabular-nums text-muted-foreground">
+                  {{ shipment.shippedAt ? (shipment.shippedAt | date: 'EEE d MMM y') : (shipment.plannedDate | date: 'EEE d MMM y') }}
+                </td>
+                <td hlmTd class="text-muted-foreground">{{ shipment.carrier ?? '—' }}</td>
+                <td hlmTd class="text-right tabular-nums font-medium">{{ shipment.totalBottles | number }}</td>
+                <td hlmTd><app-shipment-status-badge [status]="shipment.status" /></td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="7" class="py-10 text-center text-muted-foreground">
+                  {{ view() === 'draft' ? 'Aucun chargement en préparation.' : 'Aucune expédition.' }}
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (pageInfo(); as info) {
+      <app-pagination [page]="page()" [totalPages]="info.totalPages" [totalElements]="info.totalElements"
+                      itemLabel="expédition(s)" (pageChange)="goToPage($event)" />
+    }
+  }
+</section>

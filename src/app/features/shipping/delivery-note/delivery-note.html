@@ -1,0 +1,122 @@
+<div class="min-h-screen bg-muted/40 py-8 print:bg-white print:py-0">
+  <div class="mx-auto mb-4 flex max-w-[210mm] items-center justify-between px-4 print:hidden">
+    <a [routerLink]="['/ventes/expeditions', id()]" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Retour à l'expédition
+    </a>
+    <button hlmBtn (click)="print()" [disabled]="!shipment()">
+      <ng-icon name="lucidePrinter" aria-hidden="true" /> Imprimer
+    </button>
+  </div>
+
+  @if (resource.error()) {
+    <p class="text-center text-sm text-destructive">Impossible de charger ce bon de livraison.</p>
+  } @else if (shipment(); as s) {
+    <article class="mx-auto flex min-h-[297mm] max-w-[210mm] flex-col gap-8 bg-white p-[15mm] text-[13px] text-neutral-900 shadow-sm print:min-h-0 print:shadow-none">
+      <header class="flex items-start justify-between gap-6">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">Bon de livraison</h1>
+          <p class="text-neutral-500">Delivery note</p>
+        </div>
+        <dl class="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-right">
+          <dt class="text-neutral-500">N° / No.</dt>
+          <dd class="font-mono font-semibold">{{ s.code }}</dd>
+          <dt class="text-neutral-500">Date</dt>
+          <dd>{{ (s.shippedAt ?? s.plannedDate) | date: 'dd/MM/yyyy' }}</dd>
+          <dt class="text-neutral-500">Commande / Order</dt>
+          <dd class="font-mono">{{ s.orderCode }}</dd>
+          @if (s.customerReference) {
+            <dt class="text-neutral-500">Votre réf. / Your ref.</dt>
+            <dd>{{ s.customerReference }}</dd>
+          }
+        </dl>
+      </header>
+
+      @if (s.status === 'DRAFT') {
+        <p class="rounded border border-amber-300 bg-amber-50 px-3 py-2 text-amber-900 print:border-neutral-400 print:bg-white print:text-neutral-700">
+          Provisoire : le départ n'est pas encore validé. / Provisional: not yet shipped.
+        </p>
+      }
+
+      <section class="grid grid-cols-2 gap-8">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Livrer à / Ship to</h2>
+          <p class="leading-relaxed">
+            @for (line of deliveryLines(); track $index) { {{ line }}<br /> }
+          </p>
+        </div>
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Client / Customer</h2>
+          <p class="leading-relaxed">
+            <span class="font-medium">{{ s.clientName }}</span><br />
+            @for (line of clientLines(); track $index) { {{ line }}<br /> }
+          </p>
+          @if (s.clientVatNumber) {
+            <p><span class="text-neutral-500">TVA / VAT :</span> {{ s.clientVatNumber }}</p>
+          }
+          @if (s.clientExciseNumber) {
+            <p><span class="text-neutral-500">N° d'accise / Excise no. :</span> {{ s.clientExciseNumber }}</p>
+          }
+        </div>
+      </section>
+
+      <section class="grid grid-cols-3 gap-4 rounded border border-neutral-200 px-4 py-3">
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-neutral-500">Transporteur / Carrier</div>
+          <div>{{ s.carrier ?? '—' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-neutral-500">N° de transport / Transport ref.</div>
+          <div>{{ s.transportReference ?? '—' }}</div>
+        </div>
+        <div>
+          <div class="text-[11px] uppercase tracking-wider text-neutral-500">Incoterm</div>
+          <div>{{ incotermLabel() ?? '—' }}</div>
+        </div>
+      </section>
+
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="border-b-2 border-neutral-800 text-left text-[11px] uppercase tracking-wider text-neutral-500">
+            <th class="py-2 pr-3 font-semibold">Réf. / Item</th>
+            <th class="py-2 pr-3 font-semibold">Désignation / Description</th>
+            <th class="py-2 pr-3 font-semibold">Lot</th>
+            <th class="py-2 text-right font-semibold">Bouteilles / Bottles</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of s.lines; track line.id) {
+            <tr class="border-b border-neutral-200">
+              <td class="py-2 pr-3 font-mono text-[12px]">{{ line.articleCode }}</td>
+              <td class="py-2 pr-3">{{ line.articleLabel }}</td>
+              <td class="py-2 pr-3 font-mono text-[12px]">{{ line.lotNumber ?? '—' }}</td>
+              <td class="py-2 text-right tabular-nums">{{ line.quantity | number }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="py-2 pr-3 text-right font-semibold">Total</td>
+            <td class="py-2 text-right font-semibold tabular-nums">{{ s.totalBottles | number }}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      @if (s.notes) {
+        <p class="whitespace-pre-line">{{ s.notes }}</p>
+      }
+
+      <footer class="mt-auto grid grid-cols-2 gap-8 pt-8">
+        <div class="flex flex-col gap-12">
+          <span class="text-[11px] uppercase tracking-wider text-neutral-500">Expéditeur / Shipper</span>
+          <span class="border-t border-neutral-300"></span>
+        </div>
+        <div class="flex flex-col gap-12">
+          <span class="text-[11px] uppercase tracking-wider text-neutral-500">Reçu par / Received by — date, signature</span>
+          <span class="border-t border-neutral-300"></span>
+        </div>
+      </footer>
+    </article>
+  } @else {
+    <p class="text-center text-sm text-muted-foreground">Chargement…</p>
+  }
+</div>

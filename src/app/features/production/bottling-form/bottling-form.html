@@ -163,6 +163,57 @@
     </button>
   </fieldset>
 
+  <!-- ===== Les commandes servies ===== -->
+  <fieldset class="flex flex-col gap-3">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Commandes servies</legend>
+
+    @for (allocation of bottlingForm.allocations; track $index; let i = $index) {
+      <div class="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto]">
+        <div class="flex min-h-9 flex-col justify-center">
+          <span class="text-sm font-medium">{{ allocationOption(allocation.orderLineId().value())?.label ?? 'Commande' }}</span>
+          @if (allocationOption(allocation.orderLineId().value())?.missing; as missing) {
+            <span class="text-xs text-muted-foreground">Il lui manque {{ missing | number }} bt</span>
+          }
+          <app-field-error [state]="allocation.orderLineId()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label [for]="'bt-alloc-' + i" class="sr-only">Bouteilles réservées</label>
+          <div class="relative">
+            <input [id]="'bt-alloc-' + i" hlmInput type="number" step="1" class="pr-8" [formField]="allocation.quantity" />
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">bt</span>
+          </div>
+          <app-field-error [state]="allocation.quantity()" />
+        </div>
+        <button hlmBtn variant="ghost" size="icon-sm" type="button" class="mt-1" (click)="removeAllocation(i)"
+                aria-label="Ne plus réserver pour cette commande">
+          <ng-icon name="lucideTrash2" aria-hidden="true" />
+        </button>
+      </div>
+    } @empty {
+      <p class="text-sm text-muted-foreground">Aucune commande : toutes les bouteilles iront au stock.</p>
+    }
+    @for (error of bottlingForm.allocations().errors(); track error.kind) {
+      <p class="text-sm text-destructive">{{ error.message }}</p>
+    }
+
+    @if (addableAllocations().length > 0) {
+      <div class="flex flex-wrap items-center gap-2">
+        <label for="bt-add-alloc" class="text-sm text-muted-foreground">Réserver pour</label>
+        <select id="bt-add-alloc" #alloc (change)="addAllocation(alloc.value); alloc.value = ''" [class]="selectClass + ' sm:w-auto sm:min-w-64'">
+          <option value="">une commande en attente…</option>
+          @for (option of addableAllocations(); track option.orderLineId) {
+            <option [value]="option.orderLineId">{{ option.label }}{{ option.missing ? ' · manque ' + option.missing + ' bt' : '' }}</option>
+          }
+        </select>
+      </div>
+    }
+    @if (model().allocations.length > 0 && model().plannedBottles) {
+      <p class="text-[13px] text-muted-foreground">
+        {{ allocatedBottles() | number }} bt réservées · {{ ((model().plannedBottles ?? 0) - allocatedBottles()) | number }} bt pour le stock
+      </p>
+    }
+  </fieldset>
+
   <div class="flex flex-col gap-1.5">
     <label for="bt-notes" class="text-sm font-medium">Notes <span class="font-normal text-muted-foreground">(facultatif)</span></label>
     <textarea id="bt-notes" hlmInput rows="2" class="h-auto py-2" [formField]="bottlingForm.notes" placeholder="Commande, habillage particulier…"></textarea>

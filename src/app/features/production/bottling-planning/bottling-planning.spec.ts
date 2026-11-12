@@ -27,6 +27,15 @@ const row = (overrides: Partial<BottlingRow>): BottlingRow => ({
   shortageCount: 2,
   alert: true,
   lotNumber: null,
+  allocations: [
+    {
+      orderLineId: 'l1',
+      orderId: 'o1',
+      orderCode: 'CC-26-001',
+      clientName: 'Tokyo Wine',
+      quantity: 3600,
+    },
+  ],
   ...overrides,
 });
 
@@ -48,6 +57,22 @@ describe('BottlingPlanning', () => {
     };
     http.expectOne((request) => request.params.get('from') === '2026-11-09').flush(page);
     http.expectOne((request) => request.params.get('status') === 'PLANNED').flush(page);
+    http.expectOne('/api/sales/order-lines/to-plan').flush([
+      {
+        lineId: 'l2',
+        orderId: 'o2',
+        orderCode: 'CC-26-004',
+        clientName: 'Hudson',
+        articleId: 'a2',
+        articleCode: 'PF-BDX',
+        articleLabel: 'Bordeaux Blanc',
+        requestedLoadingDate: '2026-11-20',
+        remaining: 6000,
+        fromStock: 0,
+        fromBottlings: 3600,
+        missing: 2400,
+      },
+    ]);
     await fixture.whenStable();
     fixture.detectChanges();
 
@@ -56,6 +81,9 @@ describe('BottlingPlanning', () => {
     expect(text).toContain('jour 1/2');
     expect(text).toContain('jour 2/2');
     expect(text).toContain('Cuve C11');
+    expect(text).toContain('Pour CC-26-001');
+    expect(text).toContain('manque 2'); // « manque 2 400 bt » : séparateur selon la locale
+    expect(text).toContain('CC-26-004');
     expect(text).toContain('1 mise(s) dans les 10 prochains jours manquent de matières sèches');
   });
 });

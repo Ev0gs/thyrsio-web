@@ -68,6 +68,14 @@ export class BottlingDetail {
   protected readonly busy = signal(false);
 
   /** Une mise ne se clôture qu'une fois commencée. */
+  /** Les bouteilles qui ne sont réservées à aucune commande. */
+  protected readonly allocatedFree = computed(() => {
+    const b = this.bottling();
+    if (!b) return 0;
+    const total = b.producedBottles ?? b.plannedBottles;
+    return Math.max(0, total - b.allocations.reduce((sum, a) => sum + a.quantity, 0));
+  });
+
   protected readonly canClose = computed(() => {
     const bottling = this.bottling();
     return !!bottling && bottling.status === 'PLANNED' && bottling.startDate <= todayLocal();

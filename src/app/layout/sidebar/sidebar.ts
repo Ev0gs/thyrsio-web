@@ -130,8 +130,8 @@ export class Sidebar {
     {
       label: 'Ventes',
       items: [
-        { label: 'Commandes clients', icon: 'lucideShoppingCart' },
-        { label: 'Expéditions', icon: 'lucideTruck' },
+        { label: 'Commandes clients', icon: 'lucideShoppingCart', route: '/ventes/commandes' },
+        { label: 'Expéditions', icon: 'lucideTruck', route: '/ventes/expeditions' },
       ],
     },
     {

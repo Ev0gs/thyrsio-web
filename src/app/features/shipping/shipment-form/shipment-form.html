@@ -1,0 +1,91 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-5">
+
+  <div class="grid gap-4 sm:grid-cols-3">
+    <div class="flex flex-col gap-1.5">
+      <label for="sh-date" class="text-sm font-medium">Date de chargement</label>
+      <input id="sh-date" hlmInput type="date" [formField]="shipmentForm.plannedDate" />
+      <app-field-error [state]="shipmentForm.plannedDate()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="sh-carrier" class="text-sm font-medium">Transporteur</label>
+      <input id="sh-carrier" hlmInput [formField]="shipmentForm.carrier" />
+      <app-field-error [state]="shipmentForm.carrier()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="sh-ref" class="text-sm font-medium">N° de transport</label>
+      <input id="sh-ref" hlmInput [formField]="shipmentForm.transportReference" placeholder="Lettre de voiture, conteneur…" />
+      <app-field-error [state]="shipmentForm.transportReference()" />
+    </div>
+  </div>
+
+  <fieldset class="flex flex-col gap-3">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Ce qui est chargé</legend>
+
+    @for (line of shipmentForm.lines; track $index; let i = $index) {
+      @if (orderLine(line.orderLineId().value()); as ordered) {
+        <div class="grid items-start gap-3 rounded-lg border border-border p-3 sm:grid-cols-[minmax(0,1fr)_12rem_8rem_auto]">
+          <div class="flex min-w-0 flex-col">
+            <span class="truncate text-sm font-medium">{{ ordered.articleLabel }}</span>
+            <span class="text-xs text-muted-foreground">
+              Commandé {{ ordered.quantity | number }} · reste {{ ordered.remaining | number }} à expédier
+            </span>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label [for]="'sh-lot-' + i" class="sr-only">Lot de {{ ordered.articleLabel }}</label>
+            <select [id]="'sh-lot-' + i" [formField]="line.lotId" [class]="selectClass">
+              <option value="">Choisir le lot…</option>
+              @for (lot of lotsFor(ordered.id); track lot.lotId) {
+                <option [value]="lot.lotId">{{ lot.lotNumber }} · {{ lot.quantity | number: '1.0-0' }} bt</option>
+              }
+            </select>
+            @if (lotsFor(ordered.id).length === 0) {
+              <span class="text-xs text-destructive">Aucune bouteille en stock</span>
+            }
+            <app-field-error [state]="line.lotId()" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label [for]="'sh-qty-' + i" class="sr-only">Bouteilles de {{ ordered.articleLabel }}</label>
+            <div class="relative">
+              <input [id]="'sh-qty-' + i" hlmInput type="number" step="1" class="pr-8" [formField]="line.quantity" />
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">bt</span>
+            </div>
+            <app-field-error [state]="line.quantity()" />
+          </div>
+          <div class="flex gap-1">
+            <button hlmBtn variant="ghost" size="icon-sm" type="button" (click)="addLot(i)"
+                    [attr.aria-label]="'Ajouter un autre lot de ' + ordered.articleLabel" title="Pris dans un autre lot aussi">
+              <ng-icon name="lucidePlus" aria-hidden="true" />
+            </button>
+            <button hlmBtn variant="ghost" size="icon-sm" type="button" (click)="removeLine(i)"
+                    [attr.aria-label]="'Ne pas charger ' + ordered.articleLabel" title="Pas dans ce chargement">
+              <ng-icon name="lucideTrash2" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      }
+    } @empty {
+      <p class="text-sm text-muted-foreground">Rien à charger : tout a déjà été expédié.</p>
+    }
+
+    <p class="text-right text-sm text-muted-foreground">
+      <span class="font-semibold tabular-nums text-foreground">{{ totalBottles() | number }}</span> bouteilles chargées
+    </p>
+  </fieldset>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="sh-notes" class="text-sm font-medium">Notes <span class="font-normal text-muted-foreground">(imprimées sur le bon de livraison)</span></label>
+    <textarea id="sh-notes" hlmInput rows="2" class="h-auto py-2" [formField]="shipmentForm.notes"></textarea>
+    <app-field-error [state]="shipmentForm.notes()" />
+  </div>
+
+  @for (error of shipmentForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="shipmentForm().submitting() || model().lines.length === 0">
+      {{ shipmentForm().submitting() ? 'Enregistrement…' : (shipment() ? 'Enregistrer' : "Préparer l'expédition") }}
+    </button>
+  </hlm-dialog-footer>
+</form>

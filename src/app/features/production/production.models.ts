@@ -35,6 +35,17 @@ export interface BottlingRow {
   /** Planifiée, avec des manquants, et elle commence dans moins de 10 jours. */
   alert: boolean;
   lotNumber: string | null;
+  /** Les commandes que la mise sert ; le reste de ses bouteilles va au stock. */
+  allocations: AllocationLine[];
+}
+
+/** Une commande servie par la mise : « CC-26-004 · Tokyo Wine Import · 3 600 bt ». */
+export interface AllocationLine {
+  orderLineId: string;
+  orderId: string;
+  orderCode: string | null;
+  clientName: string | null;
+  quantity: number;
 }
 
 /**
@@ -100,6 +111,12 @@ export interface BottlingRequest {
   wineDescription: string | null;
   notes: string | null;
   materials: MaterialRequest[];
+  allocations: AllocationRequest[];
+}
+
+export interface AllocationRequest {
+  orderLineId: string;
+  quantity: number;
 }
 
 export interface ConsumptionRequest {

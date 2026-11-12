@@ -16,7 +16,8 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { Page } from '../../../core/api/page';
 import { todayLocal } from '../../../core/dates';
 import { describeWine } from '../../cuverie/cuverie.models';
-import { BottlingForm } from '../bottling-form/bottling-form';
+import { LineToPlan } from '../../sales/sales.models';
+import { BottlingForm, BottlingPrefill } from '../bottling-form/bottling-form';
 import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge';
 import {
   addDays,
@@ -87,6 +88,12 @@ export class BottlingPlanning {
     params: { status: 'PLANNED', size: 200 },
   }));
 
+  /** Les lignes de commande que ni le stock ni les mises ne couvrent : des mises à planifier. */
+  protected readonly toPlan = httpResource<LineToPlan[]>(() => '/api/sales/order-lines/to-plan');
+  protected readonly toPlanRows = computed(() =>
+    this.toPlan.hasValue() ? this.toPlan.value() : [],
+  );
+
   protected readonly upcomingRows = computed(() =>
     this.upcoming.hasValue() ? this.upcoming.value().content : [],
   );
@@ -132,6 +139,11 @@ export class BottlingPlanning {
 
   protected readonly dialogOpen = signal(false);
   protected readonly newDay = signal<string | null>(null);
+  protected readonly prefill = signal<BottlingPrefill | null>(null);
+
+  protected orderCodes(row: BottlingRow): string {
+    return [...new Set(row.allocations.map((a) => a.orderCode))].join(', ');
+  }
 
   protected goToWeek(offsetWeeks: number): void {
     const monday = addDays(this.monday(), offsetWeeks * 7);
@@ -146,6 +158,18 @@ export class BottlingPlanning {
 
   protected plan(day: string | null): void {
     this.newDay.set(day);
+    this.prefill.set(null);
+    this.dialogOpen.set(true);
+  }
+
+  /** Une mise pour ce qui manque à une ligne de commande, réservée à celle-ci. */
+  protected planFor(line: LineToPlan): void {
+    this.newDay.set(null);
+    this.prefill.set({
+      finishedArticleId: line.articleId,
+      plannedBottles: line.missing,
+      allocations: [{ orderLineId: line.lineId, quantity: line.missing }],
+    });
     this.dialogOpen.set(true);
   }
 

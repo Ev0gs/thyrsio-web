@@ -25,9 +25,11 @@ import { todayLocal } from '../../../core/dates';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { describeWine, Tank } from '../../cuverie/cuverie.models';
+import { LineToPlan } from '../../sales/sales.models';
 import { StockOverviewRow } from '../../stock/stock.models';
 import { ProductionApi } from '../production-api';
 import {
+  AllocationRequest,
   Bottling,
   BOTTLING_LOCATION_LABELS,
   BottlingLocation,
@@ -38,6 +40,28 @@ import {
 interface MaterialModel {
   articleId: string;
   plannedQuantity: number | null;
+}
+
+interface AllocationModel {
+  orderLineId: string;
+  quantity: number | null;
+}
+
+/** Une mise planifiée depuis une commande : le produit, les bouteilles et la réservation déjà remplis. */
+export interface BottlingPrefill {
+  finishedArticleId: string;
+  plannedBottles: number;
+  allocations: AllocationRequest[];
+}
+
+/** Ce qu'on affiche d'une ligne de commande réservée : « CC-26-004 · Hudson Fine Wines ». */
+interface AllocationOption {
+  orderLineId: string;
+  orderId: string;
+  label: string;
+  articleId: string;
+  /** Ce qui manque encore à la ligne (pour une réservation existante : inconnu). */
+  missing: number | null;
 }
 
 interface BottlingModel {
@@ -52,17 +76,22 @@ interface BottlingModel {
   bottleVolumeCl: number | null;
   notes: string;
   materials: MaterialModel[];
+  allocations: AllocationModel[];
 }
 
-const toModel = (bottling: Bottling | null, day: string | null): BottlingModel => ({
-  finishedArticleId: bottling?.finishedArticleId ?? '',
+const toModel = (
+  bottling: Bottling | null,
+  day: string | null,
+  prefill: BottlingPrefill | null,
+): BottlingModel => ({
+  finishedArticleId: bottling?.finishedArticleId ?? prefill?.finishedArticleId ?? '',
   location: bottling?.location ?? 'ON_SITE',
   sourceTankId: bottling?.sourceTankId ?? '',
   wineDescription: bottling?.wineDescription ?? '',
   contractor: bottling?.contractor ?? '',
   startDate: bottling?.startDate ?? day ?? todayLocal(),
   endDate: bottling?.endDate ?? day ?? todayLocal(),
-  plannedBottles: bottling?.plannedBottles ?? null,
+  plannedBottles: bottling?.plannedBottles ?? prefill?.plannedBottles ?? null,
   bottleVolumeCl: bottling?.bottleVolumeCl ?? 75,
   notes: bottling?.notes ?? '',
   materials:
@@ -70,6 +99,10 @@ const toModel = (bottling: Bottling | null, day: string | null): BottlingModel =
       articleId: m.articleId,
       plannedQuantity: m.plannedQuantity,
     })) ?? [],
+  allocations: (bottling?.allocations ?? prefill?.allocations ?? []).map((a) => ({
+    orderLineId: a.orderLineId,
+    quantity: a.quantity,
+  })),
 });
 
 /** Une quantité proportionnelle au nombre de bouteilles : arrondie au supérieur pour les unités entières. */
@@ -102,6 +135,8 @@ export class BottlingForm {
   readonly bottling = input<Bottling | null>(null);
   /** Le jour cliqué dans le planning, pour une nouvelle mise. */
   readonly day = input<string | null>(null);
+  /** Une nouvelle mise pour une commande (bouton « Planifier »). */
+  readonly prefill = input<BottlingPrefill | null>(null);
   readonly saved = output<Bottling>();
   readonly cancelled = output<void>();
 
@@ -125,6 +160,54 @@ export class BottlingForm {
     url: '/api/production/bottlings',
     params: { size: 50, sort: 'startDate,desc' },
   }));
+
+  /** Les lignes de commande que ni le stock ni les mises ne couvrent : ce qu'une mise peut servir. */
+  private readonly linesToPlan = httpResource<LineToPlan[]>(() => '/api/sales/order-lines/to-plan');
+
+  /** Les lignes réservables : celles déjà réservées par cette mise, et celles à planifier. */
+  private readonly allocationOptions = computed(() => {
+    const options = new Map<string, AllocationOption>();
+    const current = this.bottling();
+    for (const a of current?.allocations ?? []) {
+      options.set(a.orderLineId, {
+        orderLineId: a.orderLineId,
+        orderId: a.orderId,
+        label: `${a.orderCode} · ${a.clientName ?? ''}`,
+        articleId: current!.finishedArticleId,
+        missing: null,
+      });
+    }
+    for (const line of this.linesToPlan.hasValue() ? this.linesToPlan.value() : []) {
+      options.set(line.lineId, {
+        orderLineId: line.lineId,
+        orderId: line.orderId,
+        label: `${line.orderCode} · ${line.clientName ?? ''}`,
+        articleId: line.articleId,
+        missing: line.missing,
+      });
+    }
+    return options;
+  });
+
+  protected allocationOption(orderLineId: string): AllocationOption | undefined {
+    return this.allocationOptions().get(orderLineId);
+  }
+
+  /** Les commandes du produit choisi qu'on peut encore ajouter. */
+  protected readonly addableAllocations = computed(() => {
+    const value = this.model();
+    const taken = new Set(value.allocations.map((a) => a.orderLineId));
+    return [...this.allocationOptions().values()].filter(
+      (option) =>
+        option.articleId === value.finishedArticleId &&
+        !taken.has(option.orderLineId) &&
+        (option.missing ?? 1) > 0,
+    );
+  });
+
+  protected readonly allocatedBottles = computed(() =>
+    this.model().allocations.reduce((sum, a) => sum + (a.quantity ?? 0), 0),
+  );
 
   protected readonly productOptions = computed(() =>
     (this.finishedGoods.hasValue() ? this.finishedGoods.value() : [])
@@ -160,7 +243,9 @@ export class BottlingForm {
 
   // ---------- Le modèle et ses règles ----------
 
-  protected readonly model = linkedSignal(() => toModel(this.bottling(), this.day()));
+  protected readonly model = linkedSignal(() =>
+    toModel(this.bottling(), this.day(), this.prefill()),
+  );
   /** Le nombre de bouteilles pour lequel la liste de matières a été établie : sert à la recalculer. */
   protected readonly materialsBasis = linkedSignal(() => this.bottling()?.plannedBottles ?? null);
   protected readonly copyError = signal<string | null>(null);
@@ -210,6 +295,32 @@ export class BottlingForm {
           ? { kind: 'duplicate', message: 'Déjà dans la liste' }
           : undefined;
       });
+    });
+
+    applyEach(path.allocations, (allocation) => {
+      required(allocation.quantity, { message: 'Indique les bouteilles' });
+      min(allocation.quantity, 1, { message: 'Au moins une bouteille' });
+      validate(allocation.quantity, ({ value }) =>
+        value() !== null && !Number.isInteger(value())
+          ? { kind: 'integer', message: 'Un nombre entier de bouteilles' }
+          : undefined,
+      );
+      validate(allocation.orderLineId, ({ value, valueOf }) => {
+        const option = this.allocationOption(value());
+        return option && option.articleId !== valueOf(path.finishedArticleId)
+          ? { kind: 'otherProduct', message: 'Cette commande attend un autre produit' }
+          : undefined;
+      });
+    });
+    validate(path.allocations, ({ value, valueOf }) => {
+      const total = value().reduce((sum, a) => sum + (a.quantity ?? 0), 0);
+      const planned = valueOf(path.plannedBottles);
+      return planned !== null && total > planned
+        ? {
+            kind: 'overAllocated',
+            message: `Les commandes réservent ${total} bouteilles, la mise n'en prévoit que ${planned}`,
+          }
+        : undefined;
     });
   });
 
@@ -300,6 +411,28 @@ export class BottlingForm {
     this.materialsBasis.set(bottles);
   }
 
+  // ---------- Les commandes servies ----------
+
+  protected addAllocation(orderLineId: string): void {
+    const option = this.allocationOption(orderLineId);
+    if (!option) {
+      return;
+    }
+    const free = Math.max(0, (this.model().plannedBottles ?? 0) - this.allocatedBottles());
+    const quantity = Math.min(option.missing ?? free, free) || option.missing || null;
+    this.model.update((model) => ({
+      ...model,
+      allocations: [...model.allocations, { orderLineId, quantity }],
+    }));
+  }
+
+  protected removeAllocation(index: number): void {
+    this.model.update((model) => ({
+      ...model,
+      allocations: model.allocations.filter((_, i) => i !== index),
+    }));
+  }
+
   // ---------- Enregistrement ----------
 
   protected async save(): Promise<void> {
@@ -321,6 +454,10 @@ export class BottlingForm {
           materials: value.materials.map((line) => ({
             articleId: line.articleId,
             plannedQuantity: line.plannedQuantity!,
+          })),
+          allocations: value.allocations.map((a) => ({
+            orderLineId: a.orderLineId,
+            quantity: a.quantity!,
           })),
         };
         try {

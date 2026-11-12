@@ -1,0 +1,177 @@
+<a routerLink="/ventes/expeditions" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+  <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Toutes les expéditions
+</a>
+
+@if (resource.error()) {
+  <div class="mt-4 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+    <p class="text-sm font-medium">Impossible de charger cette expédition.</p>
+    <button hlmBtn variant="outline" (click)="resource.reload()">
+      <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+    </button>
+  </div>
+} @else if (shipment(); as s) {
+  <header class="mt-3 flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-[28px] font-semibold tracking-tight">Expédition {{ s.code }}</h1>
+        <app-shipment-status-badge [status]="s.status" />
+      </div>
+      <p class="text-sm text-muted-foreground">
+        {{ s.clientName }} · commande
+        <a [routerLink]="['/ventes/commandes', s.orderId]" class="font-mono font-medium text-foreground hover:underline">{{ s.orderCode }}</a>
+        @if (s.customerReference) { · réf. client {{ s.customerReference }} }
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      @if (s.status === 'DRAFT') {
+        <button hlmBtn variant="ghost" (click)="openDialog('cancel')">
+          <ng-icon name="lucideBan" aria-hidden="true" /> Annuler
+        </button>
+        <button hlmBtn variant="outline" (click)="openDialog('edit')" [disabled]="!order()">
+          <ng-icon name="lucidePencil" aria-hidden="true" /> Modifier
+        </button>
+      }
+      @if (s.status !== 'CANCELLED') {
+        <a hlmBtn variant="outline" [routerLink]="['/impression/bon-de-livraison', s.id]" target="_blank">
+          <ng-icon name="lucidePrinter" aria-hidden="true" /> Bon de livraison
+        </a>
+      }
+      @if (s.status === 'DRAFT') {
+        <button hlmBtn (click)="openDialog('ship')">
+          <ng-icon name="lucideTruck" aria-hidden="true" /> Valider le départ
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (actionError(); as message) {
+    @if (!dialog()) {
+      <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+    }
+  }
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-3">
+    <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+      <span class="text-sm font-medium text-muted-foreground">Livré à</span>
+      <span class="text-sm leading-relaxed">
+        @for (line of addressLines(); track $index) { {{ line }}<br /> }
+      </span>
+      @if (s.status === 'DRAFT') {
+        <span class="text-[13px] text-muted-foreground">L'adresse est figée au départ.</span>
+      }
+    </section>
+
+    <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+      <span class="text-sm font-medium text-muted-foreground">Transport</span>
+      <dl class="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-sm">
+        <dt class="text-muted-foreground">{{ s.shippedAt ? 'Parti le' : 'Chargement' }}</dt>
+        <dd class="font-medium">{{ s.shippedAt ? (s.shippedAt | date: 'EEEE d MMMM y, HH:mm') : (s.plannedDate | date: 'EEEE d MMMM y') }}</dd>
+        <dt class="text-muted-foreground">Transporteur</dt>
+        <dd>{{ s.carrier ?? '—' }}</dd>
+        <dt class="text-muted-foreground">N° de transport</dt>
+        <dd>{{ s.transportReference ?? '—' }}</dd>
+        <dt class="text-muted-foreground">Incoterm</dt>
+        <dd>{{ incotermLabel() ?? '—' }}</dd>
+      </dl>
+    </section>
+
+    <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+      <span class="text-sm font-medium text-muted-foreground">Bouteilles</span>
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ s.totalBottles | number }}</span>
+      <span class="text-[13px] text-muted-foreground">
+        @if (s.shippedBy) { départ validé par {{ s.shippedBy }} } @else { préparé par {{ s.createdBy }} }
+      </span>
+    </section>
+  </div>
+
+  @if (s.notes) {
+    <p class="mt-4 whitespace-pre-line rounded-lg bg-muted/50 px-4 py-3 text-sm">{{ s.notes }}</p>
+  }
+
+  <section class="mt-6">
+    <h2 class="text-base font-semibold">Chargé</h2>
+    <div class="mt-3 overflow-hidden rounded-xl border border-border">
+      <div hlmTableContainer>
+        <table hlmTable class="min-w-[720px]">
+          <thead hlmTHead class="bg-muted/50">
+          <tr hlmTr>
+            <th hlmTh>Produit</th>
+            <th hlmTh>Lot</th>
+            <th hlmTh class="text-right">Bouteilles</th>
+            <th hlmTh class="text-right">Commandé</th>
+          </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (line of s.lines; track line.id) {
+              <tr hlmTr>
+                <td hlmTd>
+                  <div class="font-medium">{{ line.articleLabel }}</div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ line.articleCode }}</div>
+                </td>
+                <td hlmTd class="font-mono">{{ line.lotNumber ?? '—' }}</td>
+                <td hlmTd class="text-right tabular-nums font-medium">{{ line.quantity | number }}</td>
+                <td hlmTd class="text-right tabular-nums text-muted-foreground">{{ line.orderedQuantity | number }}</td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="4" class="py-8 text-center text-muted-foreground">Rien dans ce chargement.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <hlm-dialog [state]="dialog() ? 'open' : 'closed'" (closed)="dialog.set(null)">
+    <hlm-dialog-content *hlmDialogPortal="let ctx" [class]="dialog() === 'edit' ? 'sm:max-w-3xl' : 'sm:max-w-md'">
+      @switch (dialog()) {
+        @case ('edit') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Modifier l'expédition {{ s.code }}</h3>
+          </hlm-dialog-header>
+          @if (order(); as o) {
+            <div class="dialog-scroll">
+              <app-shipment-form [order]="o" [shipment]="s" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+            </div>
+          }
+        }
+        @case ('ship') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Valider le départ de {{ s.code }} ?</h3>
+            <p hlmDialogDescription>
+              {{ s.totalBottles | number }} bouteilles sortent du stock, la commande {{ s.orderCode }} est mise à jour
+              et l'adresse de livraison est figée sur le bon. On ne peut plus revenir en arrière.
+            </p>
+          </hlm-dialog-header>
+          @if (actionError(); as message) {
+            <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+          }
+          <hlm-dialog-footer>
+            <button hlmBtn variant="outline" type="button" (click)="ctx.close()">Pas encore</button>
+            <button hlmBtn type="button" [disabled]="busy()" (click)="ship()">Valider le départ</button>
+          </hlm-dialog-footer>
+        }
+        @case ('cancel') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Annuler l'expédition {{ s.code }} ?</h3>
+            <p hlmDialogDescription>Rien n'est encore sorti du stock : la commande attend toujours ces bouteilles.</p>
+          </hlm-dialog-header>
+          @if (actionError(); as message) {
+            <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+          }
+          <hlm-dialog-footer>
+            <button hlmBtn variant="outline" type="button" (click)="ctx.close()">Garder</button>
+            <button hlmBtn variant="destructive" type="button" [disabled]="busy()" (click)="cancel()">Annuler l'expédition</button>
+          </hlm-dialog-footer>
+        }
+      }
+    </hlm-dialog-content>
+  </hlm-dialog>
+} @else {
+  <div class="mt-4 flex flex-col gap-4">
+    <div hlmSkeleton class="h-10 w-96"></div>
+    <div hlmSkeleton class="h-32 w-full rounded-xl"></div>
+    <div hlmSkeleton class="h-48 w-full rounded-xl"></div>
+  </div>
+}

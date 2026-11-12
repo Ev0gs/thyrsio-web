@@ -37,28 +37,37 @@ export class SupplierList {
   private readonly api = inject(ReferentielApi);
 
   readonly archives = input<string>();
+  /** ?vue=carte : les fournisseurs sur une carte plutôt qu'en tableau. */
+  readonly vue = input<string>();
   readonly page = input(1, {
     transform: (value: string | undefined) => Math.max(1, Number(value) || 1),
   });
 
+  protected readonly mapView = computed(() => this.vue() === 'carte');
+
+  /** La liste : une page de 25. La carte : tous les fournisseurs d'un coup (quelques dizaines au plus). */
   protected readonly suppliers = httpResource<Page<SupplierDetail>>(() => ({
     url: '/api/referentiel/suppliers',
     params: {
-      page: this.page() - 1,
-      size: 25,
+      page: this.mapView() ? 0 : this.page() - 1,
+      size: this.mapView() ? 1000 : 25,
       sort: 'name',
       includeArchived: this.archives() === '1',
     },
   }));
 
+  protected readonly rows = computed(() =>
+    this.suppliers.hasValue() ? this.suppliers.value().content : [],
+  );
+
   protected readonly dialogState = signal<'open' | 'closed'>('closed');
   protected readonly editing = signal<SupplierDetail | null>(null);
   protected readonly actionError = signal<string | null>(null);
 
-  /** Les fournisseurs de la page déjà localisés : le vin en bordeaux, les matières sèches en bleu. */
+  /** Les fournisseurs déjà localisés : le vin en bordeaux, les matières sèches en bleu. */
   protected readonly mapPoints = computed<MapPoint[]>(() =>
-    (this.suppliers.hasValue() ? this.suppliers.value().content : [])
-      .filter((supplier) => supplier.active && supplier.location)
+    this.rows()
+      .filter((supplier) => supplier.location)
       .map((supplier) => ({
         id: supplier.id,
         label: supplier.name,
@@ -96,6 +105,13 @@ export class SupplierList {
     } catch (error) {
       this.actionError.set(problemMessage(error));
     }
+  }
+
+  protected setView(map: boolean): void {
+    this.router.navigate([], {
+      queryParams: { vue: map ? 'carte' : null, page: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected setShowArchived(show: boolean): void {

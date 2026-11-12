@@ -8,27 +8,54 @@
   </button>
 </header>
 
-<label class="mt-6 inline-flex items-center gap-2 text-sm">
-  <input type="checkbox" #arch [checked]="archives() === '1'" (change)="setShowArchived(arch.checked)"
-         class="size-4 accent-primary" />
-  Afficher les archivés
-</label>
+<div class="mt-6 flex flex-wrap items-center gap-4">
+  <div role="group" aria-label="Affichage" class="flex gap-1 rounded-lg bg-muted p-1">
+    <button type="button" (click)="setView(false)" [attr.aria-pressed]="!mapView()"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="!mapView() ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+      Liste
+    </button>
+    <button type="button" (click)="setView(true)" [attr.aria-pressed]="mapView()"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="mapView() ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+      Carte
+    </button>
+  </div>
+  <label class="inline-flex items-center gap-2 text-sm">
+    <input type="checkbox" #arch [checked]="archives() === '1'" (change)="setShowArchived(arch.checked)"
+           class="size-4 accent-primary" />
+    Afficher les archivés
+  </label>
+</div>
 
 @if (actionError(); as message) {
   <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
 }
 
-@if (mapPoints().length > 0) {
+@if (mapView()) {
   <section class="mt-4" aria-label="Carte des fournisseurs">
-    <app-location-map [points]="mapPoints()" heightClass="h-64" (selected)="openFromMap($event)" />
-    <p class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-      <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-primary"></span> Vin en vrac</span>
-      <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-sky-700"></span> Matières sèches</span>
-      <span>· clic sur un point pour ouvrir la fiche</span>
-    </p>
+    @if (suppliers.error()) {
+      <div class="flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+        <p class="text-sm font-medium">Impossible de charger les fournisseurs.</p>
+        <button hlmBtn variant="outline" (click)="suppliers.reload()">
+          <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+        </button>
+      </div>
+    } @else if (!suppliers.hasValue()) {
+      <div hlmSkeleton class="h-[32rem] w-full rounded-lg"></div>
+    } @else {
+      <app-location-map [points]="mapPoints()" heightClass="h-[32rem]" (selected)="openFromMap($event)" />
+      <p class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-primary"></span> Vin en vrac</span>
+        <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-sky-700"></span> Matières sèches</span>
+        <span>· {{ mapPoints().length }} sur {{ rows().length }} placés sur la carte · clic sur un point pour ouvrir la fiche</span>
+        @if (mapPoints().length < rows().length) {
+          <span>· les autres n'ont pas d'adresse, ou elle est introuvable</span>
+        }
+      </p>
+    }
   </section>
-}
-
+} @else {
 <section class="mt-4 overflow-hidden rounded-xl border border-border">
   @if (suppliers.error()) {
     <div class="flex flex-col items-center gap-3 p-10 text-center">
@@ -105,6 +132,7 @@
     }
   }
 </section>
+}
 
 <hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
   <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">

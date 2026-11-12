@@ -1,7 +1,7 @@
 <header class="flex flex-wrap items-end justify-between gap-4">
   <div class="flex flex-col gap-1">
     <h1 class="text-[28px] font-semibold tracking-tight">Fournisseurs</h1>
-    <p class="text-sm text-muted-foreground">Ceux qui vous livrent bouteilles, bouchons, capsules, étiquettes et emballages</p>
+    <p class="text-sm text-muted-foreground">Ceux qui vous livrent le vin en vrac et les matières sèches : bouteilles, bouchons, capsules, étiquettes, emballages</p>
   </div>
   <button hlmBtn size="lg" (click)="open(null)">
     <ng-icon name="lucidePlus" aria-hidden="true" /> Nouveau fournisseur
@@ -48,6 +48,9 @@
                 <td hlmTd class="whitespace-normal">
                   <div class="flex items-center gap-2 font-medium">
                     {{ supplier.name }}
+                    @if (supplier.kind === 'WINE') {
+                      <span hlmBadge variant="secondary" class="bg-primary/10 text-primary">Vin en vrac</span>
+                    }
                     @if (!supplier.active) {
                       <span hlmBadge variant="outline">Archivé</span>
                     }

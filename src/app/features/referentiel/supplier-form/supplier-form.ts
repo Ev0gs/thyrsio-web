@@ -15,10 +15,12 @@ import { HlmInputImports } from '@spartan-ng/helm/input';
 import { problemMessage } from '../../../core/api/problem';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { ReferentielApi } from '../referentiel-api';
-import { SupplierDetail } from '../referentiel.models';
+import { SUPPLIER_KIND_LABELS, SupplierDetail, SupplierKind } from '../referentiel.models';
+import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 
 const toModel = (supplier: SupplierDetail | null) => ({
   name: supplier?.name ?? '',
+  kind: supplier?.kind ?? ('DRY_GOODS' as SupplierKind),
   email: supplier?.email ?? '',
   phone: supplier?.phone ?? '',
   address: supplier?.address ?? '',
@@ -38,6 +40,10 @@ export class SupplierForm {
 
   private readonly api = inject(ReferentielApi);
 
+  protected readonly selectClass = SELECT_CLASS;
+  protected readonly kindLabels = SUPPLIER_KIND_LABELS;
+  protected readonly kinds = Object.keys(SUPPLIER_KIND_LABELS) as SupplierKind[];
+
   protected readonly model = linkedSignal(() => toModel(this.supplier()));
 
   protected readonly supplierForm = form(this.model, (path) => {
@@ -56,6 +62,7 @@ export class SupplierForm {
         const value = this.model();
         const request = {
           name: value.name.trim(),
+          kind: value.kind,
           email: value.email.trim() || null,
           phone: value.phone.trim() || null,
           address: value.address.trim() || null,

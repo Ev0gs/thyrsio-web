@@ -1,8 +1,18 @@
 <form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
-  <div class="flex flex-col gap-1.5">
-    <label for="sup-name" class="text-sm font-medium">Nom</label>
-    <input id="sup-name" hlmInput [formField]="supplierForm.name" />
-    <app-field-error [state]="supplierForm.name()" />
+  <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_12rem]">
+    <div class="flex flex-col gap-1.5">
+      <label for="sup-name" class="text-sm font-medium">Nom</label>
+      <input id="sup-name" hlmInput [formField]="supplierForm.name" />
+      <app-field-error [state]="supplierForm.name()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="sup-kind" class="text-sm font-medium">Fournit</label>
+      <select id="sup-kind" [formField]="supplierForm.kind" [class]="selectClass">
+        @for (kind of kinds; track kind) {
+          <option [value]="kind">{{ kindLabels[kind] }}</option>
+        }
+      </select>
+    </div>
   </div>
 
   <div class="grid gap-4 sm:grid-cols-2">
@@ -27,7 +37,7 @@
   <div class="flex flex-col gap-1.5">
     <label for="sup-lead" class="text-sm font-medium">Délai de livraison moyen <span class="font-normal text-muted-foreground">(jours, facultatif)</span></label>
     <input id="sup-lead" hlmInput type="number" step="1" class="sm:w-32" [formField]="supplierForm.averageLeadTimeDays" />
-    <p class="text-xs text-muted-foreground">Servira à anticiper les commandes de matières sèches.</p>
+    <p class="text-xs text-muted-foreground">Servira à anticiper les commandes.</p>
     <app-field-error [state]="supplierForm.averageLeadTimeDays()" />
   </div>
 

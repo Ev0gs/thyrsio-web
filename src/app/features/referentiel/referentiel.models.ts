@@ -33,12 +33,6 @@ export interface UnitRow {
   decimals: number;
 }
 
-export interface SupplierRow {
-  id: string;
-  name: string;
-  active: boolean;
-}
-
 /** PUT /api/referentiel/articles/{id} : le code et l'unité sont définitifs. */
 export interface UpdateArticleRequest {
   label: string;
@@ -54,9 +48,18 @@ export interface CreateArticleRequest extends UpdateArticleRequest {
   unitCode: string | null; // null : l'unité par défaut de la catégorie
 }
 
+/** Ce que fournit un fournisseur : matières sèches (stock) ou vin en vrac (cuverie). */
+export type SupplierKind = 'DRY_GOODS' | 'WINE';
+
+export const SUPPLIER_KIND_LABELS: Record<SupplierKind, string> = {
+  DRY_GOODS: 'Matières sèches',
+  WINE: 'Vin en vrac',
+};
+
 export interface SupplierRow {
   id: string;
   name: string;
+  kind: SupplierKind;
   active: boolean;
 }
 
@@ -71,6 +74,7 @@ export interface SupplierDetail extends SupplierRow {
 /** POST et PUT /api/referentiel/suppliers : la même requête (aucun champ définitif). */
 export interface SupplierRequest {
   name: string;
+  kind: SupplierKind;
   email: string | null;
   phone: string | null;
   address: string | null;

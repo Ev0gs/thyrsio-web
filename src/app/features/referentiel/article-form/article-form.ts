@@ -93,7 +93,7 @@ export class ArticleForm {
   protected readonly units = httpResource<UnitRow[]>(() => '/api/referentiel/units');
   private readonly suppliers = httpResource<Page<SupplierRow>>(() => ({
     url: '/api/referentiel/suppliers',
-    params: { size: 200, sort: 'name' },
+    params: { kind: 'DRY_GOODS', size: 200, sort: 'name' },
   }));
 
   /** Les catégories actives, plus celle de l'article même si elle a été archivée depuis. */

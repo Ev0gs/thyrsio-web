@@ -21,6 +21,7 @@ import { problemMessage } from '../../../core/api/problem';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { CuverieApi } from '../cuverie-api';
 import {
+  fillPercent,
   Tank,
   TANK_MOVEMENT_TYPE_LABELS,
   TANK_STATUS_LABELS,
@@ -30,7 +31,7 @@ import {
 import { LossForm } from '../loss-form/loss-form';
 import { MeasureForm } from '../measure-form/measure-form';
 import { TankForm } from '../tank-form/tank-form';
-import { TankGauge } from '../tank-gauge/tank-gauge';
+import { TankIllustration } from '../tank-illustration/tank-illustration';
 import { TankStateBadge } from '../tank-state-badge/tank-state-badge';
 import { TransferForm } from '../transfer-form/transfer-form';
 import { WineLabel } from '../wine-label/wine-label';
@@ -56,7 +57,7 @@ const PAGE_SIZE = 20;
     LossForm,
     MeasureForm,
     TankForm,
-    TankGauge,
+    TankIllustration,
     TankStateBadge,
     TransferForm,
     WineLabel,
@@ -102,6 +103,14 @@ export class TankDetail {
 
   protected readonly tank = computed(() =>
     this.tankResource.hasValue() ? this.tankResource.value() : null,
+  );
+  protected readonly fill = computed(() => {
+    const tank = this.tank();
+    return tank ? fillPercent(tank.volumeHl, tank.capacityHl) : 0;
+  });
+  /** La place libre, parlée en bouteilles de 75 cl (1 hl = 133 bouteilles). */
+  protected readonly freeBottles = computed(() =>
+    Math.floor(((this.tank()?.freeSpaceHl ?? 0) * 100) / 0.75),
   );
   protected readonly tanks = computed(() =>
     this.allTanks.hasValue() ? this.allTanks.value() : [],

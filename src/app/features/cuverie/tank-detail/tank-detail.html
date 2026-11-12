@@ -43,27 +43,46 @@
 
   <div class="mt-6 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
     <!-- Contenu -->
-    <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
-      <h2 class="text-base font-semibold">Contenu</h2>
-      @if (t.wineLot; as lot) {
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <app-wine-label [lot]="lot" />
-          <a [routerLink]="['/cuverie/lots', lot.id]" class="text-sm font-medium text-primary hover:underline">Fiche du lot</a>
-        </div>
-      } @else {
-        <p class="text-sm text-muted-foreground">
-          @switch (t.state) {
-            @case ('CLEANING') { La cuve est vide et en nettoyage. }
-            @case ('OUT_OF_SERVICE') { La cuve est vide et hors service. }
-            @default { La cuve est vide : elle peut recevoir du vin. }
-          }
-        </p>
-      }
-      <app-tank-gauge [volumeHl]="t.volumeHl" [capacityHl]="t.capacityHl" [color]="t.wineLot?.color ?? null" [large]="true" />
-      <p class="text-sm text-muted-foreground">
-        Place disponible : <span class="font-medium tabular-nums text-foreground">{{ t.freeSpaceHl | number: '1.0-2' }} hl</span>
-        · mise à jour le {{ t.updatedAt | date: 'd MMM y, HH:mm' }}
-      </p>
+    <section class="grid items-center gap-6 rounded-xl border border-border bg-card p-5 sm:grid-cols-[12rem_minmax(0,1fr)]">
+      <app-tank-illustration class="mx-auto w-44 sm:w-full" [volumeHl]="t.volumeHl" [capacityHl]="t.capacityHl"
+                             [color]="t.wineLot?.color ?? null" [state]="t.state" />
+
+      <div class="flex flex-col gap-4">
+        <h2 class="text-base font-semibold">Contenu</h2>
+        @if (t.wineLot; as lot) {
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <app-wine-label [lot]="lot" />
+            <a [routerLink]="['/cuverie/lots', lot.id]" class="text-sm font-medium text-primary hover:underline">Fiche du lot</a>
+          </div>
+        } @else {
+          <p class="text-sm text-muted-foreground">
+            @switch (t.state) {
+              @case ('CLEANING') { La cuve est vide et en nettoyage. }
+              @case ('OUT_OF_SERVICE') { La cuve est vide et hors service. }
+              @default { La cuve est vide : elle peut recevoir du vin. }
+            }
+          </p>
+        }
+
+        <dl class="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Volume</dt>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+              {{ t.volumeHl | number: '1.0-2' }} <span class="text-base font-normal text-muted-foreground">hl</span>
+            </dd>
+            <dd class="text-[13px] text-muted-foreground">sur {{ t.capacityHl | number: '1.0-2' }} hl · {{ fill() | number: '1.0-0' }} %</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Place disponible</dt>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+              {{ t.freeSpaceHl | number: '1.0-2' }} <span class="text-base font-normal text-muted-foreground">hl</span>
+            </dd>
+            <dd class="text-[13px] text-muted-foreground">soit {{ freeBottles() | number }} bouteilles de 75 cl</dd>
+          </div>
+        </dl>
+
+        <p class="text-[13px] text-muted-foreground">Mise à jour le {{ t.updatedAt | date: 'd MMM y, HH:mm' }}</p>
+      </div>
     </section>
 
     <!-- Statut -->

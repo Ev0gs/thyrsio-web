@@ -16,7 +16,10 @@ describe('StockOverview', () => {
     fixture.detectChanges();
     TestBed.tick();
 
-    http.expectOne('/api/stock/overview');
+    http.expectOne(
+      (request) =>
+        request.url === '/api/stock/overview' && request.params.get('finishedGoods') === 'false',
+    );
     expect(fixture.nativeElement.textContent).toContain('Matières sèches');
   });
 });

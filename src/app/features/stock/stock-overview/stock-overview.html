@@ -1,15 +1,15 @@
 <header class="flex flex-wrap items-end justify-between gap-4">
   <div class="flex flex-col gap-1">
-    <h1 class="text-[28px] font-semibold tracking-tight">Matières sèches</h1>
+    <h1 class="text-[28px] font-semibold tracking-tight">{{ finishedGoods() ? 'Produits finis' : 'Matières sèches' }}</h1>
     <p class="text-sm text-muted-foreground">
-      Stock actuel par article
+      {{ finishedGoods() ? 'Les bouteilles produites par les mises, par lot' : 'Stock actuel par article' }}
       @if (overview.hasValue()) {
         · {{ rows().length }} articles suivis
       }
     </p>
   </div>
+  @if (!finishedGoods()) {
   <div class="flex flex-wrap gap-2">
-    <!-- Branchés à l'étape suivante : saisie des mouvements et inventaires -->
     <a hlmBtn variant="outline" size="lg" routerLink="/stock/inventaires" [queryParams]="{ nouveau: 1 }">
       Nouvel inventaire
     </a>
@@ -28,6 +28,9 @@
       </hlm-dialog-content>
     </hlm-dialog>
   </div>
+  } @else {
+    <a hlmBtn variant="outline" size="lg" routerLink="/production/mises">Planning des mises</a>
+  }
 </header>
 
 <!-- Filtres -->

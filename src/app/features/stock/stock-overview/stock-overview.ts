@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -46,8 +46,14 @@ const isAlert = (row: StockOverviewRow) => row.status !== 'OK';
   templateUrl: './stock-overview.html',
 })
 export class StockOverview {
+  /** true sur /stock/produits-finis (data de la route) : les bouteilles produites par les mises. */
+  readonly finishedGoods = input(false);
+
   /** Un seul appel : tous les articles avec leur stock. Le filtrage se fait ensuite ici. */
-  protected readonly overview = httpResource<StockOverviewRow[]>(() => '/api/stock/overview');
+  protected readonly overview = httpResource<StockOverviewRow[]>(() => ({
+    url: '/api/stock/overview',
+    params: { finishedGoods: this.finishedGoods() },
+  }));
 
   // L'état des filtres : des signaux, modifiés par le template
   protected readonly search = signal('');

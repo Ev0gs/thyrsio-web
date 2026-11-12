@@ -24,5 +24,10 @@ describe('Sidebar', () => {
     expect(text).toContain('Matières sèches');
     expect(text).toContain('Pierre Martin');
     expect(text).toContain('Administrateur');
+    // L'icône est bien enregistrée : sans elle, le bouton de déconnexion est vide
+    const logout: HTMLElement = fixture.nativeElement.querySelector(
+      '[aria-label="Se déconnecter"]',
+    );
+    expect(logout.querySelector('svg')).not.toBeNull();
   });
 });

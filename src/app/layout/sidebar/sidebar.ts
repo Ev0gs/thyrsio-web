@@ -53,6 +53,7 @@ interface NavGroup {
       lucideTag,
       lucideUsers,
       lucideFactory,
+      lucideLogOut,
     }),
   ],
   templateUrl: './sidebar.html',

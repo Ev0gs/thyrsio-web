@@ -12,6 +12,7 @@ import { MOVEMENT_TYPE_LABELS, MovementRow, StockOverviewRow } from '../stock/st
 import { roundHl, Tank } from '../cuverie/cuverie.models';
 import { BottlingStateBadge } from '../production/bottling-state-badge/bottling-state-badge';
 import { addDays, BottlingRow, isoDay, mondayOf } from '../production/production.models';
+import { OrderRow } from '../sales/sales.models';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -34,10 +35,20 @@ export class Dashboard {
   protected readonly today = new Date();
   protected readonly typeLabels = MOVEMENT_TYPE_LABELS;
 
-  /** Les indicateurs des modules pas encore développés côté API. */
-  protected readonly upcomingKpis = [
-    { label: 'Commandes à charger', hint: 'Avec le module Commandes clients' },
-  ];
+  /** Les commandes confirmées à charger d'ici 7 jours (ou en retard). */
+  protected readonly ordersToLoad = httpResource<Page<OrderRow>>(() => ({
+    url: '/api/sales/orders',
+    params: { open: true, loadingTo: addDays(isoDay(this.today), 7), size: 100 },
+  }));
+  protected readonly ordersToLoadCount = computed(() =>
+    this.ordersToLoad.hasValue() ? this.ordersToLoad.value().page.totalElements : 0,
+  );
+  protected readonly ordersUncovered = computed(
+    () =>
+      (this.ordersToLoad.hasValue() ? this.ordersToLoad.value().content : []).filter(
+        (order) => order.missingBottles > 0,
+      ).length,
+  );
 
   // ---------- Les appels à l'API, lancés en parallèle ----------
 

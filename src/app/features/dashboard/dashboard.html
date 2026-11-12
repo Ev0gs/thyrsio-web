@@ -84,16 +84,21 @@
     <span class="text-[13px] text-muted-foreground">Planifiées, pas encore clôturées</span>
   </a>
 
-  @for (kpi of upcomingKpis; track kpi.label) {
-    <div class="flex flex-col gap-2.5 rounded-xl border border-dashed border-border p-5">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-medium text-muted-foreground">{{ kpi.label }}</span>
-        <span hlmBadge variant="outline">À venir</span>
-      </div>
-      <span class="text-3xl font-semibold tracking-tight text-muted-foreground/50">—</span>
-      <span class="text-[13px] text-muted-foreground">{{ kpi.hint }}</span>
+  <a routerLink="/ventes/commandes"
+     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-muted-foreground">Commandes à charger</span>
+      @if (ordersUncovered() > 0) {
+        <span hlmBadge variant="destructive">{{ ordersUncovered() }} à planifier</span>
+      }
     </div>
-  }
+    @if (ordersToLoad.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ ordersToLoadCount() }}</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-12"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Confirmées, chargement d'ici 7 jours</span>
+  </a>
 </section>
 
 <!-- ===== Mises et alertes ===== -->

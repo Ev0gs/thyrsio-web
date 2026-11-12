@@ -1,0 +1,180 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Cuverie</h1>
+    <p class="text-sm text-muted-foreground">
+      Le contenu de chaque cuve, mis à jour à chaque réception, transfert ou perte
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button hlmBtn variant="outline" size="lg" (click)="open('tank')">
+      <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvelle cuve
+    </button>
+    <button hlmBtn variant="outline" size="lg" (click)="open('transfer')" [disabled]="stats().inUse === 0">
+      <ng-icon name="lucideArrowLeftRight" aria-hidden="true" /> Transférer
+    </button>
+    <button hlmBtn size="lg" (click)="open('reception')">
+      <ng-icon name="lucideTruck" aria-hidden="true" /> Réceptionner du vin
+    </button>
+  </div>
+</header>
+
+<!-- ===== Indicateurs ===== -->
+<section aria-label="Indicateurs de la cuverie" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+    <span class="text-sm font-medium text-muted-foreground">Vin en cuve</span>
+    @if (tankResource.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ stats().volume | number: '1.0-2' }} <span class="text-base font-normal text-muted-foreground">hl</span></span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-28"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">{{ stats().lots }} lot(s) de vin différents</span>
+  </div>
+  <div class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+    <span class="text-sm font-medium text-muted-foreground">Remplissage</span>
+    @if (tankResource.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ stats().fill | number: '1.0-0' }} %</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-20"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Sur {{ stats().capacity | number: '1.0-0' }} hl de capacité</span>
+  </div>
+  <div class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+    <span class="text-sm font-medium text-muted-foreground">Cuves vides</span>
+    @if (tankResource.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ stats().empty }}</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-12"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Prêtes à recevoir du vin</span>
+  </div>
+  <div class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+    <span class="text-sm font-medium text-muted-foreground">Indisponibles</span>
+    @if (tankResource.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ stats().unavailable }}</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-12"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">En nettoyage ou hors service</span>
+  </div>
+</section>
+
+<!-- ===== Filtres ===== -->
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <label class="relative min-w-64 flex-1">
+    <span class="sr-only">Rechercher une cuve ou un vin</span>
+    <ng-icon name="lucideSearch" size="16" aria-hidden="true"
+             class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <input hlmInput type="search" #query (input)="search.set(query.value)"
+           placeholder="Rechercher une cuve, une appellation, un lot…" class="pl-8" />
+  </label>
+
+  <div role="group" aria-label="Filtrer par état" class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+    @for (f of stateFilters(); track f.value) {
+      <button type="button" (click)="stateFilter.set(f.value)"
+              [attr.aria-pressed]="stateFilter() === f.value"
+              class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+              [class]="stateFilter() === f.value
+                ? 'bg-background text-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground'">
+        {{ f.label }} <span class="tabular-nums opacity-70">({{ f.count }})</span>
+      </button>
+    }
+  </div>
+</div>
+
+<!-- ===== Les cuves ===== -->
+@if (tankResource.error()) {
+  <div class="mt-4 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+    <p class="text-sm font-medium">Impossible de charger les cuves.</p>
+    <p class="text-sm text-muted-foreground">Vérifie que l'API est démarrée, puis réessaie.</p>
+    <button hlmBtn variant="outline" (click)="tankResource.reload()">
+      <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+    </button>
+  </div>
+} @else if (!tankResource.hasValue()) {
+  <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div hlmSkeleton class="h-40 w-full rounded-xl"></div>
+    }
+  </div>
+} @else {
+  <ul class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+    @for (tank of filtered(); track tank.id) {
+      <li>
+        <a [routerLink]="['/cuverie/cuves', tank.id]"
+           class="flex h-full flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-muted/30"
+           [class.opacity-70]="tank.state === 'OUT_OF_SERVICE'">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex min-w-0 flex-col">
+              <span class="text-base font-semibold">{{ tank.code }}</span>
+              <span class="truncate text-xs text-muted-foreground">{{ tank.label ?? 'Sans libellé' }}</span>
+            </div>
+            <app-tank-state-badge [state]="tank.state" />
+          </div>
+
+          <div class="min-h-5 text-sm">
+            @if (tank.wineLot; as lot) {
+              <app-wine-label [lot]="lot" />
+            } @else {
+              <span class="text-muted-foreground">
+                @switch (tank.state) {
+                  @case ('CLEANING') { Nettoyage en cours }
+                  @case ('OUT_OF_SERVICE') { Indisponible }
+                  @default { Prête à recevoir du vin }
+                }
+              </span>
+            }
+          </div>
+
+          <div class="mt-auto">
+            <app-tank-gauge [volumeHl]="tank.volumeHl" [capacityHl]="tank.capacityHl"
+                            [color]="tank.wineLot?.color ?? null" />
+          </div>
+        </a>
+      </li>
+    } @empty {
+      <li class="col-span-full rounded-xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground">
+        @if (tanks().length === 0) {
+          Aucune cuve pour l'instant : commence par créer tes cuves.
+        } @else {
+          Aucune cuve ne correspond à ces filtres.
+        }
+      </li>
+    }
+  </ul>
+}
+
+<!-- ===== Une seule boîte de dialogue, dont le contenu dépend de l'action ===== -->
+<hlm-dialog [state]="dialog() ? 'open' : 'closed'" (closed)="dialog.set(null)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" [class]="dialog() === 'reception' ? 'sm:max-w-2xl' : 'sm:max-w-xl'">
+    @switch (dialog()) {
+      @case ('reception') {
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Réceptionner du vin en vrac</h3>
+          <p hlmDialogDescription>Le lot de vin est créé et les cuves sont remplies en un seul enregistrement.</p>
+        </hlm-dialog-header>
+        <div class="dialog-scroll">
+          <app-reception-form [tanks]="tanks()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+        </div>
+      }
+      @case ('transfer') {
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Transférer du vin</h3>
+          <p hlmDialogDescription>Soutirage ou changement de cuve. La perte en route est enregistrée à part.</p>
+        </hlm-dialog-header>
+        <div class="dialog-scroll">
+          <app-transfer-form [tanks]="tanks()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+        </div>
+      }
+      @case ('tank') {
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Nouvelle cuve</h3>
+          <p hlmDialogDescription>Elle est créée vide et en service.</p>
+        </hlm-dialog-header>
+        <div class="dialog-scroll">
+          <app-tank-form (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+        </div>
+      }
+    }
+  </hlm-dialog-content>
+</hlm-dialog>

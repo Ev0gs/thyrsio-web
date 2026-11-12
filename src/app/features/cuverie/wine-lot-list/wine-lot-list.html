@@ -1,0 +1,91 @@
+<header class="flex flex-col gap-1">
+  <h1 class="text-[28px] font-semibold tracking-tight">Lots de vin</h1>
+  <p class="text-sm text-muted-foreground">Chaque vin reçu en vrac, avec ce qu'il en reste en cuve</p>
+</header>
+
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <form class="relative min-w-64 flex-1" (submit)="$event.preventDefault(); setSearch(query.value)">
+    <label for="lot-search" class="sr-only">Rechercher un lot</label>
+    <ng-icon name="lucideSearch" size="16" aria-hidden="true"
+             class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <input id="lot-search" hlmInput type="search" #query [value]="q() ?? ''" (search)="setSearch(query.value)"
+           placeholder="Code, appellation ou n° de lot du vendeur… (Entrée)" class="pl-8" />
+  </form>
+
+  <label class="inline-flex items-center gap-2 text-sm">
+    <input type="checkbox" #all [checked]="showAll()" (change)="setShowAll(all.checked)" class="size-4 accent-primary" />
+    Inclure les lots qui ne sont plus en cuve
+  </label>
+</div>
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (lots.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les lots.</p>
+      <button hlmBtn variant="outline" (click)="lots.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="lots.isLoading()">
+      <table hlmTable class="min-w-[860px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Vin</th>
+          <th hlmTh>Fournisseur</th>
+          <th hlmTh>Reçu le</th>
+          <th hlmTh class="text-right">Degré</th>
+          <th hlmTh class="text-right">En cuve</th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!lots.hasValue()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr hlmTr><td hlmTd colspan="5"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (lot of rows(); track lot.id) {
+              <tr hlmTr>
+                <td hlmTd>
+                  <a [routerLink]="['/cuverie/lots', lot.id]" class="hover:underline">
+                    <app-wine-label [lot]="lot" />
+                  </a>
+                  <div class="pl-4.5 text-xs text-muted-foreground">{{ colorLabels[lot.color] }}</div>
+                </td>
+                <td hlmTd class="text-muted-foreground">{{ lot.supplierName ?? '—' }}</td>
+                <td hlmTd class="tabular-nums text-muted-foreground">{{ lot.receivedAt | date: 'd MMM y' }}</td>
+                <td hlmTd class="text-right tabular-nums text-muted-foreground">
+                  {{ lot.alcohol !== null ? (lot.alcohol | number: '1.0-2') + ' %' : '—' }}
+                </td>
+                <td hlmTd class="text-right">
+                  @if (lot.volumeHl > 0) {
+                    <span class="font-medium tabular-nums">{{ lot.volumeHl | number: '1.0-2' }} hl</span>
+                    <div class="text-xs text-muted-foreground">{{ lot.tankCount }} cuve(s)</div>
+                  } @else {
+                    <span class="text-muted-foreground">Plus en cuve</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="5" class="py-10 text-center text-muted-foreground">
+                  @if (q()) {
+                    Aucun lot ne correspond à « {{ q() }} ».
+                  } @else if (showAll()) {
+                    Aucun lot de vin reçu pour l'instant.
+                  } @else {
+                    Aucun vin en cuve pour l'instant.
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (pageInfo(); as info) {
+      <app-pagination [page]="page()" [totalPages]="info.totalPages" [totalElements]="info.totalElements"
+                      itemLabel="lot(s)" (pageChange)="goToPage($event)" />
+    }
+  }
+</section>

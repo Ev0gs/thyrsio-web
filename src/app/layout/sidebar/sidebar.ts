@@ -2,10 +2,12 @@ import { Component, inject } from '@angular/core';
 import { IsActiveMatchOptions, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideArrowLeftRight,
   lucideArrowUpDown,
   lucideClipboardList,
   lucideContainer,
   lucideFactory,
+  lucideGrape,
   lucideLayoutDashboard,
   lucideLogOut,
   lucidePackage,
@@ -42,6 +44,8 @@ interface NavGroup {
       lucideClipboardList,
       lucideWine,
       lucideContainer,
+      lucideGrape,
+      lucideArrowLeftRight,
       lucideShoppingCart,
       lucideTruck,
       lucideTag,
@@ -92,11 +96,26 @@ export class Sidebar {
       ],
     },
     {
-      label: 'Production',
+      label: 'Cuverie',
       items: [
-        { label: 'Mises en bouteille', icon: 'lucideWine' },
-        { label: 'Cuverie', icon: 'lucideContainer' },
+        { label: 'Cuves', icon: 'lucideContainer', route: '/cuverie/cuves', includeSubPaths: true },
+        {
+          label: 'Lots de vin',
+          icon: 'lucideGrape',
+          route: '/cuverie/lots',
+          includeSubPaths: true,
+        },
+        {
+          label: 'Mouvements de vin',
+          icon: 'lucideArrowLeftRight',
+          route: '/cuverie/mouvements',
+          includeSubPaths: true,
+        },
       ],
+    },
+    {
+      label: 'Production',
+      items: [{ label: 'Mises en bouteille', icon: 'lucideWine' }],
     },
     {
       label: 'Ventes',

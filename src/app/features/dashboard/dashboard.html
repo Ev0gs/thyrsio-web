@@ -9,7 +9,7 @@
 </header>
 
 <!-- ===== Indicateurs ===== -->
-<section aria-label="Indicateurs" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+<section aria-label="Indicateurs" class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
   <a routerLink="/stock"
      class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
     <div class="flex items-center justify-between gap-2">
@@ -36,6 +36,36 @@
       <div hlmSkeleton class="h-9 w-16"></div>
     }
     <span class="text-[13px] text-muted-foreground">Articles sans aucun stock</span>
+  </a>
+
+  <a routerLink="/cuverie/cuves"
+     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-muted-foreground">Vin en cuve</span>
+      @if (tanks.hasValue()) {
+        <span hlmBadge variant="secondary" class="bg-primary/10 text-primary">{{ cellar().fill | number: '1.0-0' }} % rempli</span>
+      }
+    </div>
+    @if (tanks.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ cellar().volume | number: '1.0-0' }} <span class="text-base font-normal text-muted-foreground">hl</span></span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-24"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Tous lots confondus</span>
+  </a>
+
+  <a routerLink="/cuverie/cuves"
+     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-muted-foreground">Cuves vides</span>
+      <span hlmBadge variant="secondary" class="bg-emerald-50 text-emerald-700">Disponibles</span>
+    </div>
+    @if (tanks.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ cellar().empty }} <span class="text-base font-normal text-muted-foreground">/ {{ cellar().total }}</span></span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-16"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Prêtes à recevoir du vin</span>
   </a>
 
   @for (kpi of upcomingKpis; track kpi.label) {

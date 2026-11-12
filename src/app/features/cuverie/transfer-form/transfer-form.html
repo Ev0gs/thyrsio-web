@@ -1,0 +1,100 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div class="flex flex-col gap-1.5">
+      <label for="tr-source" class="text-sm font-medium">Cuve d'origine</label>
+      <select id="tr-source" [formField]="transferForm.sourceTankId" [class]="selectClass">
+        <option value="">Choisir une cuve…</option>
+        @for (tank of sourceOptions(); track tank.id) {
+          <option [value]="tank.id">
+            {{ tank.code }} · {{ tank.wineLot ? describeWine(tank.wineLot) : '' }} — {{ tank.volumeHl | number: '1.0-2' }} hl
+          </option>
+        }
+      </select>
+      <app-field-error [state]="transferForm.sourceTankId()" />
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="tr-destination" class="text-sm font-medium">Cuve de destination</label>
+      <select id="tr-destination" [formField]="transferForm.destinationTankId" [class]="selectClass">
+        <option value="">{{ source() ? 'Choisir une cuve…' : "Choisis d'abord l'origine" }}</option>
+        @for (tank of destinationOptions(); track tank.id) {
+          <option [value]="tank.id">
+            {{ tank.code }} · {{ tank.wineLot ? 'même vin' : 'vide' }} — {{ tank.freeSpaceHl | number: '1.0-2' }} hl de place
+          </option>
+        }
+      </select>
+      <app-field-error [state]="transferForm.destinationTankId()" />
+      @if (source() && destinationOptions().length === 0) {
+        <p class="text-xs text-muted-foreground">Aucune cuve vide (ou contenant ce vin) n'est disponible.</p>
+      }
+    </div>
+  </div>
+
+  @if (source(); as tank) {
+    @if (tank.wineLot; as lot) {
+      <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2 text-sm">
+        <app-wine-label [lot]="lot" />
+        <span class="tabular-nums text-muted-foreground">{{ tank.volumeHl | number: '1.0-2' }} hl dans {{ tank.code }}</span>
+      </div>
+    }
+  }
+
+  <!-- Partiel ou tout -->
+  <div role="group" aria-label="Volume à transférer" class="flex w-fit gap-1 rounded-lg bg-muted p-1">
+    <button type="button" (click)="setMode('partial')" [attr.aria-pressed]="model().mode === 'partial'"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="model().mode === 'partial' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+      Une partie
+    </button>
+    <button type="button" (click)="setMode('all')" [attr.aria-pressed]="model().mode === 'all'"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="model().mode === 'all' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+      Vider la cuve
+    </button>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-3">
+    @if (!transferForm.volumeHl().hidden()) {
+      <div class="flex flex-col gap-1.5">
+        <label for="tr-volume" class="text-sm font-medium">Volume arrivé <span class="font-normal text-muted-foreground">(hl)</span></label>
+        <input id="tr-volume" hlmInput type="number" step="0.01" [formField]="transferForm.volumeHl" />
+        <app-field-error [state]="transferForm.volumeHl()" />
+      </div>
+    }
+    <div class="flex flex-col gap-1.5">
+      <label for="tr-loss" class="text-sm font-medium">Perte <span class="font-normal text-muted-foreground">(hl, facultatif)</span></label>
+      <input id="tr-loss" hlmInput type="number" step="0.01" placeholder="0" [formField]="transferForm.lossHl" />
+      <app-field-error [state]="transferForm.lossHl()" />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label for="tr-date" class="text-sm font-medium">Date</label>
+      <input id="tr-date" hlmInput type="date" [formField]="transferForm.occurredOn" />
+      <app-field-error [state]="transferForm.occurredOn()" />
+    </div>
+  </div>
+
+  @if (source()) {
+    <p class="text-sm text-muted-foreground">
+      Arrivera dans la destination : <span class="font-semibold tabular-nums text-foreground">{{ arrivingHl() | number: '1.0-2' }} hl</span>
+      · restera dans {{ source()!.code }} : <span class="tabular-nums">{{ leftInSourceHl() | number: '1.0-2' }} hl</span>
+    </p>
+  }
+
+  <div class="flex flex-col gap-1.5">
+    <label for="tr-notes" class="text-sm font-medium">Notes <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+    <textarea id="tr-notes" hlmInput rows="2" class="h-auto py-2" placeholder="Soutirage, préparation de mise…"
+              [formField]="transferForm.notes"></textarea>
+  </div>
+
+  @for (error of transferForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="transferForm().submitting()">
+      {{ transferForm().submitting() ? 'Enregistrement…' : 'Transférer' }}
+    </button>
+  </hlm-dialog-footer>
+</form>

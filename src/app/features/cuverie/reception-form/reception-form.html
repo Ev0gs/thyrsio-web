@@ -1,0 +1,150 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-5">
+
+  <!-- ===== Le vin ===== -->
+  <fieldset class="flex flex-col gap-4">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Le vin</legend>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="rc-supplier" class="text-sm font-medium">Fournisseur</label>
+      <select id="rc-supplier" [formField]="receptionForm.supplierId" [class]="selectClass">
+        <option value="">Choisir un fournisseur de vin…</option>
+        @for (supplier of supplierOptions(); track supplier.id) {
+          <option [value]="supplier.id">{{ supplier.name }}</option>
+        }
+      </select>
+      @if (suppliers.hasValue() && supplierOptions().length === 0) {
+        <p class="text-xs text-muted-foreground">
+          Aucun fournisseur de vin pour l'instant :
+          <a routerLink="/referentiel/fournisseurs" class="font-medium text-primary hover:underline">crée-le dans le référentiel</a>
+          avec le type « Vin en vrac ».
+        </p>
+      }
+      <app-field-error [state]="receptionForm.supplierId()" />
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_8rem_7rem]">
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-appellation" class="text-sm font-medium">Appellation</label>
+        <input id="rc-appellation" hlmInput [formField]="receptionForm.appellation" placeholder="Bordeaux Supérieur" />
+        <app-field-error [state]="receptionForm.appellation()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-color" class="text-sm font-medium">Couleur</label>
+        <select id="rc-color" [formField]="receptionForm.color" [class]="selectClass">
+          @for (color of colors; track color) {
+            <option [value]="color">{{ colorLabels[color] }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-vintage" class="text-sm font-medium">Millésime</label>
+        <input id="rc-vintage" hlmInput type="number" step="1" placeholder="2024" [formField]="receptionForm.vintage" />
+        <app-field-error [state]="receptionForm.vintage()" />
+      </div>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-alcohol" class="text-sm font-medium">Degré <span class="font-normal text-muted-foreground">(% vol.)</span></label>
+        <input id="rc-alcohol" hlmInput type="number" step="0.01" [formField]="receptionForm.alcohol" />
+        <app-field-error [state]="receptionForm.alcohol()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-supplier-lot" class="text-sm font-medium">N° de lot du vendeur</label>
+        <input id="rc-supplier-lot" hlmInput [formField]="receptionForm.supplierLotNumber" />
+        <app-field-error [state]="receptionForm.supplierLotNumber()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-price" class="text-sm font-medium">Prix <span class="font-normal text-muted-foreground">(€/hl)</span></label>
+        <input id="rc-price" hlmInput type="number" step="0.01" [formField]="receptionForm.pricePerHl" />
+        <app-field-error [state]="receptionForm.pricePerHl()" />
+      </div>
+    </div>
+    <p class="-mt-2 text-xs text-muted-foreground">Degré, n° de lot et prix sont facultatifs. Le prix servira plus tard au coût de revient d'une bouteille.</p>
+  </fieldset>
+
+  <!-- ===== La livraison ===== -->
+  <fieldset class="flex flex-col gap-4">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">La livraison</legend>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-dae" class="text-sm font-medium">N° de DAE <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+        <input id="rc-dae" hlmInput [formField]="receptionForm.daeNumber" placeholder="26FRG0000000000" />
+        <app-field-error [state]="receptionForm.daeNumber()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="rc-date" class="text-sm font-medium">Date de réception</label>
+        <input id="rc-date" hlmInput type="date" [formField]="receptionForm.receivedOn" />
+        <app-field-error [state]="receptionForm.receivedOn()" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- ===== Les cuves remplies ===== -->
+  <fieldset class="flex flex-col gap-3">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Cuves remplies</legend>
+
+    @if (emptyTanks().length === 0) {
+      <p class="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        Aucune cuve vide et en service : vide ou remets une cuve en service avant la réception.
+      </p>
+    }
+
+    @for (fill of receptionForm.fills; track $index; let i = $index) {
+      <div class="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_9rem_auto]">
+        <div class="flex flex-col gap-1.5">
+          <label [for]="'rc-tank-' + i" class="sr-only">Cuve {{ i + 1 }}</label>
+          <select [id]="'rc-tank-' + i" [formField]="fill.tankId" [class]="selectClass">
+            <option value="">Choisir une cuve…</option>
+            @for (tank of emptyTanks(); track tank.id) {
+              <option [value]="tank.id">{{ tank.code }}{{ tank.label ? ' · ' + tank.label : '' }} — {{ tank.capacityHl | number: '1.0-2' }} hl</option>
+            }
+          </select>
+          <app-field-error [state]="fill.tankId()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label [for]="'rc-volume-' + i" class="sr-only">Volume pour la cuve {{ i + 1 }}</label>
+          <div class="relative">
+            <input [id]="'rc-volume-' + i" hlmInput type="number" step="0.01" class="pr-9" [formField]="fill.volumeHl" />
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">hl</span>
+          </div>
+          <app-field-error [state]="fill.volumeHl()" />
+        </div>
+        <div class="flex gap-1">
+          <button hlmBtn variant="ghost" size="sm" type="button" [disabled]="!fill.tankId().value()"
+                  (click)="fillTank(i)" title="Remplir la cuve au maximum">Pleine</button>
+          <button hlmBtn variant="ghost" size="icon-sm" type="button" [disabled]="receptionForm.fills.length === 1"
+                  (click)="removeFill(i)" [attr.aria-label]="'Retirer la cuve ' + (i + 1)">
+            <ng-icon name="lucideTrash2" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <button hlmBtn variant="outline" size="sm" type="button" (click)="addFill()"
+              [disabled]="receptionForm.fills.length >= emptyTanks().length">
+        <ng-icon name="lucidePlus" aria-hidden="true" /> Ajouter une cuve
+      </button>
+      <span class="text-sm text-muted-foreground">
+        Total reçu : <span class="font-semibold tabular-nums text-foreground">{{ totalHl() | number: '1.0-2' }} hl</span>
+      </span>
+    </div>
+  </fieldset>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="rc-notes" class="text-sm font-medium">Notes <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+    <textarea id="rc-notes" hlmInput rows="2" class="h-auto py-2" [formField]="receptionForm.notes"></textarea>
+  </div>
+
+  @for (error of receptionForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="receptionForm().submitting()">
+      {{ receptionForm().submitting() ? 'Enregistrement…' : 'Enregistrer la réception' }}
+    </button>
+  </hlm-dialog-footer>
+</form>

@@ -9,6 +9,7 @@ import { Page } from '../../core/api/page';
 import { CurrentUser } from '../../core/auth/current-user';
 import { StockStatusBadge } from '../stock/stock-status-badge/stock-status-badge';
 import { MOVEMENT_TYPE_LABELS, MovementRow, StockOverviewRow } from '../stock/stock.models';
+import { roundHl, Tank } from '../cuverie/cuverie.models';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -36,7 +37,7 @@ export class Dashboard {
     { label: 'Commandes à charger', hint: 'Avec le module Commandes clients' },
   ];
 
-  // ---------- Les trois appels à l'API, lancés en parallèle ----------
+  // ---------- Les appels à l'API, lancés en parallèle ----------
 
   protected readonly overview = httpResource<StockOverviewRow[]>(() => '/api/stock/overview');
 
@@ -44,6 +45,8 @@ export class Dashboard {
     url: '/api/stock/movements',
     params: { size: 6 },
   }));
+
+  protected readonly tanks = httpResource<Tank[]>(() => '/api/cuverie/tanks');
 
   private readonly since = new Date(Date.now() - 30 * DAY_MS).toISOString();
 
@@ -69,6 +72,19 @@ export class Dashboard {
   protected readonly outCount = computed(
     () => this.rows().filter((row) => row.status === 'OUT_OF_STOCK').length,
   );
+
+  /** La cuverie en deux chiffres : le vin en cuve et les cuves prêtes à recevoir. */
+  protected readonly cellar = computed(() => {
+    const tanks = this.tanks.hasValue() ? this.tanks.value() : [];
+    const capacity = tanks.reduce((sum, tank) => sum + tank.capacityHl, 0);
+    const volume = tanks.reduce((sum, tank) => sum + tank.volumeHl, 0);
+    return {
+      volume: roundHl(volume),
+      fill: capacity > 0 ? (volume / capacity) * 100 : 0,
+      empty: tanks.filter((tank) => tank.state === 'EMPTY').length,
+      total: tanks.length,
+    };
+  });
 
   /** Les 5 articles les plus critiques : la part du seuil encore en stock, du plus bas au plus haut. */
   protected readonly alerts = computed(() =>

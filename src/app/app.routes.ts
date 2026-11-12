@@ -38,6 +38,39 @@ export const routes: Routes = [
             (m) => m.InventoryDetail,
           ),
       },
+      { path: 'cuverie', pathMatch: 'full', redirectTo: 'cuverie/cuves' },
+      {
+        path: 'cuverie/cuves',
+        title: 'Cuverie · Thyrsio',
+        loadComponent: () =>
+          import('./features/cuverie/tank-overview/tank-overview').then((m) => m.TankOverview),
+      },
+      {
+        path: 'cuverie/cuves/:id',
+        title: 'Cuve · Thyrsio',
+        loadComponent: () =>
+          import('./features/cuverie/tank-detail/tank-detail').then((m) => m.TankDetail),
+      },
+      {
+        path: 'cuverie/lots',
+        title: 'Lots de vin · Thyrsio',
+        loadComponent: () =>
+          import('./features/cuverie/wine-lot-list/wine-lot-list').then((m) => m.WineLotList),
+      },
+      {
+        path: 'cuverie/lots/:id',
+        title: 'Lot de vin · Thyrsio',
+        loadComponent: () =>
+          import('./features/cuverie/wine-lot-detail/wine-lot-detail').then((m) => m.WineLotDetail),
+      },
+      {
+        path: 'cuverie/mouvements',
+        title: 'Mouvements de vin · Thyrsio',
+        loadComponent: () =>
+          import('./features/cuverie/cuverie-movements/cuverie-movements').then(
+            (m) => m.CuverieMovements,
+          ),
+      },
       {
         path: 'referentiel/articles',
         title: 'Articles · Thyrsio',

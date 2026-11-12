@@ -17,6 +17,8 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { Page } from '../../../core/api/page';
 import { problemMessage } from '../../../core/api/problem';
+import { LocationMap, MapPoint } from '../../../shared/ui/location-map/location-map';
+import { SupplierDetail } from '../../referentiel/referentiel.models';
 import { AnalysisForm } from '../analysis-form/analysis-form';
 import { CuverieApi } from '../cuverie-api';
 import {
@@ -41,6 +43,7 @@ type DialogKind = 'analysis' | 'edit';
     RouterLink,
     NgIcon,
     AnalysisForm,
+    LocationMap,
     TankGauge,
     WineLotForm,
     HlmBadgeImports,
@@ -72,6 +75,29 @@ export class WineLotDetail {
   protected readonly lotResource = httpResource<WineLot>(
     () => `/api/cuverie/wine-lots/${this.id()}`,
   );
+  /** Le vendeur du vin, pour situer son origine sur la carte. */
+  private readonly supplier = httpResource<SupplierDetail>(() => {
+    const supplierId = this.lotResource.hasValue() ? this.lotResource.value().supplierId : null;
+    return supplierId ? `/api/referentiel/suppliers/${supplierId}` : undefined;
+  });
+  protected readonly supplierAddress = computed(() =>
+    this.supplier.hasValue() ? this.supplier.value().address : null,
+  );
+  protected readonly originPoint = computed<MapPoint[]>(() => {
+    const supplier = this.supplier.hasValue() ? this.supplier.value() : null;
+    return supplier?.location
+      ? [
+          {
+            id: supplier.id,
+            label: supplier.name,
+            detail: supplier.address ?? undefined,
+            location: supplier.location,
+            primary: true,
+          },
+        ]
+      : [];
+  });
+
   protected readonly analyses = httpResource<WineAnalysis[]>(
     () => `/api/cuverie/wine-lots/${this.id()}/analyses`,
   );

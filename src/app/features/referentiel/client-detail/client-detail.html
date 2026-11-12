@@ -81,6 +81,25 @@
     }
   </section>
 
+  <!-- ===== La carte ===== -->
+  @if (mapPoints().length > 0) {
+    <section class="mt-6" aria-labelledby="client-map-title">
+      <h2 id="client-map-title" class="sr-only">Sur la carte</h2>
+      <app-location-map [points]="mapPoints()" heightClass="h-72" />
+      @if (mapPoints().length > 1) {
+        <p class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-primary"></span> Siège</span>
+          <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-sky-700"></span> Adresses de livraison</span>
+        </p>
+      }
+    </section>
+  } @else if (waitingForMap()) {
+    <p class="mt-6 flex items-center gap-2 rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+      <ng-icon name="lucideMapPin" aria-hidden="true" />
+      Les adresses apparaissent sur la carte quelques minutes après leur enregistrement, le temps de les localiser.
+    </p>
+  }
+
   <!-- ===== Les adresses de livraison ===== -->
   <section class="mt-8">
     <div class="flex flex-wrap items-end justify-between gap-3">

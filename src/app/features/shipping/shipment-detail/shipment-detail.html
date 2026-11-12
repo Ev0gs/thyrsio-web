@@ -59,6 +59,9 @@
       @if (s.status === 'DRAFT') {
         <span class="text-[13px] text-muted-foreground">L'adresse est figée au départ.</span>
       }
+      @if (deliveryPoint().length > 0) {
+        <app-location-map class="mt-2" heightClass="h-40" [points]="deliveryPoint()" />
+      }
     </section>
 
     <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
@@ -79,7 +82,7 @@
       <span class="text-sm font-medium text-muted-foreground">Bouteilles</span>
       <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ s.totalBottles | number }}</span>
       <span class="text-[13px] text-muted-foreground">
-        @if (s.shippedBy) { départ validé par {{ s.shippedBy }} } @else { préparé par {{ s.createdBy }} }
+        {{ s.lines.length }} ligne(s) · {{ s.status === 'SHIPPED' ? 'sorties du stock' : 'pas encore sorties du stock' }}
       </span>
     </section>
   </div>

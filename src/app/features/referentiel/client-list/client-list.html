@@ -27,6 +27,19 @@
     </select>
   </label>
 
+  <div role="group" aria-label="Affichage" class="flex gap-1 rounded-lg bg-muted p-1">
+    <button type="button" (click)="setView(false)" [attr.aria-pressed]="!mapView()"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="!mapView() ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+      Liste
+    </button>
+    <button type="button" (click)="setView(true)" [attr.aria-pressed]="mapView()"
+            class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+            [class]="mapView() ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+      Carte
+    </button>
+  </div>
+
   <label class="flex items-center gap-2 text-sm">
     <input type="checkbox" #arch [checked]="archives() === '1'"
            (change)="setFilter('archives', arch.checked ? '1' : '')" class="size-4 accent-primary" />
@@ -38,6 +51,29 @@
   <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
 }
 
+@if (mapView()) {
+  <section class="mt-4" aria-label="Carte des clients">
+    @if (allClients.error()) {
+      <div class="flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+        <p class="text-sm font-medium">Impossible de charger les clients.</p>
+        <button hlmBtn variant="outline" (click)="allClients.reload()">
+          <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+        </button>
+      </div>
+    } @else if (!allClients.hasValue()) {
+      <div hlmSkeleton class="h-[32rem] w-full rounded-lg"></div>
+    } @else {
+      <app-location-map [points]="mapPoints()" heightClass="h-[32rem]" (selected)="openClient($event)" />
+      <p class="mt-1.5 text-xs text-muted-foreground">
+        {{ mapPoints().length }} client(s) sur {{ mapClients().length }} placés d'après l'adresse de leur siège
+        · clic sur un point pour ouvrir la fiche
+        @if (mapPoints().length < mapClients().length) {
+          · les autres n'ont pas d'adresse, ou ne sont pas encore localisés
+        }
+      </p>
+    }
+  </section>
+} @else {
 <section class="mt-4 overflow-hidden rounded-xl border border-border">
   @if (clients.error()) {
     <div class="flex flex-col items-center gap-3 p-10 text-center">
@@ -114,6 +150,7 @@
     }
   }
 </section>
+}
 
 <hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
   <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-2xl">

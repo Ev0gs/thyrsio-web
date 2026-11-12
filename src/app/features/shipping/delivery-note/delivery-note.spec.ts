@@ -21,6 +21,7 @@ const shipment: Shipment = {
   clientExciseNumber: 'JP-EXC-42',
   clientLanguage: 'en',
   deliveryAddressText: 'Entrepôt Yokohama\n5 Port Road\nYokohama\nJP',
+  deliveryLocation: { latitude: 35.4437, longitude: 139.638, approximate: false },
   plannedDate: '2026-11-20',
   carrier: 'Transports Dupont',
   transportReference: 'MSKU 123456-7',

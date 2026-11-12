@@ -6,6 +6,9 @@
 
 @import '@spartan-ng/brain/hlm-tailwind-preset.css';
 
+/* Les cartes (Leaflet) : dans la couche components, au-dessus du reset de Tailwind */
+@import 'leaflet/dist/leaflet.css' layer(components);
+
 /* ===== Thème spartan "zinc" (généré par ng g @spartan-ng/cli:init) ===== */
 
 :root {
@@ -154,6 +157,20 @@
     margin-inline: -0.5rem;
     padding-inline: 0.5rem;
     padding-block: 0.25rem;
+  }
+
+  /* Les épingles des cartes : bordeaux pour le point principal, bleu pour les autres */
+  .map-pin {
+    border-radius: 9999px;
+    border: 3px solid #ffffff;
+    background: var(--primary);
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.45);
+  }
+  .map-pin--secondary {
+    background: #0369a1;
+  }
+  .leaflet-container {
+    font-family: var(--font-sans);
   }
 
   /* Les boutons restent visibles en bas, même au milieu d'un long formulaire */

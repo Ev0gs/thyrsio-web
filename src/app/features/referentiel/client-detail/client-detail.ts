@@ -15,6 +15,7 @@ import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { problemMessage } from '../../../core/api/problem';
 import { countryName, languageName } from '../../../core/i18n/countries';
+import { LocationMap, MapPoint } from '../../../shared/ui/location-map/location-map';
 import { AddressForm } from '../address-form/address-form';
 import { ClientForm } from '../client-form/client-form';
 import { ReferentielApi } from '../referentiel-api';
@@ -27,6 +28,7 @@ import { ClientRow, DeliveryAddress, INCOTERMS, toAddressRequest } from '../refe
     RouterLink,
     AddressForm,
     ClientForm,
+    LocationMap,
     HlmBadgeImports,
     HlmButtonImports,
     HlmDialogImports,
@@ -69,6 +71,41 @@ export class ClientDetail {
   );
   protected readonly archivedAddresses = computed(() =>
     this.allAddresses().filter((address) => !address.active),
+  );
+
+  /** Le siège (en bordeaux) et les adresses de livraison actives déjà localisées. */
+  protected readonly mapPoints = computed<MapPoint[]>(() => {
+    const client = this.current();
+    const points: MapPoint[] = [];
+    if (client?.location) {
+      points.push({
+        id: client.id,
+        label: 'Siège',
+        detail: [client.addressLine1, [client.postalCode, client.city].filter(Boolean).join(' ')]
+          .filter(Boolean)
+          .join(', '),
+        location: client.location,
+        primary: true,
+      });
+    }
+    for (const address of this.activeAddresses()) {
+      if (address.location) {
+        points.push({
+          id: address.id,
+          label: address.label,
+          detail: `${address.addressLine1}, ${address.postalCode ?? ''} ${address.city}`.trim(),
+          location: address.location,
+        });
+      }
+    }
+    return points;
+  });
+
+  /** Des adresses existent, mais aucune n'est encore sur la carte. */
+  protected readonly waitingForMap = computed(
+    () =>
+      this.mapPoints().length === 0 &&
+      (!!this.current()?.city || this.activeAddresses().length > 0),
   );
 
   protected readonly incotermLabel = computed(() => {

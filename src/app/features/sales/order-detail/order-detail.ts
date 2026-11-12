@@ -18,6 +18,7 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { problemMessage } from '../../../core/api/problem';
 import { countryName } from '../../../core/i18n/countries';
+import { LocationMap, MapPoint } from '../../../shared/ui/location-map/location-map';
 import { BottlingForm, BottlingPrefill } from '../../production/bottling-form/bottling-form';
 import { Bottling } from '../../production/production.models';
 import { INCOTERMS } from '../../referentiel/referentiel.models';
@@ -40,6 +41,7 @@ type DialogKind = 'edit' | 'cancel' | 'ship' | 'plan';
     RouterLink,
     NgIcon,
     BottlingForm,
+    LocationMap,
     OrderForm,
     OrderStatusBadge,
     ShipmentForm,
@@ -94,6 +96,14 @@ export class OrderDetail {
       order.shippedBottles === 0 &&
       !order.shipments.some((shipment) => shipment.status === 'DRAFT')
     );
+  });
+
+  /** L'adresse de livraison sur la carte, une fois localisée. */
+  protected readonly deliveryPoint = computed<MapPoint[]>(() => {
+    const address = this.order()?.deliveryAddress;
+    return address?.location
+      ? [{ id: address.id, label: address.label, location: address.location, primary: true }]
+      : [];
   });
 
   protected readonly incotermLabel = computed(() => {

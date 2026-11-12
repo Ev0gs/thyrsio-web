@@ -53,7 +53,14 @@
           <dt class="text-muted-foreground">Notes</dt>
           <dd class="whitespace-pre-line">{{ l.notes }}</dd>
         }
+        @if (supplierAddress(); as address) {
+          <dt class="text-muted-foreground">Origine</dt>
+          <dd>{{ l.supplierName }} · {{ address }}</dd>
+        }
       </dl>
+      @if (originPoint().length > 0) {
+        <app-location-map heightClass="h-44" [points]="originPoint()" />
+      }
     </section>
 
     <!-- Les cuves -->

@@ -1,4 +1,5 @@
 /** Miroir des DTO de l'API (package sales). Les quantités sont en bouteilles. */
+import { GeoLocation } from '../../core/geo';
 import { Incoterm } from '../referentiel/referentiel.models';
 
 export type OrderStatus = 'DRAFT' | 'CONFIRMED' | 'PARTIALLY_SHIPPED' | 'SHIPPED' | 'CANCELLED';
@@ -83,6 +84,7 @@ export interface OrderDeliveryAddress {
   phone: string | null;
   deliveryInstructions: string | null;
   active: boolean;
+  location: GeoLocation | null;
 }
 
 /** GET /api/sales/orders/{id} */

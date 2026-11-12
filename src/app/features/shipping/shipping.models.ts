@@ -1,4 +1,5 @@
 /** Miroir des DTO de l'API (package shipping). */
+import { GeoLocation } from '../../core/geo';
 import { Incoterm } from '../referentiel/referentiel.models';
 
 export type ShipmentStatus = 'DRAFT' | 'SHIPPED' | 'CANCELLED';
@@ -55,6 +56,8 @@ export interface Shipment {
   clientLanguage: string;
   /** Une ligne par élément ; figée au départ. */
   deliveryAddressText: string;
+  /** L'adresse livrée (ou le siège du client) sur la carte, si elle est connue. */
+  deliveryLocation: GeoLocation | null;
   plannedDate: string;
   carrier: string | null;
   transportReference: string | null;

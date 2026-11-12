@@ -16,6 +16,7 @@ import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { problemMessage } from '../../../core/api/problem';
+import { LocationMap, MapPoint } from '../../../shared/ui/location-map/location-map';
 import { INCOTERMS } from '../../referentiel/referentiel.models';
 import { Order } from '../../sales/sales.models';
 import { ShipmentForm } from '../shipment-form/shipment-form';
@@ -33,6 +34,7 @@ type DialogKind = 'edit' | 'cancel' | 'ship';
     DecimalPipe,
     RouterLink,
     NgIcon,
+    LocationMap,
     ShipmentForm,
     ShipmentStatusBadge,
     HlmButtonImports,
@@ -78,6 +80,20 @@ export class ShipmentDetail {
   protected readonly incotermLabel = computed(() => {
     const code = this.shipment()?.incoterm;
     return code ? (INCOTERMS.find((incoterm) => incoterm.code === code)?.label ?? code) : null;
+  });
+
+  protected readonly deliveryPoint = computed<MapPoint[]>(() => {
+    const shipment = this.shipment();
+    return shipment?.deliveryLocation
+      ? [
+          {
+            id: shipment.id,
+            label: this.addressLines()[0] ?? shipment.clientName,
+            location: shipment.deliveryLocation,
+            primary: true,
+          },
+        ]
+      : [];
   });
 
   protected readonly addressLines = computed(

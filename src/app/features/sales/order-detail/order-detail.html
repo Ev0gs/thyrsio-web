@@ -65,6 +65,9 @@
         @if (address.deliveryInstructions) {
           <span class="text-[13px] text-muted-foreground">{{ address.deliveryInstructions }}</span>
         }
+        @if (deliveryPoint().length > 0) {
+          <app-location-map class="mt-2" heightClass="h-40" [points]="deliveryPoint()" />
+        }
       } @else {
         <span class="text-sm text-muted-foreground">Pas d'adresse de livraison : le bon portera l'adresse du siège du client.</span>
       }

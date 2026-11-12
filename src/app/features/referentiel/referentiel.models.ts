@@ -1,4 +1,5 @@
 /** Miroir des DTO de l'API (package referentiel). */
+import { GeoLocation } from '../../core/geo';
 
 export interface ArticleRow {
   id: string;
@@ -69,6 +70,8 @@ export interface SupplierDetail extends SupplierRow {
   address: string | null;
   averageLeadTimeDays: number | null;
   createdAt: string;
+  /** La position de l'adresse sur la carte (null : pas encore localisée, ou introuvable). */
+  location: GeoLocation | null;
 }
 
 /** POST et PUT /api/referentiel/suppliers : la même requête (aucun champ définitif). */
@@ -117,6 +120,8 @@ export interface ClientRow {
   notes: string | null;
   active: boolean;
   createdAt: string;
+  /** Le siège sur la carte (null : pas encore localisé, ou introuvable). */
+  location: GeoLocation | null;
 }
 
 /** PUT /api/referentiel/clients/{id} : tout sauf le code, définitif. */
@@ -157,6 +162,7 @@ export interface DeliveryAddress {
   defaultAddress: boolean;
   active: boolean;
   createdAt: string;
+  location: GeoLocation | null;
 }
 
 /** POST et PUT : la même requête (PUT = remplacement complet). */

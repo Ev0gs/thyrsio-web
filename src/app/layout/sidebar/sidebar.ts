@@ -11,6 +11,7 @@ import {
   lucideLayoutDashboard,
   lucideLogOut,
   lucidePackage,
+  lucidePackageCheck,
   lucideShoppingCart,
   lucideTag,
   lucideTruck,
@@ -40,6 +41,7 @@ interface NavGroup {
     provideIcons({
       lucideLayoutDashboard,
       lucidePackage,
+      lucidePackageCheck,
       lucideArrowUpDown,
       lucideClipboardList,
       lucideWine,
@@ -81,6 +83,7 @@ export class Sidebar {
       label: 'Stock',
       items: [
         { label: 'Matières sèches', icon: 'lucidePackage', route: '/stock' },
+        { label: 'Produits finis', icon: 'lucidePackageCheck', route: '/stock/produits-finis' },
         {
           label: 'Mouvements',
           icon: 'lucideArrowUpDown',
@@ -115,7 +118,14 @@ export class Sidebar {
     },
     {
       label: 'Production',
-      items: [{ label: 'Mises en bouteille', icon: 'lucideWine' }],
+      items: [
+        {
+          label: 'Mises en bouteille',
+          icon: 'lucideWine',
+          route: '/production/mises',
+          includeSubPaths: true,
+        },
+      ],
     },
     {
       label: 'Ventes',

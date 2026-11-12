@@ -10,6 +10,8 @@ import { CurrentUser } from '../../core/auth/current-user';
 import { StockStatusBadge } from '../stock/stock-status-badge/stock-status-badge';
 import { MOVEMENT_TYPE_LABELS, MovementRow, StockOverviewRow } from '../stock/stock.models';
 import { roundHl, Tank } from '../cuverie/cuverie.models';
+import { BottlingStateBadge } from '../production/bottling-state-badge/bottling-state-badge';
+import { addDays, BottlingRow, isoDay, mondayOf } from '../production/production.models';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -20,6 +22,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
     DecimalPipe,
     RouterLink,
     StockStatusBadge,
+    BottlingStateBadge,
     HlmBadgeImports,
     HlmButtonImports,
     HlmSkeletonImports,
@@ -33,7 +36,6 @@ export class Dashboard {
 
   /** Les indicateurs des modules pas encore développés côté API. */
   protected readonly upcomingKpis = [
-    { label: 'Mises cette semaine', hint: 'Avec le module Production' },
     { label: 'Commandes à charger', hint: 'Avec le module Commandes clients' },
   ];
 
@@ -47,6 +49,12 @@ export class Dashboard {
   }));
 
   protected readonly tanks = httpResource<Tank[]>(() => '/api/cuverie/tanks');
+
+  /** Toutes les mises planifiées, de la plus proche à la plus lointaine. */
+  protected readonly plannedBottlings = httpResource<Page<BottlingRow>>(() => ({
+    url: '/api/production/bottlings',
+    params: { status: 'PLANNED', size: 200 },
+  }));
 
   private readonly since = new Date(Date.now() - 30 * DAY_MS).toISOString();
 
@@ -85,6 +93,23 @@ export class Dashboard {
       total: tanks.length,
     };
   });
+
+  private readonly planned = computed(() =>
+    this.plannedBottlings.hasValue() ? this.plannedBottlings.value().content : [],
+  );
+
+  /** Les mises de la semaine en cours (une mise commencée lundi et finie mardi compte une fois). */
+  protected readonly bottlingsThisWeek = computed(() => {
+    const monday = mondayOf(isoDay(this.today));
+    const sunday = addDays(monday, 6);
+    return this.planned().filter((row) => row.startDate <= sunday && row.endDate >= monday);
+  });
+
+  protected readonly bottlingAlerts = computed(
+    () => this.planned().filter((row) => row.alert).length,
+  );
+
+  protected readonly nextBottlings = computed(() => this.planned().slice(0, 5));
 
   /** Les 5 articles les plus critiques : la part du seuil encore en stock, du plus bas au plus haut. */
   protected readonly alerts = computed(() =>

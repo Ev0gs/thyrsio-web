@@ -1,0 +1,158 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Mises en bouteille</h1>
+    <p class="text-sm text-muted-foreground">Le planning de la semaine · les manquants en matières sont vérifiés pour chaque mise</p>
+  </div>
+  <button hlmBtn size="lg" (click)="plan(null)">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Planifier une mise
+  </button>
+</header>
+
+<!-- ===== Alertes ===== -->
+@if (alerts().length > 0) {
+  <section role="alert" class="mt-6 flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50/60 p-4">
+    <div class="flex items-center gap-2 text-sm font-semibold text-red-800">
+      <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
+      {{ alerts().length }} mise(s) dans les 10 prochains jours manquent de matières sèches
+    </div>
+    <ul class="flex flex-col gap-1 text-sm">
+      @for (alert of alerts(); track alert.id) {
+        <li>
+          <a [routerLink]="['/production/mises', alert.id]" class="font-medium text-red-900 hover:underline">{{ alert.code }}</a>
+          <span class="text-red-900/80"> · {{ alert.startDate | date: 'EEEE d MMMM' }} · {{ alert.finishedArticleLabel }} · {{ alert.shortageCount }} matière(s) en manque</span>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<!-- ===== Navigation entre les semaines ===== -->
+<div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+  <div class="flex items-center gap-2">
+    <button hlmBtn variant="outline" size="icon" (click)="goToWeek(-1)" aria-label="Semaine précédente">
+      <ng-icon name="lucideChevronLeft" aria-hidden="true" />
+    </button>
+    <span class="px-2 text-[15px] font-semibold">
+      Semaine {{ weekNumber() }} · {{ monday() | date: 'd MMM' }} – {{ sunday() | date: 'd MMM y' }}
+    </span>
+    <button hlmBtn variant="outline" size="icon" (click)="goToWeek(1)" aria-label="Semaine suivante">
+      <ng-icon name="lucideChevronRight" aria-hidden="true" />
+    </button>
+  </div>
+  @if (!isCurrentWeek()) {
+    <button hlmBtn variant="ghost" (click)="goToToday()">Revenir à cette semaine</button>
+  }
+</div>
+
+<!-- ===== La semaine ===== -->
+@if (week.error()) {
+  <div class="mt-4 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+    <p class="text-sm font-medium">Impossible de charger le planning.</p>
+    <button hlmBtn variant="outline" (click)="week.reload()">
+      <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+    </button>
+  </div>
+} @else {
+  <div class="mt-4 overflow-x-auto pb-2">
+    <div class="grid min-w-[1100px] grid-cols-[repeat(5,minmax(0,1fr))_repeat(2,minmax(0,0.7fr))] gap-3"
+         [class.opacity-60]="week.isLoading()">
+      @for (d of days(); track d.day) {
+        <section class="flex min-h-80 flex-col gap-2.5 rounded-xl border p-3"
+                 [class]="d.isToday ? 'border-primary/40 bg-primary/[0.03]' : d.isWeekend ? 'border-border bg-muted/20' : 'border-border bg-muted/40'">
+          <div class="flex items-baseline justify-between gap-2 px-1">
+            <h2 class="text-sm font-semibold capitalize" [class.text-primary]="d.isToday">{{ d.date | date: 'EEEE d' }}</h2>
+            @if (d.totalBottles > 0) {
+              <span class="text-xs tabular-nums text-muted-foreground">{{ d.totalBottles | number }} bt</span>
+            }
+          </div>
+
+          @if (!week.hasValue()) {
+            <div hlmSkeleton class="h-28 w-full rounded-lg"></div>
+          } @else {
+            @for (entry of d.bottlings; track entry.bottling.id) {
+              <a [routerLink]="['/production/mises', entry.bottling.id]"
+                 class="flex flex-col gap-2 rounded-lg border bg-card p-3 shadow-xs transition-colors hover:border-primary/40"
+                 [class]="entry.bottling.alert ? 'border-red-200' : 'border-border'">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-mono text-[11px] text-muted-foreground">
+                    {{ entry.bottling.code }}
+                    @if (entry.dayCount > 1) { · jour {{ entry.dayIndex }}/{{ entry.dayCount }} }
+                  </span>
+                  <app-bottling-state-badge [bottling]="entry.bottling" />
+                </div>
+                <span class="text-sm font-semibold leading-snug">{{ entry.bottling.finishedArticleLabel }}</span>
+                <div class="flex items-center justify-between gap-2 text-[13px]">
+                  <span class="font-medium tabular-nums">
+                    {{ (entry.bottling.producedBottles ?? entry.bottling.plannedBottles) | number }} bt
+                  </span>
+                  <span class="truncate text-muted-foreground">
+                    @if (entry.bottling.location === 'ON_SITE') {
+                      Cuve {{ entry.bottling.sourceTankCode }}
+                    } @else {
+                      Chez le producteur
+                    }
+                  </span>
+                </div>
+                @if (entry.bottling.shortageCount > 0 && entry.bottling.status === 'PLANNED') {
+                  <span class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
+                    {{ entry.bottling.shortageCount }} matière(s) en manque
+                  </span>
+                }
+              </a>
+            } @empty {
+              <button type="button" (click)="plan(d.day)"
+                      class="flex min-h-24 flex-1 items-center justify-center rounded-lg border border-dashed border-border text-[13px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+                Aucune mise · planifier
+              </button>
+            }
+          }
+        </section>
+      }
+    </div>
+  </div>
+}
+
+<!-- ===== À venir ===== -->
+<section class="mt-6 flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
+  <div class="flex flex-col gap-0.5">
+    <h2 class="text-base font-semibold">À venir</h2>
+    <span class="text-[13px] text-muted-foreground">Toutes les mises planifiées, dans l'ordre où elles consommeront le stock</span>
+  </div>
+  @if (!upcoming.hasValue()) {
+    @for (i of [1, 2, 3]; track i) {
+      <div hlmSkeleton class="h-10 w-full"></div>
+    }
+  } @else {
+    <ul class="divide-y divide-border/60">
+      @for (row of upcomingRows(); track row.id) {
+        <li>
+          <a [routerLink]="['/production/mises', row.id]" class="flex flex-wrap items-center gap-3 py-2.5 text-sm hover:bg-muted/30">
+            <span class="w-40 shrink-0 tabular-nums text-muted-foreground">
+              {{ row.startDate | date: 'EEE d MMM' }}
+              @if (row.endDate !== row.startDate) { → {{ row.endDate | date: 'EEE d' }} }
+            </span>
+            <span class="w-24 shrink-0 font-mono text-[13px] text-muted-foreground">{{ row.code }}</span>
+            <span class="min-w-48 flex-1 font-medium">{{ row.finishedArticleLabel }}</span>
+            <span class="w-24 text-right tabular-nums">{{ row.plannedBottles | number }} bt</span>
+            <span class="w-36 truncate text-muted-foreground">{{ row.location === 'ON_SITE' ? 'Cuve ' + row.sourceTankCode : 'Chez le producteur' }}</span>
+            <app-bottling-state-badge [bottling]="row" />
+          </a>
+        </li>
+      } @empty {
+        <li class="py-2.5 text-sm text-muted-foreground">Aucune mise planifiée.</li>
+      }
+    </ul>
+  }
+</section>
+
+<hlm-dialog [state]="dialogOpen() ? 'open' : 'closed'" (closed)="dialogOpen.set(false)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-3xl">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>Planifier une mise</h3>
+      <p hlmDialogDescription>Les manquants sont calculés dès l'enregistrement, en tenant compte des mises déjà planifiées avant.</p>
+    </hlm-dialog-header>
+    <div class="dialog-scroll">
+      <app-bottling-form [day]="newDay()" (saved)="ctx.close(); onSaved($event)" (cancelled)="ctx.close()" />
+    </div>
+  </hlm-dialog-content>
+</hlm-dialog>

@@ -19,6 +19,14 @@ export const routes: Routes = [
           import('./features/stock/stock-overview/stock-overview').then((m) => m.StockOverview),
       },
       {
+        path: 'stock/produits-finis',
+        title: 'Produits finis · Thyrsio',
+        // Le même écran que les matières sèches : data devient l'input finishedGoods du composant
+        data: { finishedGoods: true },
+        loadComponent: () =>
+          import('./features/stock/stock-overview/stock-overview').then((m) => m.StockOverview),
+      },
+      {
         path: 'stock/mouvements',
         title: 'Mouvements · Thyrsio',
         loadComponent: () =>
@@ -36,6 +44,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/stock/inventory-detail/inventory-detail').then(
             (m) => m.InventoryDetail,
+          ),
+      },
+      {
+        path: 'production/mises',
+        title: 'Mises en bouteille · Thyrsio',
+        loadComponent: () =>
+          import('./features/production/bottling-planning/bottling-planning').then(
+            (m) => m.BottlingPlanning,
+          ),
+      },
+      {
+        path: 'production/mises/:id',
+        title: 'Mise en bouteille · Thyrsio',
+        loadComponent: () =>
+          import('./features/production/bottling-detail/bottling-detail').then(
+            (m) => m.BottlingDetail,
           ),
       },
       { path: 'cuverie', pathMatch: 'full', redirectTo: 'cuverie/cuves' },

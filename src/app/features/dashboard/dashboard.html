@@ -68,6 +68,22 @@
     <span class="text-[13px] text-muted-foreground">Prêtes à recevoir du vin</span>
   </a>
 
+  <a routerLink="/production/mises"
+     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+    <div class="flex items-center justify-between gap-2">
+      <span class="text-sm font-medium text-muted-foreground">Mises cette semaine</span>
+      @if (bottlingAlerts() > 0) {
+        <span hlmBadge variant="destructive">{{ bottlingAlerts() }} en manque</span>
+      }
+    </div>
+    @if (plannedBottlings.hasValue()) {
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ bottlingsThisWeek().length }}</span>
+    } @else {
+      <div hlmSkeleton class="h-9 w-12"></div>
+    }
+    <span class="text-[13px] text-muted-foreground">Planifiées, pas encore clôturées</span>
+  </a>
+
   @for (kpi of upcomingKpis; track kpi.label) {
     <div class="flex flex-col gap-2.5 rounded-xl border border-dashed border-border p-5">
       <div class="flex items-center justify-between gap-2">
@@ -82,15 +98,39 @@
 
 <!-- ===== Mises et alertes ===== -->
 <div class="mt-4 grid gap-4 lg:grid-cols-2">
-  <section class="flex flex-col gap-3 rounded-xl border border-dashed border-border p-5">
+  <section class="flex flex-col gap-2 rounded-xl border border-border bg-card p-5">
     <div class="flex items-center justify-between gap-2">
       <h2 class="text-base font-semibold">Prochaines mises</h2>
-      <span hlmBadge variant="outline">À venir</span>
+      <a routerLink="/production/mises" class="text-sm font-medium text-primary hover:underline">Planning</a>
     </div>
-    <p class="text-sm text-muted-foreground">
-      Le planning des mises en bouteille apparaîtra ici avec le module Production :
-      produits, quantités, et manquants en matières sèches.
-    </p>
+
+    @if (plannedBottlings.error()) {
+      <p class="text-sm text-muted-foreground">Impossible de charger les mises.</p>
+    } @else if (!plannedBottlings.hasValue()) {
+      @for (i of [1, 2, 3]; track i) {
+        <div hlmSkeleton class="h-10 w-full"></div>
+      }
+    } @else {
+      <ul class="divide-y divide-border/60">
+        @for (bottling of nextBottlings(); track bottling.id) {
+          <li>
+            <a [routerLink]="['/production/mises', bottling.id]" class="flex items-center gap-3 py-2.5 text-sm hover:bg-muted/30">
+              <span class="w-24 shrink-0 tabular-nums text-muted-foreground">{{ bottling.startDate | date: 'EEE d MMM' }}</span>
+              <span class="flex min-w-0 flex-1 flex-col">
+                <span class="truncate font-medium">{{ bottling.finishedArticleLabel }}</span>
+                <span class="text-xs text-muted-foreground">
+                  {{ bottling.plannedBottles | number }} bt ·
+                  {{ bottling.location === 'ON_SITE' ? 'cuve ' + bottling.sourceTankCode : 'chez le producteur' }}
+                </span>
+              </span>
+              <app-bottling-state-badge [bottling]="bottling" />
+            </a>
+          </li>
+        } @empty {
+          <li class="py-2.5 text-sm text-muted-foreground">Aucune mise planifiée.</li>
+        }
+      </ul>
+    }
   </section>
 
   <section class="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">

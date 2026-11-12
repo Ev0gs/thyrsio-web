@@ -1,0 +1,182 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-5">
+
+  <!-- ===== Le produit ===== -->
+  <fieldset class="flex flex-col gap-4">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Ce qu'on met en bouteille</legend>
+
+    <div class="flex flex-col gap-1.5">
+      <label for="bt-product" class="text-sm font-medium">Produit fini</label>
+      <select id="bt-product" [formField]="bottlingForm.finishedArticleId" [class]="selectClass">
+        <option value="">Choisir un produit…</option>
+        @for (product of productOptions(); track product.articleId) {
+          <option [value]="product.articleId">{{ product.articleLabel }} ({{ product.articleCode }})</option>
+        }
+      </select>
+      @if (finishedGoodsLoaded() && productOptions().length === 0) {
+        <p class="text-xs text-muted-foreground">
+          Aucun produit fini pour l'instant :
+          <a routerLink="/referentiel/articles" class="font-medium text-primary hover:underline">crée-le dans les articles</a>
+          avec la catégorie « Produit fini ».
+        </p>
+      }
+      <app-field-error [state]="bottlingForm.finishedArticleId()" />
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-bottles" class="text-sm font-medium">Bouteilles prévues</label>
+        <input id="bt-bottles" hlmInput type="number" step="1" [formField]="bottlingForm.plannedBottles" />
+        <app-field-error [state]="bottlingForm.plannedBottles()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-cl" class="text-sm font-medium">Contenance <span class="font-normal text-muted-foreground">(cl)</span></label>
+        <input id="bt-cl" hlmInput type="number" step="1" [formField]="bottlingForm.bottleVolumeCl" />
+        <app-field-error [state]="bottlingForm.bottleVolumeCl()" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- ===== Où et quand ===== -->
+  <fieldset class="flex flex-col gap-4">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Où et quand</legend>
+
+    <div role="group" aria-label="Lieu de la mise" class="flex w-fit gap-1 rounded-lg bg-muted p-1">
+      @for (location of locations; track location) {
+        <button type="button" (click)="bottlingForm.location().value.set(location)"
+                [attr.aria-pressed]="model().location === location"
+                class="h-8 rounded-md px-3 text-[13px] font-medium transition-colors"
+                [class]="model().location === location ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">
+          {{ locationLabels[location] }}
+        </button>
+      }
+    </div>
+
+    @if (!bottlingForm.sourceTankId().hidden()) {
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-tank" class="text-sm font-medium">Cuve d'origine</label>
+        <select id="bt-tank" [formField]="bottlingForm.sourceTankId" [class]="selectClass">
+          <option value="">Choisir une cuve…</option>
+          @for (tank of tankOptions(); track tank.id) {
+            <option [value]="tank.id">
+              {{ tank.code }} · {{ tank.wineLot ? describeWine(tank.wineLot) : 'vide' }} — {{ tank.volumeHl | number: '1.0-2' }} hl
+            </option>
+          }
+        </select>
+        <app-field-error [state]="bottlingForm.sourceTankId()" />
+        @if (wineNeeded() > 0) {
+          <p class="text-xs" [class]="selectedTank() && selectedTank()!.volumeHl < wineNeeded() ? 'text-destructive' : 'text-muted-foreground'">
+            Vin nécessaire : {{ wineNeeded() | number: '1.0-2' }} hl
+            @if (selectedTank(); as tank) {
+              · dans {{ tank.code }} : {{ tank.volumeHl | number: '1.0-2' }} hl
+              @if (tank.volumeHl < wineNeeded()) { — pas assez de vin }
+            }
+          </p>
+        }
+      </div>
+    }
+
+    @if (!bottlingForm.wineDescription().hidden()) {
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-wine" class="text-sm font-medium">Vin <span class="font-normal text-muted-foreground">(il ne passe pas par nos cuves)</span></label>
+        <input id="bt-wine" hlmInput [formField]="bottlingForm.wineDescription" placeholder="Bordeaux Blanc 2024, à la propriété" />
+        <app-field-error [state]="bottlingForm.wineDescription()" />
+      </div>
+    }
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-start" class="text-sm font-medium">Premier jour</label>
+        <input id="bt-start" hlmInput type="date" [formField]="bottlingForm.startDate" />
+        <app-field-error [state]="bottlingForm.startDate()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-end" class="text-sm font-medium">Dernier jour</label>
+        <input id="bt-end" hlmInput type="date" [formField]="bottlingForm.endDate" />
+        <app-field-error [state]="bottlingForm.endDate()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="bt-contractor" class="text-sm font-medium">Prestataire</label>
+        <input id="bt-contractor" hlmInput [formField]="bottlingForm.contractor" placeholder="Embouteillage…" />
+        <app-field-error [state]="bottlingForm.contractor()" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- ===== Les matières sèches ===== -->
+  <fieldset class="flex flex-col gap-3">
+    <legend class="mb-1 text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">Matières sèches</legend>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <label for="bt-copy" class="text-sm text-muted-foreground">Reprendre la liste de</label>
+      <select id="bt-copy" #copy (change)="copyFrom(copy.value); copy.value = ''" [class]="selectClass + ' sm:w-auto sm:min-w-64'">
+        <option value="">une mise précédente…</option>
+        @for (previous of previousOptions(); track previous.id) {
+          <option [value]="previous.id">{{ previous.code }} · {{ previous.finishedArticleLabel }} ({{ previous.plannedBottles | number }} bt)</option>
+        }
+      </select>
+      @if (canRescale()) {
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="rescale()">
+          Recalculer pour {{ model().plannedBottles | number }} bouteilles
+        </button>
+      }
+    </div>
+    @if (copyError(); as message) {
+      <p role="alert" class="text-sm text-destructive">{{ message }}</p>
+    }
+
+    @for (material of bottlingForm.materials; track $index; let i = $index) {
+      <div class="grid items-start gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto]">
+        <div class="flex flex-col gap-1.5">
+          <label [for]="'bt-article-' + i" class="sr-only">Article {{ i + 1 }}</label>
+          <select [id]="'bt-article-' + i" [formField]="material.articleId" [class]="selectClass">
+            <option value="">Choisir un article…</option>
+            @for (option of articleOptions(); track option.articleId) {
+              <option [value]="option.articleId">{{ option.articleLabel }} ({{ option.articleCode }})</option>
+            }
+          </select>
+          <app-field-error [state]="material.articleId()" />
+          @if (article(material.articleId().value()); as row) {
+            <span class="text-xs text-muted-foreground">En stock : {{ row.quantity | number: '1.0-4' }} {{ row.unitCode }}</span>
+          }
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label [for]="'bt-qty-' + i" class="sr-only">Quantité de l'article {{ i + 1 }}</label>
+          <div class="relative">
+            <input [id]="'bt-qty-' + i" hlmInput type="number" step="any" class="pr-10" [formField]="material.plannedQuantity" />
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              {{ article(material.articleId().value())?.unitCode ?? '' }}
+            </span>
+          </div>
+          <app-field-error [state]="material.plannedQuantity()" />
+        </div>
+        <button hlmBtn variant="ghost" size="icon-sm" type="button" class="mt-1" (click)="removeMaterial(i)"
+                [attr.aria-label]="'Retirer l\'article ' + (i + 1)">
+          <ng-icon name="lucideTrash2" aria-hidden="true" />
+        </button>
+      </div>
+    } @empty {
+      <p class="text-sm text-muted-foreground">Aucune matière pour l'instant : ajoute-les une par une, ou reprends la liste d'une mise précédente.</p>
+    }
+
+    <button hlmBtn variant="outline" size="sm" type="button" class="w-fit" (click)="addMaterial()">
+      <ng-icon name="lucidePlus" aria-hidden="true" /> Ajouter une matière
+    </button>
+  </fieldset>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="bt-notes" class="text-sm font-medium">Notes <span class="font-normal text-muted-foreground">(facultatif)</span></label>
+    <textarea id="bt-notes" hlmInput rows="2" class="h-auto py-2" [formField]="bottlingForm.notes" placeholder="Commande, habillage particulier…"></textarea>
+    <app-field-error [state]="bottlingForm.notes()" />
+  </div>
+
+  @for (error of bottlingForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="bottlingForm().submitting()">
+      {{ bottlingForm().submitting() ? 'Enregistrement…' : (bottling() ? 'Enregistrer' : 'Planifier la mise') }}
+    </button>
+  </hlm-dialog-footer>
+</form>

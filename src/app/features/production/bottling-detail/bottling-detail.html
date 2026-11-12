@@ -1,0 +1,246 @@
+<a routerLink="/production/mises" class="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+  <ng-icon name="lucideChevronLeft" aria-hidden="true" /> Planning des mises
+</a>
+
+@if (resource.error()) {
+  <div class="mt-4 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center">
+    <p class="text-sm font-medium">Impossible de charger cette mise.</p>
+    <button hlmBtn variant="outline" (click)="resource.reload()">
+      <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+    </button>
+  </div>
+} @else if (bottling(); as b) {
+  <header class="mt-3 flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-col gap-1">
+      <div class="flex flex-wrap items-center gap-3">
+        <h1 class="text-[28px] font-semibold tracking-tight">{{ b.finishedArticleLabel }}</h1>
+        <app-bottling-state-badge [bottling]="b" />
+      </div>
+      <p class="text-sm text-muted-foreground">
+        <span class="font-mono">{{ b.code }}</span> ·
+        {{ b.startDate | date: 'EEEE d MMMM y' }}
+        @if (b.endDate !== b.startDate) { au {{ b.endDate | date: 'EEEE d MMMM' }} }
+        · {{ locationLabels[b.location] }}
+        @if (b.contractor) { · {{ b.contractor }} }
+      </p>
+    </div>
+    @if (b.status === 'PLANNED') {
+      <div class="flex flex-wrap gap-2">
+        <button hlmBtn variant="ghost" (click)="open('cancel')">
+          <ng-icon name="lucideBan" aria-hidden="true" /> Annuler la mise
+        </button>
+        <button hlmBtn variant="outline" (click)="open('edit')">
+          <ng-icon name="lucidePencil" aria-hidden="true" /> Modifier
+        </button>
+        <button hlmBtn (click)="open('close')" [disabled]="!canClose()"
+                [title]="canClose() ? '' : 'La mise n\'a pas encore commencé'">
+          <ng-icon name="lucideCircleCheck" aria-hidden="true" /> Clôturer avec le réel
+        </button>
+      </div>
+    }
+  </header>
+
+  @if (actionError(); as message) {
+    <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+  }
+
+  @if (b.alert) {
+    <p role="alert" class="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
+      {{ b.shortageCount }} matière(s) en manque, et la mise commence bientôt : pense à commander.
+    </p>
+  }
+
+  <div class="mt-6 grid gap-4 lg:grid-cols-3">
+    <!-- Bouteilles -->
+    <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+      <span class="text-sm font-medium text-muted-foreground">Bouteilles</span>
+      @if (b.status === 'CLOSED') {
+        <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ b.producedBottles | number }}</span>
+        <span class="text-[13px] text-muted-foreground">
+          produites sur {{ b.plannedBottles | number }} prévues · {{ (b.brokenBottles ?? 0) | number }} cassée(s)
+        </span>
+      } @else {
+        <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ b.plannedBottles | number }}</span>
+        <span class="text-[13px] text-muted-foreground">prévues · {{ b.bottleVolumeCl }} cl</span>
+      }
+    </section>
+
+    <!-- Vin -->
+    <section class="flex flex-col gap-1.5 rounded-xl border bg-card p-5" [class]="wineShort() ? 'border-red-200' : 'border-border'">
+      <span class="text-sm font-medium text-muted-foreground">Vin</span>
+      <span class="text-3xl font-semibold tracking-tight tabular-nums">
+        {{ (b.wineUsedHl ?? b.wineNeededHl) | number: '1.0-2' }} <span class="text-base font-normal text-muted-foreground">hl</span>
+      </span>
+      @if (b.location === 'ON_SITE') {
+        <span class="text-[13px] text-muted-foreground">
+          {{ b.status === 'CLOSED' ? 'tirés de la' : 'à tirer de la' }}
+          <a [routerLink]="['/cuverie/cuves', b.sourceTankId]" class="font-medium text-foreground hover:underline">cuve {{ b.sourceTankCode }}</a>
+          @if (b.status === 'PLANNED' && b.tankVolumeHl !== null) { · {{ b.tankVolumeHl | number: '1.0-2' }} hl dedans }
+        </span>
+        @if (b.status === 'PLANNED' && b.wineLot; as lot) {
+          <span class="text-[13px]"><app-wine-label [lot]="lot" /></span>
+        }
+        @if (wineShort()) {
+          <span class="text-[13px] font-medium text-destructive">Pas assez de vin dans la cuve</span>
+        }
+      } @else {
+        <span class="text-[13px] text-muted-foreground">{{ b.wineDescription ?? 'Embouteillé chez le producteur' }}</span>
+      }
+    </section>
+
+    <!-- Lot -->
+    <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
+      <span class="text-sm font-medium text-muted-foreground">Numéro de lot</span>
+      @if (b.lotNumber) {
+        <span class="font-mono text-3xl font-semibold tracking-tight">{{ b.lotNumber }}</span>
+        <span class="text-[13px] text-muted-foreground">Clôturée le {{ b.closedAt | date: 'd MMM y, HH:mm' }}</span>
+      } @else {
+        <span class="text-3xl font-semibold tracking-tight text-muted-foreground/50">—</span>
+        <span class="text-[13px] text-muted-foreground">Attribué à la clôture</span>
+      }
+    </section>
+  </div>
+
+  @if (b.notes) {
+    <p class="mt-4 whitespace-pre-line rounded-lg bg-muted/50 px-4 py-3 text-sm">{{ b.notes }}</p>
+  }
+
+  <!-- Matières -->
+  <section class="mt-6">
+    <h2 class="text-base font-semibold">{{ b.status === 'CLOSED' ? 'Matières prévues' : 'Matières sèches' }}</h2>
+    @if (b.status === 'PLANNED') {
+      <p class="mt-1 text-[13px] text-muted-foreground">« Réservé avant » : ce que les mises planifiées plus tôt consommeront d'abord.</p>
+    }
+    <div class="mt-3 overflow-hidden rounded-xl border border-border">
+      <div hlmTableContainer>
+        <table hlmTable class="min-w-[760px]">
+          <thead hlmTHead class="bg-muted/50">
+          <tr hlmTr>
+            <th hlmTh>Article</th>
+            <th hlmTh class="text-right">Prévu</th>
+            @if (b.status === 'PLANNED') {
+              <th hlmTh class="text-right">En stock</th>
+              <th hlmTh class="text-right">Réservé avant</th>
+              <th hlmTh class="text-right">Manquant</th>
+            }
+          </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (line of b.materials; track line.articleId) {
+              <tr hlmTr [class.bg-red-50/50]="(line.shortageQuantity ?? 0) > 0">
+                <td hlmTd>
+                  <div class="font-medium">{{ line.articleLabel }}</div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ line.articleCode }} · {{ line.categoryLabel }}</div>
+                </td>
+                <td hlmTd class="text-right tabular-nums">
+                  {{ line.plannedQuantity | number: '1.0-4' }} <span class="text-xs text-muted-foreground">{{ line.unitCode }}</span>
+                </td>
+                @if (b.status === 'PLANNED') {
+                  <td hlmTd class="text-right tabular-nums text-muted-foreground">{{ line.stockQuantity | number: '1.0-4' }}</td>
+                  <td hlmTd class="text-right tabular-nums text-muted-foreground">{{ line.reservedBefore | number: '1.0-4' }}</td>
+                  <td hlmTd class="text-right tabular-nums">
+                    @if ((line.shortageQuantity ?? 0) > 0) {
+                      <span class="font-semibold text-red-700">{{ line.shortageQuantity | number: '1.0-4' }}</span>
+                    } @else {
+                      <span class="text-emerald-700">OK</span>
+                    }
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd [attr.colspan]="b.status === 'PLANNED' ? 5 : 2" class="py-8 text-center text-muted-foreground">
+                  Aucune matière prévue : modifie la mise pour en ajouter.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Consommations réelles -->
+  @if (b.status === 'CLOSED') {
+    <section class="mt-6">
+      <h2 class="text-base font-semibold">Matières réellement consommées</h2>
+      <div class="mt-3 overflow-hidden rounded-xl border border-border">
+        <div hlmTableContainer>
+          <table hlmTable class="min-w-[600px]">
+            <thead hlmTHead class="bg-muted/50">
+            <tr hlmTr>
+              <th hlmTh>Article</th>
+              <th hlmTh>Lot</th>
+              <th hlmTh class="text-right">Quantité</th>
+            </tr>
+            </thead>
+            <tbody hlmTBody>
+              @for (line of b.consumptions; track $index) {
+                <tr hlmTr>
+                  <td hlmTd>
+                    <div class="font-medium">{{ line.articleLabel }}</div>
+                    <div class="font-mono text-xs text-muted-foreground">{{ line.articleCode }}</div>
+                  </td>
+                  <td hlmTd class="font-mono text-[13px] text-muted-foreground">{{ line.lotNumber ?? '—' }}</td>
+                  <td hlmTd class="text-right tabular-nums">
+                    {{ line.quantity | number: '1.0-4' }} <span class="text-xs text-muted-foreground">{{ line.unitCode }}</span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr hlmTr>
+                  <td hlmTd colspan="3" class="py-8 text-center text-muted-foreground">Aucune consommation enregistrée.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  }
+
+  <hlm-dialog [state]="dialog() ? 'open' : 'closed'" (closed)="dialog.set(null)">
+    <hlm-dialog-content *hlmDialogPortal="let ctx" [class]="dialog() === 'cancel' ? 'sm:max-w-md' : 'sm:max-w-3xl'">
+      @switch (dialog()) {
+        @case ('edit') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Modifier la mise {{ b.code }}</h3>
+          </hlm-dialog-header>
+          <div class="dialog-scroll">
+            <app-bottling-form [bottling]="b" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+          </div>
+        }
+        @case ('close') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Clôturer la mise {{ b.code }}</h3>
+            <p hlmDialogDescription>
+              Saisis le réel. À l'enregistrement : les matières sont consommées, le vin est tiré de la cuve
+              et les bouteilles entrent en stock. Une mise clôturée ne se modifie plus.
+            </p>
+          </hlm-dialog-header>
+          <div class="dialog-scroll">
+            <app-close-form [bottling]="b" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+          </div>
+        }
+        @case ('cancel') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Annuler la mise {{ b.code }} ?</h3>
+            <p hlmDialogDescription>Elle reste dans l'historique, sans effet sur le stock ni sur les cuves. Elle ne pourra plus être modifiée.</p>
+          </hlm-dialog-header>
+          @if (actionError(); as message) {
+            <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+          }
+          <hlm-dialog-footer>
+            <button hlmBtn variant="outline" type="button" (click)="ctx.close()">Garder la mise</button>
+            <button hlmBtn variant="destructive" type="button" [disabled]="busy()" (click)="cancel()">Annuler la mise</button>
+          </hlm-dialog-footer>
+        }
+      }
+    </hlm-dialog-content>
+  </hlm-dialog>
+} @else {
+  <div class="mt-4 flex flex-col gap-4">
+    <div hlmSkeleton class="h-10 w-96"></div>
+    <div hlmSkeleton class="h-32 w-full rounded-xl"></div>
+    <div hlmSkeleton class="h-64 w-full rounded-xl"></div>
+  </div>
+}

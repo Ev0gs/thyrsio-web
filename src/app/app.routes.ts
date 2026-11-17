@@ -96,6 +96,22 @@ export const routes: Routes = [
             (m) => m.CuverieMovements,
           ),
       },
+      {
+        path: 'registres/cahier-de-chai',
+        title: 'Cahier de chai · Thyrsio',
+        loadComponent: () =>
+          import('./features/registre/register-journal/register-journal').then(
+            (m) => m.RegisterJournal,
+          ),
+      },
+      {
+        path: 'parametres/societe',
+        title: 'Société · Thyrsio',
+        loadComponent: () =>
+          import('./features/registre/company-settings/company-settings').then(
+            (m) => m.CompanySettingsPage,
+          ),
+      },
       ...(FEATURES.sales
         ? [
             {

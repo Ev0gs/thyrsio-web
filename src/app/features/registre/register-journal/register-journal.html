@@ -1,0 +1,287 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="flex items-center gap-3 text-[28px] font-semibold tracking-tight">
+      <app-page-icon name="lucideBookOpen" />
+      Cahier de chai
+    </h1>
+    <p class="text-sm text-muted-foreground">
+      Le registre des manipulations, rempli par chaque opération. Une écriture ne se modifie pas :
+      une erreur se corrige par une contre-écriture.
+    </p>
+  </div>
+
+  @if (verification.hasValue()) {
+    @let check = verification.value();
+    @if (check.valid) {
+      <div
+        class="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+        role="status"
+        [title]="check.lastHash ? 'Empreinte de la dernière écriture : ' + check.lastHash : ''"
+      >
+        <ng-icon name="lucideShieldCheck" size="18" aria-hidden="true" />
+        <span>Registre intact · {{ check.verifiedEntries | number }} écriture(s) vérifiée(s)</span>
+      </div>
+    } @else {
+      <div
+        class="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        role="alert"
+      >
+        <ng-icon name="lucideShieldAlert" size="18" class="mt-0.5" aria-hidden="true" />
+        <span>
+          <span class="font-medium">Registre altéré à l'écriture n° {{ check.brokenAt }}</span>
+          <span class="block text-xs">{{ check.problem }}</span>
+        </span>
+      </div>
+    }
+  }
+</header>
+
+<div class="mt-6 flex flex-wrap items-end gap-3">
+  <label class="flex min-w-56 flex-col gap-1.5 text-sm font-medium">
+    Registre
+    <select
+      #bookSelect
+      (change)="setFilter('registre', bookSelect.value)"
+      [class]="selectClass + ' font-normal'"
+    >
+      <option value="">Tous les registres</option>
+      @for (book of books; track book) {
+        <option [value]="book" [selected]="book === registre()">{{ bookLabels[book] }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm font-medium">
+    Du
+    <input
+      hlmInput
+      type="date"
+      #fromInput
+      [value]="from() ?? ''"
+      (change)="setFilter('from', fromInput.value)"
+      class="w-40"
+    />
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm font-medium">
+    Au
+    <input
+      hlmInput
+      type="date"
+      #toInput
+      [value]="to() ?? ''"
+      (change)="setFilter('to', toInput.value)"
+      class="w-40"
+    />
+  </label>
+
+  <label class="flex min-w-56 flex-1 flex-col gap-1.5 text-sm font-medium sm:max-w-72">
+    Rechercher
+    <input
+      hlmInput
+      type="search"
+      #searchInput
+      [value]="q() ?? ''"
+      placeholder="Lot, cuve, DAE, appellation…"
+      (keydown.enter)="setFilter('q', searchInput.value)"
+      (change)="setFilter('q', searchInput.value)"
+      class="font-normal"
+    />
+  </label>
+
+  <label class="flex h-9 items-center gap-2 text-sm">
+    <input
+      type="checkbox"
+      class="size-4 accent-primary"
+      [checked]="lateOnly()"
+      (change)="setFilter('retard', lateOnly() ? '' : '1')"
+    />
+    Saisies hors délai
+  </label>
+
+  @if (lot()) {
+    <span hlmBadge variant="secondary" class="h-9 gap-1.5 px-3">
+      Lot {{ lotCode() }}
+      <button
+        type="button"
+        class="cursor-pointer rounded hover:text-foreground"
+        aria-label="Retirer le filtre du lot"
+        (click)="setFilter('lot', '')"
+      >
+        <ng-icon name="lucideX" aria-hidden="true" />
+      </button>
+    </span>
+  }
+
+  @if (hasFilters()) {
+    <button hlmBtn variant="ghost" (click)="clearFilters()">
+      <ng-icon name="lucideX" aria-hidden="true" /> Effacer les filtres
+    </button>
+  }
+</div>
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (entries.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger le registre.</p>
+      <button hlmBtn variant="outline" (click)="entries.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="entries.isLoading()">
+      <table hlmTable class="min-w-[1100px]">
+        <thead hlmTHead class="bg-muted/50">
+          <tr hlmTr>
+            <th hlmTh class="w-10"><span class="sr-only">Détail</span></th>
+            <th hlmTh class="w-16 text-right">N°</th>
+            <th hlmTh>Opération</th>
+            <th hlmTh>Vin</th>
+            <th hlmTh>Cuve(s)</th>
+            <th hlmTh class="text-right">Volume</th>
+            <th hlmTh>Détail</th>
+            <th hlmTh>Inscrite</th>
+          </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!entries.hasValue()) {
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <tr hlmTr>
+                <td hlmTd colspan="8"><div hlmSkeleton class="h-7 w-full"></div></td>
+              </tr>
+            }
+          } @else {
+            @for (entry of rows(); track entry.id) {
+              @let open = expanded().has(entry.id);
+              <tr hlmTr class="align-top" [class.bg-amber-50/60]="entry.kind === 'CORRECTION'">
+                <td hlmTd>
+                  <button
+                    type="button"
+                    class="flex size-7 cursor-pointer items-center justify-center rounded-md hover:bg-muted"
+                    [attr.aria-expanded]="open"
+                    [attr.aria-label]="
+                      (open ? 'Masquer' : 'Afficher') +
+                      ' le détail de l\'écriture ' +
+                      entry.sequenceNo
+                    "
+                    (click)="toggle(entry.id)"
+                  >
+                    <ng-icon
+                      [name]="open ? 'lucideChevronDown' : 'lucideChevronRight'"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </td>
+                <td hlmTd class="text-right font-mono tabular-nums text-muted-foreground">
+                  {{ entry.sequenceNo }}
+                </td>
+                <td hlmTd>
+                  <div class="tabular-nums">{{ entry.operationAt | date: 'd MMM y, HH:mm' }}</div>
+                  <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span
+                      hlmBadge
+                      [variant]="entry.kind === 'CORRECTION' ? 'outline' : 'secondary'"
+                      >{{ kindLabel(entry.kind) }}</span
+                    >
+                    @if (!registre()) {
+                      <span class="text-xs text-muted-foreground">{{ entry.bookLabel }}</span>
+                    }
+                  </div>
+                </td>
+                <td hlmTd class="max-w-56 whitespace-normal">
+                  @if (entry.wineLotId) {
+                    <a
+                      [routerLink]="['/cuverie/lots', entry.wineLotId]"
+                      class="font-mono text-xs font-medium hover:underline"
+                      >{{ entry.wineLotCode }}</a
+                    >
+                    <div>{{ entry.denomination }}</div>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td hlmTd class="whitespace-normal">{{ entry.tanks ?? '—' }}</td>
+                <td hlmTd class="text-right font-medium tabular-nums">
+                  @if (entry.volumeHl !== null) {
+                    {{ entry.volumeHl | number: '1.0-4' }}
+                    <span class="text-xs font-normal text-muted-foreground">hl</span>
+                  } @else {
+                    —
+                  }
+                </td>
+                <td hlmTd class="max-w-80 whitespace-normal">
+                  <div>{{ entry.summary }}</div>
+                  @if (entry.reference) {
+                    <div class="text-xs text-muted-foreground">Réf. {{ entry.reference }}</div>
+                  }
+                  @if (entry.correctsEntryId) {
+                    <div class="text-xs text-amber-800">
+                      Corrige l'écriture
+                      {{
+                        correctedSequence(entry) ? 'n° ' + correctedSequence(entry) : 'précédente'
+                      }}
+                    </div>
+                  }
+                </td>
+                <td hlmTd class="whitespace-normal">
+                  <div class="tabular-nums text-muted-foreground">
+                    {{ entry.recordedAt | date: 'd MMM y, HH:mm' }}
+                  </div>
+                  <div class="text-xs text-muted-foreground">
+                    {{ entry.recordedByName ?? 'Utilisateur inconnu' }}
+                  </div>
+                  @if (entry.late) {
+                    <span
+                      hlmBadge
+                      variant="destructive"
+                      class="mt-1"
+                      title="Inscrite après le délai réglementaire"
+                      >Hors délai</span
+                    >
+                  }
+                </td>
+              </tr>
+              @if (open) {
+                <tr hlmTr class="bg-muted/30 hover:bg-muted/30">
+                  <td hlmTd></td>
+                  <td hlmTd colspan="7" class="whitespace-normal">
+                    <dl class="grid gap-x-6 gap-y-1.5 py-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                      @for (field of describeData(entry.data); track field.label) {
+                        <div class="flex flex-col">
+                          <dt class="text-xs text-muted-foreground">{{ field.label }}</dt>
+                          <dd>{{ field.value }}</dd>
+                        </div>
+                      }
+                    </dl>
+                    <p class="mt-2 break-all font-mono text-[11px] text-muted-foreground">
+                      Empreinte : {{ entry.hash }}
+                    </p>
+                  </td>
+                </tr>
+              }
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="8" class="py-10 text-center text-muted-foreground">
+                  {{
+                    hasFilters()
+                      ? 'Aucune écriture ne correspond à ces filtres.'
+                      : "Aucune écriture pour l'instant : elles apparaîtront avec les premières réceptions de vin."
+                  }}
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (pageInfo(); as info) {
+      <app-pagination
+        [page]="page()"
+        [totalPages]="info.totalPages"
+        [totalElements]="info.totalElements"
+        itemLabel="écriture(s)"
+        (pageChange)="goToPage($event)"
+      />
+    }
+  }
+</section>

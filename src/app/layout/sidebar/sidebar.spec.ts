@@ -27,6 +27,9 @@ describe('Sidebar', () => {
     // Branche production : les ventes et les clients sont masqués, les fournisseurs restent
     expect(text).toContain('Mises en bouteille');
     expect(text).toContain('Fournisseurs');
+    // Les registres et la fiche de l'entreprise
+    expect(text).toContain('Cahier de chai');
+    expect(text).toContain('Société');
     expect(text).not.toContain('Commandes clients');
     expect(text).not.toContain('Expéditions');
     expect(text).not.toContain('Clients');

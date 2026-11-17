@@ -4,6 +4,7 @@ import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideBookOpen,
   lucideChevronLeft,
   lucideFlaskConical,
   lucidePencil,
@@ -54,6 +55,7 @@ type DialogKind = 'analysis' | 'edit';
   ],
   viewProviders: [
     provideIcons({
+      lucideBookOpen,
       lucideChevronLeft,
       lucideFlaskConical,
       lucidePencil,

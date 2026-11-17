@@ -4,6 +4,8 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeftRight,
   lucideArrowUpDown,
+  lucideBookOpen,
+  lucideBuilding2,
   lucideClipboardList,
   lucideContainer,
   lucideFactory,
@@ -71,6 +73,8 @@ const visible = (groups: NavGroup[]): NavGroup[] =>
       lucideTags,
       lucideUsers,
       lucideFactory,
+      lucideBookOpen,
+      lucideBuilding2,
       lucideLogOut,
     }),
   ],
@@ -147,6 +151,12 @@ export class Sidebar {
       ],
     },
     {
+      label: 'Registres',
+      items: [
+        { label: 'Cahier de chai', icon: 'lucideBookOpen', route: '/registres/cahier-de-chai' },
+      ],
+    },
+    {
       label: 'Ventes',
       sales: true,
       items: [
@@ -199,6 +209,10 @@ export class Sidebar {
           includeSubPaths: true,
         },
       ],
+    },
+    {
+      label: 'Paramètres',
+      items: [{ label: 'Société', icon: 'lucideBuilding2', route: '/parametres/societe' }],
     },
   ]);
 }

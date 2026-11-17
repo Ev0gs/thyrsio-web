@@ -21,6 +21,9 @@
       </p>
     </div>
     <div class="flex flex-wrap gap-2">
+      <a hlmBtn variant="ghost" routerLink="/registres/cahier-de-chai" [queryParams]="{ lot: l.id }">
+        <ng-icon name="lucideBookOpen" aria-hidden="true" /> Au cahier de chai
+      </a>
       <button hlmBtn variant="outline" (click)="open('edit')">
         <ng-icon name="lucidePencil" aria-hidden="true" /> Corriger la fiche
       </button>

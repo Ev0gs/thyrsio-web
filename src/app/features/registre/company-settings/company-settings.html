@@ -1,0 +1,149 @@
+<header class="flex flex-col gap-1">
+  <h1 class="flex items-center gap-3 text-[28px] font-semibold tracking-tight">
+    <app-page-icon name="lucideBuilding2" />
+    Société
+  </h1>
+  <p class="text-sm text-muted-foreground">
+    L'entreprise qui tient les registres : ces informations figurent en page de garde du cahier de
+    chai et du registre de conditionnement.
+  </p>
+</header>
+
+@if (settings.error()) {
+  <div
+    class="mt-6 flex flex-col items-center gap-3 rounded-xl border border-border p-10 text-center"
+  >
+    <p class="text-sm font-medium">Impossible de charger la fiche de l'entreprise.</p>
+    <button hlmBtn variant="outline" (click)="settings.reload()">
+      <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+    </button>
+  </div>
+} @else if (!settings.hasValue()) {
+  <div hlmSkeleton class="mt-6 h-96 w-full max-w-3xl rounded-xl"></div>
+} @else {
+  <form class="mt-6 flex max-w-3xl flex-col gap-6" (submit)="save($event)" novalidate>
+    <section class="flex flex-col gap-4 rounded-xl border border-border p-5">
+      <h2 class="text-base font-semibold">Identité</h2>
+      <div class="flex flex-col gap-1.5">
+        <label for="co-name" class="text-sm font-medium">Raison sociale</label>
+        <input id="co-name" hlmInput [formField]="companyForm.legalName" placeholder="SARL …" />
+        <app-field-error [state]="companyForm.legalName()" />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="flex flex-col gap-1.5">
+          <label for="co-excise" class="text-sm font-medium">N° d'accise</label>
+          <input
+            id="co-excise"
+            hlmInput
+            [formField]="companyForm.exciseNumber"
+            class="font-mono uppercase"
+            placeholder="FR0…"
+          />
+          <app-field-error [state]="companyForm.exciseNumber()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="co-siret" class="text-sm font-medium">SIRET</label>
+          <input
+            id="co-siret"
+            hlmInput
+            [formField]="companyForm.siret"
+            class="font-mono"
+            inputmode="numeric"
+          />
+          <app-field-error [state]="companyForm.siret()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="co-vat" class="text-sm font-medium">N° de TVA</label>
+          <input
+            id="co-vat"
+            hlmInput
+            [formField]="companyForm.vatNumber"
+            class="font-mono uppercase"
+            placeholder="FR…"
+          />
+          <app-field-error [state]="companyForm.vatNumber()" />
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-4 rounded-xl border border-border p-5">
+      <h2 class="text-base font-semibold">Adresse et contact</h2>
+      <div class="flex flex-col gap-1.5">
+        <label for="co-line1" class="text-sm font-medium">Adresse</label>
+        <input id="co-line1" hlmInput [formField]="companyForm.addressLine1" />
+        <app-field-error [state]="companyForm.addressLine1()" />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label for="co-line2" class="text-sm font-medium"
+          >Complément <span class="font-normal text-muted-foreground">(facultatif)</span></label
+        >
+        <input id="co-line2" hlmInput [formField]="companyForm.addressLine2" />
+        <app-field-error [state]="companyForm.addressLine2()" />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-[8rem_1fr_6rem]">
+        <div class="flex flex-col gap-1.5">
+          <label for="co-postal" class="text-sm font-medium">Code postal</label>
+          <input id="co-postal" hlmInput [formField]="companyForm.postalCode" inputmode="numeric" />
+          <app-field-error [state]="companyForm.postalCode()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="co-city" class="text-sm font-medium">Commune</label>
+          <input id="co-city" hlmInput [formField]="companyForm.city" />
+          <app-field-error [state]="companyForm.city()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="co-country" class="text-sm font-medium">Pays</label>
+          <input id="co-country" hlmInput [formField]="companyForm.countryCode" class="uppercase" />
+          <app-field-error [state]="companyForm.countryCode()" />
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <label for="co-phone" class="text-sm font-medium">Téléphone</label>
+          <input id="co-phone" hlmInput type="tel" [formField]="companyForm.phone" />
+          <app-field-error [state]="companyForm.phone()" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label for="co-email" class="text-sm font-medium">E-mail</label>
+          <input id="co-email" hlmInput type="email" [formField]="companyForm.email" />
+          <app-field-error [state]="companyForm.email()" />
+        </div>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-4 rounded-xl border border-border p-5">
+      <h2 class="text-base font-semibold">Registre numérique</h2>
+      <div class="flex flex-col gap-1.5">
+        <label for="co-start" class="text-sm font-medium">Tenu dans Thyrsio depuis le</label>
+        <input
+          id="co-start"
+          hlmInput
+          type="date"
+          [formField]="companyForm.registerStartDate"
+          class="w-48"
+        />
+        <p class="text-xs text-muted-foreground">
+          Avant cette date, le cahier papier fait foi. La date est reportée sur la page de garde des
+          registres imprimés.
+        </p>
+      </div>
+    </section>
+
+    @for (error of companyForm().errors(); track error.kind) {
+      <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        {{ error.message }}
+      </p>
+    }
+
+    <div class="flex flex-wrap items-center justify-end gap-3">
+      @if (savedAt(); as at) {
+        <span class="flex items-center gap-1.5 text-sm text-emerald-700" role="status">
+          <ng-icon name="lucideCheck" aria-hidden="true" /> Enregistré à {{ at | date: 'HH:mm' }}
+        </span>
+      }
+      <button hlmBtn type="submit" [disabled]="companyForm().submitting()">
+        {{ companyForm().submitting() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </form>
+}

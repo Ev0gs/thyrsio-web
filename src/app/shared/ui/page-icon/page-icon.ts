@@ -3,6 +3,8 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeftRight,
   lucideArrowUpDown,
+  lucideBookOpen,
+  lucideBuilding2,
   lucideClipboardList,
   lucideContainer,
   lucideFactory,
@@ -26,6 +28,8 @@ import {
 const PAGE_ICONS = {
   lucideArrowLeftRight,
   lucideArrowUpDown,
+  lucideBookOpen,
+  lucideBuilding2,
   lucideClipboardList,
   lucideContainer,
   lucideFactory,

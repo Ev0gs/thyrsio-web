@@ -23,6 +23,29 @@ describe('TankIllustration', () => {
     expect(parseFloat(level.style.transform.replace('translateY(', ''))).toBeCloseTo(56.1, 1);
   });
 
+  it('moves the surface of small tanks too, each at its own pace', () => {
+    const first = render({
+      volumeHl: 50,
+      capacityHl: 100,
+      color: 'WHITE',
+      state: 'IN_USE',
+      compact: true,
+    });
+    const second = render({
+      volumeHl: 50,
+      capacityHl: 100,
+      color: 'RED',
+      state: 'IN_USE',
+      compact: true,
+    });
+
+    const firstWave = first.querySelector<SVGGElement>('.wave')!;
+    const secondWave = second.querySelector<SVGGElement>('.wave')!;
+    expect(firstWave).not.toBeNull();
+    expect(secondWave).not.toBeNull();
+    expect(firstWave.style.animationDelay).not.toBe(secondWave.style.animationDelay);
+  });
+
   it('says why a tank holds no wine', () => {
     const element = render({ volumeHl: 0, capacityHl: 200, color: null, state: 'CLEANING' });
 

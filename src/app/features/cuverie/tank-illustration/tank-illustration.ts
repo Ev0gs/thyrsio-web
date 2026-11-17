@@ -127,7 +127,7 @@ let nextId = 0;
         <rect x="29" y="18" width="102" height="200" [attr.fill]="'url(#' + ids.inside + ')'" />
         @if (shade()) {
           <g class="level" [style.transform]="'translateY(' + levelY() + 'px)'">
-            <g [class.wave]="!compact()">
+            <g class="wave" [style.animation-delay]="waveDelay">
               <path [attr.d]="wave" [attr.fill]="'url(#' + ids.wine + ')'" />
               <path
                 [attr.d]="wave"
@@ -212,7 +212,7 @@ export class TankIllustration {
   /** null : pas de vin, la cuve est dessinée vide. */
   readonly color = input<WineColor | null>(null);
   readonly state = input<TankState>('EMPTY');
-  /** Petite cuve (cartes) : sans libellés ni texte sur le dessin, surface immobile. */
+  /** Petite cuve (cartes) : sans libellés ni texte sur le dessin. */
   readonly compact = input(false);
 
   private readonly id = nextId++;
@@ -225,6 +225,11 @@ export class TankIllustration {
     clip: `tank-clip-${this.id}`,
   };
   protected readonly wave = WAVE;
+  /**
+   * Chaque cuve commence sa vague à un moment différent : sur la page Cuverie,
+   * les surfaces ne bougent pas toutes en même temps.
+   */
+  protected readonly waveDelay = `-${((this.id * 1.7) % 4).toFixed(1)}s`;
   protected readonly marks = [25, 50, 75, 100].map((percent) => ({
     percent,
     y: INNER_BOTTOM - (percent / 100) * (INNER_BOTTOM - INNER_TOP),

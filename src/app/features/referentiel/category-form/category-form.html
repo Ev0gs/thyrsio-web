@@ -1,0 +1,63 @@
+<div role="group" aria-label="Catégorie d'article" class="flex flex-col gap-4">
+  @if (isEdit()) {
+    <p class="rounded-md bg-muted px-3 py-2 text-sm">
+      Code <span class="font-mono font-medium">{{ category()?.code }}</span>
+      <span class="text-muted-foreground">: définitif</span>
+    </p>
+  }
+
+  <div class="grid gap-4" [class.sm:grid-cols-2]="!isEdit()">
+    @if (!categoryForm.code().hidden()) {
+      <div class="flex flex-col gap-1.5">
+        <label for="cat-code" class="text-sm font-medium">Code</label>
+        <input id="cat-code" hlmInput [formField]="categoryForm.code" class="font-mono uppercase"
+               placeholder="MUSELET" (keydown.enter)="onEnter($event)" />
+        <app-field-error [state]="categoryForm.code()" />
+      </div>
+    }
+    <div class="flex flex-col gap-1.5">
+      <label for="cat-label" class="text-sm font-medium">Libellé</label>
+      <input id="cat-label" hlmInput [formField]="categoryForm.label" placeholder="Muselet"
+             (keydown.enter)="onEnter($event)" />
+      <app-field-error [state]="categoryForm.label()" />
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-1.5">
+    <label for="cat-unit" class="text-sm font-medium">Unité par défaut des articles</label>
+    <select id="cat-unit" [formField]="categoryForm.defaultUnitCode" [class]="selectClass + ' sm:w-64'">
+      @for (unit of units.hasValue() ? units.value() : []; track unit.code) {
+        <option [value]="unit.code">{{ unit.label }} ({{ unit.code }})</option>
+      }
+    </select>
+    <app-field-error [state]="categoryForm.defaultUnitCode()" />
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <label class="flex items-start gap-2 text-sm">
+      <input type="checkbox" [formField]="categoryForm.lotTracked" class="mt-0.5 size-4 accent-primary" />
+      <span>
+        <span class="font-medium">Suivi par lot</span>
+        <span class="block text-xs text-muted-foreground">Chaque entrée en stock porte un numéro de lot du fournisseur (bouchons, capsules…).</span>
+      </span>
+    </label>
+    <label class="flex items-start gap-2 text-sm">
+      <input type="checkbox" [formField]="categoryForm.regulated" class="mt-0.5 size-4 accent-primary" />
+      <span>
+        <span class="font-medium">Réglementé</span>
+        <span class="block text-xs text-muted-foreground">Soumis à un suivi douanier, comme les capsules CRD.</span>
+      </span>
+    </label>
+  </div>
+
+  @for (error of categoryForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <div class="flex flex-wrap justify-end gap-2">
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="button" [disabled]="categoryForm().submitting()" (click)="save()">
+      {{ categoryForm().submitting() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer la catégorie') }}
+    </button>
+  </div>
+</div>

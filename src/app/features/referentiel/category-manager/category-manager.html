@@ -1,0 +1,61 @@
+@if (editing() !== undefined) {
+  <app-category-form [category]="editing() ?? null" (saved)="onSaved()" (cancelled)="editing.set(undefined)" />
+} @else {
+  <div class="flex flex-col gap-4">
+    @if (actionError(); as message) {
+      <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+    }
+
+    @if (categories.error()) {
+      <div class="flex flex-col items-center gap-3 rounded-lg border border-border p-6 text-center">
+        <p class="text-sm font-medium">Impossible de charger les catégories.</p>
+        <button hlmBtn variant="outline" type="button" (click)="categories.reload()">
+          <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+        </button>
+      </div>
+    } @else if (!categories.hasValue()) {
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div hlmSkeleton class="h-10 w-full"></div>
+      }
+    } @else {
+      <ul class="flex flex-col divide-y divide-border rounded-lg border border-border" [class.opacity-60]="busy()">
+        @for (category of rows(); track category.id) {
+          <li class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2.5 text-sm"
+              [class.text-muted-foreground]="!category.active">
+            <div class="flex min-w-0 flex-1 flex-col">
+              <span class="flex flex-wrap items-center gap-2 font-medium">
+                {{ category.label }}
+                @if (!category.active) {
+                  <span hlmBadge variant="outline">Archivée</span>
+                }
+              </span>
+              <span class="text-xs text-muted-foreground">
+                <span class="font-mono">{{ category.code }}</span> · unité {{ category.defaultUnitCode }}
+                @if (category.lotTracked) { · suivi par lot }
+                @if (category.regulated) { · réglementée }
+              </span>
+            </div>
+            <button hlmBtn variant="ghost" size="sm" type="button" (click)="edit(category)"
+                    [attr.aria-label]="'Modifier la catégorie ' + category.label">Modifier</button>
+            <button hlmBtn variant="ghost" size="sm" type="button" [disabled]="busy()" (click)="toggleActive(category)"
+                    [attr.aria-label]="(category.active ? 'Archiver ' : 'Réactiver ') + 'la catégorie ' + category.label">
+              {{ category.active ? 'Archiver' : 'Réactiver' }}
+            </button>
+          </li>
+        } @empty {
+          <li class="px-3 py-6 text-center text-sm text-muted-foreground">Aucune catégorie.</li>
+        }
+      </ul>
+      <p class="text-xs text-muted-foreground">
+        Une catégorie archivée n'est plus proposée pour les nouveaux articles ; ceux qui l'utilisent la gardent.
+      </p>
+    }
+
+    <div class="flex flex-wrap justify-between gap-2">
+      <button hlmBtn variant="outline" type="button" (click)="edit(null)">
+        <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvelle catégorie
+      </button>
+      <button hlmBtn type="button" (click)="closed.emit()">Fermer</button>
+    </div>
+  </div>
+}

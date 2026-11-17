@@ -42,6 +42,10 @@
         </p>
       }
       <app-field-error [state]="articleForm.categoryCode()" />
+      @if (!creatingCategory()) {
+        <button type="button" class="w-fit text-xs font-medium text-primary hover:underline"
+                (click)="creatingCategory.set(true)">+ Nouvelle catégorie</button>
+      }
     </div>
 
     @if (!articleForm.unitCode().hidden()) {
@@ -56,6 +60,13 @@
       </div>
     }
   </div>
+
+  @if (creatingCategory()) {
+    <section class="rounded-lg border border-border bg-muted/30 p-4" aria-label="Nouvelle catégorie">
+      <h4 class="mb-3 text-sm font-semibold">Nouvelle catégorie</h4>
+      <app-category-form (saved)="onCategoryCreated($event)" (cancelled)="creatingCategory.set(false)" />
+    </section>
+  }
 
   <div class="grid gap-4 sm:grid-cols-2">
     <div class="flex flex-col gap-1.5">

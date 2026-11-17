@@ -3,6 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
   ArticleRow,
+  CategoryRow,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
   ClientRow,
   CreateArticleRequest,
   CreateClientRequest,
@@ -14,7 +17,7 @@ import {
   UpdateClientRequest,
 } from './referentiel.models';
 
-type ArchivableResource = 'articles' | 'suppliers' | 'clients';
+type ArchivableResource = 'articles' | 'categories' | 'suppliers' | 'clients';
 
 /** Les écritures du référentiel. Les lectures passent par httpResource dans les composants. */
 @Injectable({ providedIn: 'root' })
@@ -30,6 +33,16 @@ export class ReferentielApi {
 
   updateArticle(id: string, request: UpdateArticleRequest): Promise<ArticleRow> {
     return firstValueFrom(this.http.put<ArticleRow>(`${this.baseUrl}/articles/${id}`, request));
+  }
+
+  // ---------- Catégories d'articles ----------
+
+  createCategory(request: CreateCategoryRequest): Promise<CategoryRow> {
+    return firstValueFrom(this.http.post<CategoryRow>(`${this.baseUrl}/categories`, request));
+  }
+
+  updateCategory(id: string, request: UpdateCategoryRequest): Promise<CategoryRow> {
+    return firstValueFrom(this.http.put<CategoryRow>(`${this.baseUrl}/categories/${id}`, request));
   }
 
   // ---------- Fournisseurs ----------

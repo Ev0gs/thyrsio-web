@@ -3,11 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-  lucidePlus,
-  lucideRotateCw,
-  lucideSearch,
-} from '@ng-icons/lucide';
+import { lucidePlus, lucideRotateCw, lucideSearch, lucideTags } from '@ng-icons/lucide';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
@@ -18,6 +14,7 @@ import { Page } from '../../../core/api/page';
 import { problemMessage } from '../../../core/api/problem';
 import { ArticleForm } from '../article-form/article-form';
 import { ReferentielApi } from '../referentiel-api';
+import { CategoryManager } from '../category-manager/category-manager';
 import { ArticleRow, CategoryRow } from '../referentiel.models';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
 
@@ -26,6 +23,7 @@ const PAGE_SIZE = 25;
 @Component({
   selector: 'app-article-list',
   imports: [
+    CategoryManager,
     DecimalPipe,
     NgIcon,
     ArticleForm,
@@ -42,6 +40,7 @@ const PAGE_SIZE = 25;
       lucidePlus,
       lucideRotateCw,
       lucideSearch,
+      lucideTags,
     }),
   ],
   templateUrl: './article-list.html',
@@ -104,6 +103,14 @@ export class ArticleList {
   protected onSaved(): void {
     this.dialogState.set('closed');
     this.articles.reload();
+  }
+
+  /** Le dialogue des catégories : créer, modifier, archiver. */
+  protected readonly categoriesDialog = signal<'open' | 'closed'>('closed');
+
+  protected onCategoriesChanged(): void {
+    this.categories.reload();
+    this.articles.reload(); // un libellé de catégorie a pu changer
   }
 
   /** Réversible et sans perte : pas de confirmation. */

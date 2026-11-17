@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, linkedSignal, output } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import {
   applyWhen,
@@ -18,6 +18,7 @@ import { Page } from '../../../core/api/page';
 import { problemMessage } from '../../../core/api/problem';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { SELECT_CLASS } from '../../../shared/ui/form-styles';
+import { CategoryForm } from '../category-form/category-form';
 import { ReferentielApi } from '../referentiel-api';
 import { ArticleRow, CategoryRow, SupplierRow, UnitRow } from '../referentiel.models';
 
@@ -46,7 +47,14 @@ function toModel(article: ArticleRow | null): ArticleModel {
 
 @Component({
   selector: 'app-article-form',
-  imports: [FormField, FieldError, HlmButtonImports, HlmDialogImports, HlmInputImports],
+  imports: [
+    CategoryForm,
+    FormField,
+    FieldError,
+    HlmButtonImports,
+    HlmDialogImports,
+    HlmInputImports,
+  ],
   templateUrl: './article-form.html',
 })
 export class ArticleForm {
@@ -76,7 +84,9 @@ export class ArticleForm {
       (code) => {
         required(code, { message: 'Indique un code' });
         maxLength(code, 50, { message: '50 caractères au maximum' });
-        pattern(code, /^[A-Za-z0-9_-]+$/, { message: 'Lettres, chiffres, - et _ uniquement, sans espace' });
+        pattern(code, /^[A-Za-z0-9_-]+$/, {
+          message: 'Lettres, chiffres, - et _ uniquement, sans espace',
+        });
       },
     );
 
@@ -90,6 +100,15 @@ export class ArticleForm {
   // ---------- Les listes de choix ----------
 
   private readonly categories = httpResource<CategoryRow[]>(() => '/api/referentiel/categories');
+
+  /** La catégorie manque : on la crée sans quitter l'article, elle est choisie aussitôt. */
+  protected readonly creatingCategory = signal(false);
+
+  protected onCategoryCreated(category: CategoryRow): void {
+    this.creatingCategory.set(false);
+    this.categories.reload();
+    this.articleForm.categoryCode().value.set(category.code);
+  }
   protected readonly units = httpResource<UnitRow[]>(() => '/api/referentiel/units');
   private readonly suppliers = httpResource<Page<SupplierRow>>(() => ({
     url: '/api/referentiel/suppliers',
@@ -110,7 +129,9 @@ export class ArticleForm {
   );
 
   protected readonly selectedCategory = computed(() =>
-    this.categoryOptions().find((category) => category.code === this.articleForm.categoryCode().value()),
+    this.categoryOptions().find(
+      (category) => category.code === this.articleForm.categoryCode().value(),
+    ),
   );
 
   // ---------- Enregistrement ----------
@@ -130,7 +151,11 @@ export class ArticleForm {
           const article = this.article();
           const saved = article
             ? await this.api.updateArticle(article.id, fields)
-            : await this.api.createArticle({ ...fields, code: value.code.trim(), unitCode: value.unitCode || null });
+            : await this.api.createArticle({
+                ...fields,
+                code: value.code.trim(),
+                unitCode: value.unitCode || null,
+              });
           this.saved.emit(saved);
           return undefined;
         } catch (error) {

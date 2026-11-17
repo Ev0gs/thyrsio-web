@@ -27,6 +27,19 @@ export interface CategoryRow {
   active: boolean;
 }
 
+/** PUT /api/referentiel/categories/{id} : le code est définitif. */
+export interface UpdateCategoryRequest {
+  label: string;
+  defaultUnitCode: string;
+  lotTracked: boolean;
+  regulated: boolean;
+}
+
+/** POST /api/referentiel/categories */
+export interface CreateCategoryRequest extends UpdateCategoryRequest {
+  code: string;
+}
+
 export interface UnitRow {
   id: string;
   code: string;

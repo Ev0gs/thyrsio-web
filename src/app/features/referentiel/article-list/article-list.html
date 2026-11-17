@@ -3,9 +3,14 @@
     <h1 class="text-[28px] font-semibold tracking-tight">Articles</h1>
     <p class="text-sm text-muted-foreground">Les matières sèches et le vin en vrac que vous achetez et stockez</p>
   </div>
-  <button hlmBtn size="lg" (click)="openCreate()">
-    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvel article
-  </button>
+  <div class="flex flex-wrap gap-2">
+    <button hlmBtn variant="outline" size="lg" (click)="categoriesDialog.set('open')">
+      <ng-icon name="lucideTags" aria-hidden="true" /> Catégories
+    </button>
+    <button hlmBtn size="lg" (click)="openCreate()">
+      <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvel article
+    </button>
+  </div>
 </header>
 
 <!-- Filtres -->
@@ -135,6 +140,18 @@
     </hlm-dialog-header>
     <div class="dialog-scroll">
       <app-article-form [article]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    </div>
+  </hlm-dialog-content>
+</hlm-dialog>
+
+<hlm-dialog [state]="categoriesDialog()" (closed)="categoriesDialog.set('closed')">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>Catégories d'articles</h3>
+      <p hlmDialogDescription>Elles regroupent les articles et fixent leur unité et leur suivi par lot.</p>
+    </hlm-dialog-header>
+    <div class="dialog-scroll">
+      <app-category-manager (changed)="onCategoriesChanged()" (closed)="ctx.close()" />
     </div>
   </hlm-dialog-content>
 </hlm-dialog>

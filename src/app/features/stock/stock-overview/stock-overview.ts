@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { booleanAttribute, Component, computed, input, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -47,7 +47,7 @@ const isAlert = (row: StockOverviewRow) => row.status !== 'OK';
 })
 export class StockOverview {
   /** true sur /stock/produits-finis (data de la route) : les bouteilles produites par les mises. */
-  readonly finishedGoods = input(false);
+  readonly finishedGoods = input(false, { transform: booleanAttribute });
 
   /** Un seul appel : tous les articles avec leur stock. Le filtrage se fait ensuite ici. */
   protected readonly overview = httpResource<StockOverviewRow[]>(() => ({

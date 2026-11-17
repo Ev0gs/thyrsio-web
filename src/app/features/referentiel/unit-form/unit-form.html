@@ -1,0 +1,48 @@
+<form (submit)="$event.preventDefault(); save()" novalidate class="flex flex-col gap-4">
+  @if (isEdit()) {
+    <p class="rounded-md bg-muted px-3 py-2 text-sm">
+      Code <span class="font-mono font-medium">{{ unit()?.code }}</span>
+      · {{ unit()?.decimals }} décimale(s)
+      <span class="text-muted-foreground">: définitifs, des quantités en stock en dépendent</span>
+    </p>
+  }
+
+  <div class="grid gap-4" [class.sm:grid-cols-[10rem_minmax(0,1fr)]]="!isEdit()">
+    @if (!unitForm.code().hidden()) {
+      <div class="flex flex-col gap-1.5">
+        <label for="unit-code" class="text-sm font-medium">Code</label>
+        <input id="unit-code" hlmInput [formField]="unitForm.code" class="font-mono uppercase" placeholder="CL" />
+        <app-field-error [state]="unitForm.code()" />
+      </div>
+    }
+    <div class="flex flex-col gap-1.5">
+      <label for="unit-label" class="text-sm font-medium">Libellé</label>
+      <input id="unit-label" hlmInput [formField]="unitForm.label" placeholder="Centilitre" />
+      <app-field-error [state]="unitForm.label()" />
+    </div>
+  </div>
+
+  @if (!unitForm.decimals().hidden()) {
+    <div class="flex flex-col gap-1.5">
+      <label for="unit-decimals" class="text-sm font-medium">Décimales</label>
+      <input id="unit-decimals" hlmInput type="number" step="1" class="w-28"
+             [formField]="unitForm.decimals" />
+      <p class="text-xs text-muted-foreground">
+        La précision des quantités : 0 pour des pièces, 3 pour des kilos au gramme près. Exemple : {{ example() }}.
+        Définitif une fois l'unité créée.
+      </p>
+      <app-field-error [state]="unitForm.decimals()" />
+    </div>
+  }
+
+  @for (error of unitForm().errors(); track error.kind) {
+    <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ error.message }}</p>
+  }
+
+  <hlm-dialog-footer>
+    <button hlmBtn variant="outline" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button hlmBtn type="submit" [disabled]="unitForm().submitting()">
+      {{ unitForm().submitting() ? 'Enregistrement…' : (isEdit() ? 'Enregistrer' : 'Créer l\'unité') }}
+    </button>
+  </hlm-dialog-footer>
+</form>

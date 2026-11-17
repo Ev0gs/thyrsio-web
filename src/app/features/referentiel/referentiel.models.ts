@@ -47,6 +47,17 @@ export interface UnitRow {
   decimals: number;
 }
 
+/** PUT /api/referentiel/units/{id} : seul le libellé change ; le code et les décimales sont définitifs. */
+export interface UpdateUnitRequest {
+  label: string;
+}
+
+/** POST /api/referentiel/units */
+export interface CreateUnitRequest extends UpdateUnitRequest {
+  code: string;
+  decimals: number;
+}
+
 /** PUT /api/referentiel/articles/{id} : le code et l'unité sont définitifs. */
 export interface UpdateArticleRequest {
   label: string;

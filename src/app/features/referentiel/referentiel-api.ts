@@ -5,6 +5,9 @@ import {
   ArticleRow,
   CategoryRow,
   CreateCategoryRequest,
+  CreateUnitRequest,
+  UnitRow,
+  UpdateUnitRequest,
   UpdateCategoryRequest,
   ClientRow,
   CreateArticleRequest,
@@ -43,6 +46,16 @@ export class ReferentielApi {
 
   updateCategory(id: string, request: UpdateCategoryRequest): Promise<CategoryRow> {
     return firstValueFrom(this.http.put<CategoryRow>(`${this.baseUrl}/categories/${id}`, request));
+  }
+
+  // ---------- Unités ----------
+
+  createUnit(request: CreateUnitRequest): Promise<UnitRow> {
+    return firstValueFrom(this.http.post<UnitRow>(`${this.baseUrl}/units`, request));
+  }
+
+  updateUnit(id: string, request: UpdateUnitRequest): Promise<UnitRow> {
+    return firstValueFrom(this.http.put<UnitRow>(`${this.baseUrl}/units/${id}`, request));
   }
 
   // ---------- Fournisseurs ----------

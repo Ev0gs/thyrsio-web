@@ -12,6 +12,7 @@ import {
   lucideLogOut,
   lucidePackage,
   lucidePackageCheck,
+  lucideRuler,
   lucideShoppingCart,
   lucideTag,
   lucideTruck,
@@ -56,6 +57,7 @@ const visible = (groups: NavGroup[]): NavGroup[] =>
       lucideLayoutDashboard,
       lucidePackage,
       lucidePackageCheck,
+      lucideRuler,
       lucideArrowUpDown,
       lucideClipboardList,
       lucideWine,
@@ -175,6 +177,12 @@ export class Sidebar {
           route: '/referentiel/clients',
           includeSubPaths: true,
           sales: true,
+        },
+        {
+          label: 'Unités',
+          icon: 'lucideRuler',
+          route: '/referentiel/unites',
+          includeSubPaths: true,
         },
         {
           label: 'Fournisseurs',

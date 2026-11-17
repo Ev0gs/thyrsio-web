@@ -1,0 +1,67 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Unités</h1>
+    <p class="text-sm text-muted-foreground">Comment se comptent les articles : à la pièce, au litre, au kilo… Chaque catégorie d'article a son unité par défaut.</p>
+  </div>
+  <button hlmBtn size="lg" (click)="open(null)">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvelle unité
+  </button>
+</header>
+
+<section class="mt-6 overflow-hidden rounded-xl border border-border lg:max-w-3xl">
+  @if (units.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les unités.</p>
+      <button hlmBtn variant="outline" (click)="units.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="units.isLoading()">
+      <table hlmTable>
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Code</th>
+          <th hlmTh>Libellé</th>
+          <th hlmTh class="text-right">Décimales</th>
+          <th hlmTh><span class="sr-only">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!units.hasValue()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr hlmTr><td hlmTd colspan="4"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (unit of rows(); track unit.id) {
+              <tr hlmTr>
+                <td hlmTd class="font-mono font-medium">{{ unit.code }}</td>
+                <td hlmTd>{{ unit.label }}</td>
+                <td hlmTd class="text-right tabular-nums text-muted-foreground">{{ unit.decimals }}</td>
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="ghost" size="sm" (click)="open(unit)"
+                          [attr.aria-label]="'Renommer l\'unité ' + unit.label">Renommer</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr><td hlmTd colspan="4" class="py-10 text-center text-muted-foreground">Aucune unité.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+<p class="mt-2 text-xs text-muted-foreground lg:max-w-3xl">
+  Le code et le nombre de décimales ne changent plus une fois l'unité créée : des quantités en stock en dépendent.
+  Seul le libellé peut être modifié.
+</p>
+
+<hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>{{ editing() ? 'Renommer l\'unité' : 'Nouvelle unité' }}</h3>
+    </hlm-dialog-header>
+    <app-unit-form [unit]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+  </hlm-dialog-content>
+</hlm-dialog>

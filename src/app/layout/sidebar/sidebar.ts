@@ -19,6 +19,7 @@ import {
   lucideWine,
 } from '@ng-icons/lucide';
 import { CurrentUser } from '../../core/auth/current-user';
+import { FEATURES } from '../../core/features';
 
 interface NavItem {
   label: string;
@@ -26,12 +27,25 @@ interface NavItem {
   route?: string;
   /** Rester actif sur les sous-pages (/stock/inventaires/123). Pas pour /stock, qui englobe tout le module. */
   includeSubPaths?: boolean;
+  /** Fait partie des ventes : masqué tant que FEATURES.sales est faux. */
+  sales?: boolean;
 }
 
 interface NavGroup {
   label: string;
   items: NavItem[];
+  sales?: boolean;
 }
+
+/** Les groupes et entrées des ventes disparaissent du menu quand le module est masqué. */
+const visible = (groups: NavGroup[]): NavGroup[] =>
+  groups
+    .filter((group) => FEATURES.sales || !group.sales)
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => FEATURES.sales || !item.sales),
+    }))
+    .filter((group) => group.items.length > 0);
 
 @Component({
   selector: 'app-sidebar',
@@ -73,7 +87,7 @@ export class Sidebar {
   protected readonly user = inject(CurrentUser);
 
   // Les groupes suivent les modules de l'API
-  protected readonly groups: NavGroup[] = [
+  protected readonly groups: NavGroup[] = visible([
     {
       label: 'Pilotage',
       items: [
@@ -130,6 +144,7 @@ export class Sidebar {
     },
     {
       label: 'Ventes',
+      sales: true,
       items: [
         {
           label: 'Commandes clients',
@@ -159,6 +174,7 @@ export class Sidebar {
           icon: 'lucideUsers',
           route: '/referentiel/clients',
           includeSubPaths: true,
+          sales: true,
         },
         {
           label: 'Fournisseurs',
@@ -168,5 +184,5 @@ export class Sidebar {
         },
       ],
     },
-  ];
+  ]);
 }

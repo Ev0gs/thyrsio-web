@@ -20,6 +20,7 @@ import { todayLocal } from '../../../core/dates';
 import { WineLabel } from '../../cuverie/wine-label/wine-label';
 import { BottlingForm } from '../bottling-form/bottling-form';
 import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge';
+import { FEATURES } from '../../../core/features';
 import { CloseForm } from '../close-form/close-form';
 import { ProductionApi } from '../production-api';
 import { Bottling, BOTTLING_LOCATION_LABELS } from '../production.models';
@@ -53,6 +54,9 @@ export class BottlingDetail {
   private readonly api = inject(ProductionApi);
 
   readonly id = input.required<string>();
+
+  /** La section « Commandes servies » : seulement si les ventes sont affichées. */
+  protected readonly sales = FEATURES.sales;
 
   protected readonly locationLabels = BOTTLING_LOCATION_LABELS;
 

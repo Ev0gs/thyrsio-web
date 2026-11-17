@@ -84,21 +84,34 @@
     <span class="text-[13px] text-muted-foreground">Planifiées, pas encore clôturées</span>
   </a>
 
-  <a routerLink="/ventes/commandes"
-     class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
-    <div class="flex items-center justify-between gap-2">
-      <span class="text-sm font-medium text-muted-foreground">Commandes à charger</span>
-      @if (ordersUncovered() > 0) {
-        <span hlmBadge variant="destructive">{{ ordersUncovered() }} à planifier</span>
+  @if (sales) {
+    <a routerLink="/ventes/commandes"
+       class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-medium text-muted-foreground">Commandes à charger</span>
+        @if (ordersUncovered() > 0) {
+          <span hlmBadge variant="destructive">{{ ordersUncovered() }} à planifier</span>
+        }
+      </div>
+      @if (ordersToLoad.hasValue()) {
+        <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ ordersToLoadCount() }}</span>
+      } @else {
+        <div hlmSkeleton class="h-9 w-12"></div>
       }
-    </div>
-    @if (ordersToLoad.hasValue()) {
-      <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ ordersToLoadCount() }}</span>
-    } @else {
-      <div hlmSkeleton class="h-9 w-12"></div>
-    }
-    <span class="text-[13px] text-muted-foreground">Confirmées, chargement d'ici 7 jours</span>
-  </a>
+      <span class="text-[13px] text-muted-foreground">Confirmées, chargement d'ici 7 jours</span>
+    </a>
+  } @else {
+    <a routerLink="/production/mises"
+       class="flex flex-col gap-2.5 rounded-xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+      <span class="text-sm font-medium text-muted-foreground">Bouteilles produites ce mois</span>
+      @if (closedThisMonth.hasValue()) {
+        <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ bottlesThisMonth() | number }}</span>
+      } @else {
+        <div hlmSkeleton class="h-9 w-24"></div>
+      }
+      <span class="text-[13px] text-muted-foreground">{{ bottlingsClosedThisMonth() }} mise(s) clôturée(s) depuis le 1er</span>
+    </a>
+  }
 </section>
 
 <!-- ===== Mises et alertes ===== -->

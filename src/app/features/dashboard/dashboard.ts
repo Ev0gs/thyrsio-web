@@ -12,6 +12,7 @@ import { MOVEMENT_TYPE_LABELS, MovementRow, StockOverviewRow } from '../stock/st
 import { roundHl, Tank } from '../cuverie/cuverie.models';
 import { BottlingStateBadge } from '../production/bottling-state-badge/bottling-state-badge';
 import { addDays, BottlingRow, isoDay, mondayOf } from '../production/production.models';
+import { FEATURES } from '../../core/features';
 import { OrderRow } from '../sales/sales.models';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -35,11 +36,17 @@ export class Dashboard {
   protected readonly today = new Date();
   protected readonly typeLabels = MOVEMENT_TYPE_LABELS;
 
-  /** Les commandes confirmées à charger d'ici 7 jours (ou en retard). */
-  protected readonly ordersToLoad = httpResource<Page<OrderRow>>(() => ({
-    url: '/api/sales/orders',
-    params: { open: true, loadingTo: addDays(isoDay(this.today), 7), size: 100 },
-  }));
+  protected readonly sales = FEATURES.sales;
+
+  /** Les commandes confirmées à charger d'ici 7 jours (ou en retard) : seulement si les ventes sont affichées. */
+  protected readonly ordersToLoad = httpResource<Page<OrderRow>>(() =>
+    this.sales
+      ? {
+          url: '/api/sales/orders',
+          params: { open: true, loadingTo: addDays(isoDay(this.today), 7), size: 100 },
+        }
+      : undefined,
+  );
   protected readonly ordersToLoadCount = computed(() =>
     this.ordersToLoad.hasValue() ? this.ordersToLoad.value().page.totalElements : 0,
   );
@@ -48,6 +55,25 @@ export class Dashboard {
       (this.ordersToLoad.hasValue() ? this.ordersToLoad.value().content : []).filter(
         (order) => order.missingBottles > 0,
       ).length,
+  );
+
+  /** Les mises clôturées depuis le 1er du mois : les bouteilles produites ce mois-ci. */
+  protected readonly closedThisMonth = httpResource<Page<BottlingRow>>(() => ({
+    url: '/api/production/bottlings',
+    params: {
+      status: 'CLOSED',
+      from: isoDay(new Date(this.today.getFullYear(), this.today.getMonth(), 1)),
+      size: 200,
+    },
+  }));
+  protected readonly bottlesThisMonth = computed(() =>
+    (this.closedThisMonth.hasValue() ? this.closedThisMonth.value().content : []).reduce(
+      (sum, bottling) => sum + (bottling.producedBottles ?? 0),
+      0,
+    ),
+  );
+  protected readonly bottlingsClosedThisMonth = computed(() =>
+    this.closedThisMonth.hasValue() ? this.closedThisMonth.value().content.length : 0,
   );
 
   // ---------- Les appels à l'API, lancés en parallèle ----------

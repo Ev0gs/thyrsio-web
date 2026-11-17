@@ -16,6 +16,7 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { Page } from '../../../core/api/page';
 import { todayLocal } from '../../../core/dates';
 import { describeWine } from '../../cuverie/cuverie.models';
+import { FEATURES } from '../../../core/features';
 import { LineToPlan } from '../../sales/sales.models';
 import { BottlingForm, BottlingPrefill } from '../bottling-form/bottling-form';
 import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge';
@@ -89,7 +90,11 @@ export class BottlingPlanning {
   }));
 
   /** Les lignes de commande que ni le stock ni les mises ne couvrent : des mises à planifier. */
-  protected readonly toPlan = httpResource<LineToPlan[]>(() => '/api/sales/order-lines/to-plan');
+  /** Seulement si les ventes sont affichées. */
+  protected readonly sales = FEATURES.sales;
+  protected readonly toPlan = httpResource<LineToPlan[]>(() =>
+    this.sales ? '/api/sales/order-lines/to-plan' : undefined,
+  );
   protected readonly toPlanRows = computed(() =>
     this.toPlan.hasValue() ? this.toPlan.value() : [],
   );

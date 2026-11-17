@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { FEATURES } from './core/features';
 import { Shell } from './layout/shell/shell';
 
 export const routes: Routes = [
@@ -95,50 +96,62 @@ export const routes: Routes = [
             (m) => m.CuverieMovements,
           ),
       },
-      {
-        path: 'ventes/commandes',
-        title: 'Commandes clients · Thyrsio',
-        loadComponent: () =>
-          import('./features/sales/order-list/order-list').then((m) => m.OrderList),
-      },
-      {
-        path: 'ventes/commandes/:id',
-        title: 'Commande · Thyrsio',
-        loadComponent: () =>
-          import('./features/sales/order-detail/order-detail').then((m) => m.OrderDetail),
-      },
-      {
-        path: 'ventes/expeditions',
-        title: 'Expéditions · Thyrsio',
-        loadComponent: () =>
-          import('./features/shipping/shipment-list/shipment-list').then((m) => m.ShipmentList),
-      },
-      {
-        path: 'ventes/expeditions/:id',
-        title: 'Expédition · Thyrsio',
-        loadComponent: () =>
-          import('./features/shipping/shipment-detail/shipment-detail').then(
-            (m) => m.ShipmentDetail,
-          ),
-      },
+      ...(FEATURES.sales
+        ? [
+            {
+              path: 'ventes/commandes',
+              title: 'Commandes clients · Thyrsio',
+              loadComponent: () =>
+                import('./features/sales/order-list/order-list').then((m) => m.OrderList),
+            },
+            {
+              path: 'ventes/commandes/:id',
+              title: 'Commande · Thyrsio',
+              loadComponent: () =>
+                import('./features/sales/order-detail/order-detail').then((m) => m.OrderDetail),
+            },
+            {
+              path: 'ventes/expeditions',
+              title: 'Expéditions · Thyrsio',
+              loadComponent: () =>
+                import('./features/shipping/shipment-list/shipment-list').then(
+                  (m) => m.ShipmentList,
+                ),
+            },
+            {
+              path: 'ventes/expeditions/:id',
+              title: 'Expédition · Thyrsio',
+              loadComponent: () =>
+                import('./features/shipping/shipment-detail/shipment-detail').then(
+                  (m) => m.ShipmentDetail,
+                ),
+            },
+          ]
+        : []),
       {
         path: 'referentiel/articles',
         title: 'Articles · Thyrsio',
         loadComponent: () =>
           import('./features/referentiel/article-list/article-list').then((m) => m.ArticleList),
       },
-      {
-        path: 'referentiel/clients',
-        title: 'Clients · Thyrsio',
-        loadComponent: () =>
-          import('./features/referentiel/client-list/client-list').then((m) => m.ClientList),
-      },
-      {
-        path: 'referentiel/clients/:id',
-        title: 'Client · Thyrsio',
-        loadComponent: () =>
-          import('./features/referentiel/client-detail/client-detail').then((m) => m.ClientDetail),
-      },
+      ...(FEATURES.sales
+        ? [
+            {
+              path: 'referentiel/clients',
+              title: 'Clients · Thyrsio',
+              loadComponent: () =>
+                import('./features/referentiel/client-list/client-list').then((m) => m.ClientList),
+            },
+            {
+              path: 'referentiel/clients/:id',
+              title: 'Client · Thyrsio',
+              loadComponent: () =>
+                import('./features/referentiel/client-detail/client-detail').then(
+                  (m) => m.ClientDetail,
+                ),
+            },
+          ]
+        : []),
       {
         path: 'referentiel/fournisseurs',
         title: 'Fournisseurs · Thyrsio',
@@ -147,12 +160,16 @@ export const routes: Routes = [
       },
     ],
   },
-  // Hors de la mise en page : une page à imprimer
-  {
-    path: 'impression/bon-de-livraison/:id',
-    title: 'Bon de livraison · Thyrsio',
-    loadComponent: () =>
-      import('./features/shipping/delivery-note/delivery-note').then((m) => m.DeliveryNote),
-  },
+  // Hors de la mise en page : une page à imprimer (ventes)
+  ...(FEATURES.sales
+    ? [
+        {
+          path: 'impression/bon-de-livraison/:id',
+          title: 'Bon de livraison · Thyrsio',
+          loadComponent: () =>
+            import('./features/shipping/delivery-note/delivery-note').then((m) => m.DeliveryNote),
+        },
+      ]
+    : []),
   { path: '**', redirectTo: '' },
 ];

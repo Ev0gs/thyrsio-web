@@ -24,6 +24,12 @@ describe('Sidebar', () => {
     expect(text).toContain('Matières sèches');
     expect(text).toContain('Pierre Martin');
     expect(text).toContain('Administrateur');
+    // Branche production : les ventes et les clients sont masqués, les fournisseurs restent
+    expect(text).toContain('Mises en bouteille');
+    expect(text).toContain('Fournisseurs');
+    expect(text).not.toContain('Commandes clients');
+    expect(text).not.toContain('Expéditions');
+    expect(text).not.toContain('Clients');
     // L'icône est bien enregistrée : sans elle, le bouton de déconnexion est vide
     const logout: HTMLElement = fixture.nativeElement.querySelector(
       '[aria-label="Se déconnecter"]',

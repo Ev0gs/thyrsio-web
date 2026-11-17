@@ -117,7 +117,7 @@
                     }
                   </span>
                 </div>
-                @if (entry.bottling.allocations.length > 0) {
+                @if (sales && entry.bottling.allocations.length > 0) {
                   <span class="truncate text-xs text-sky-700">Pour {{ orderCodes(entry.bottling) }}</span>
                 }
                 @if (entry.bottling.shortageCount > 0 && entry.bottling.status === 'PLANNED') {

@@ -25,6 +25,7 @@ import { todayLocal } from '../../../core/dates';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { describeWine, Tank } from '../../cuverie/cuverie.models';
+import { FEATURES } from '../../../core/features';
 import { LineToPlan } from '../../sales/sales.models';
 import { StockOverviewRow } from '../../stock/stock.models';
 import { ProductionApi } from '../production-api';
@@ -137,6 +138,9 @@ export class BottlingForm {
   readonly day = input<string | null>(null);
   /** Une nouvelle mise pour une commande (bouton « Planifier »). */
   readonly prefill = input<BottlingPrefill | null>(null);
+
+  /** Les commandes servies : seulement si les ventes sont affichées (les réservations existantes sont conservées). */
+  protected readonly sales = FEATURES.sales;
   readonly saved = output<Bottling>();
   readonly cancelled = output<void>();
 
@@ -162,7 +166,9 @@ export class BottlingForm {
   }));
 
   /** Les lignes de commande que ni le stock ni les mises ne couvrent : ce qu'une mise peut servir. */
-  private readonly linesToPlan = httpResource<LineToPlan[]>(() => '/api/sales/order-lines/to-plan');
+  private readonly linesToPlan = httpResource<LineToPlan[]>(() =>
+    this.sales ? '/api/sales/order-lines/to-plan' : undefined,
+  );
 
   /** Les lignes réservables : celles déjà réservées par cette mise, et celles à planifier. */
   private readonly allocationOptions = computed(() => {

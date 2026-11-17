@@ -52,40 +52,46 @@
 
   <div class="mt-6 grid gap-4 lg:grid-cols-3">
     <!-- Bouteilles -->
-    <section class="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-5">
-      <span class="text-sm font-medium text-muted-foreground">Bouteilles</span>
-      @if (b.status === 'CLOSED') {
-        <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ b.producedBottles | number }}</span>
-        <span class="text-[13px] text-muted-foreground">
-          produites sur {{ b.plannedBottles | number }} prévues · {{ (b.brokenBottles ?? 0) | number }} cassée(s)
-        </span>
-      } @else {
-        <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ b.plannedBottles | number }}</span>
-        <span class="text-[13px] text-muted-foreground">prévues · {{ b.bottleVolumeCl }} cl</span>
-      }
+    <section class="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-5">
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <span class="text-sm font-medium text-muted-foreground">Bouteilles</span>
+        @if (b.status === 'CLOSED') {
+          <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ b.producedBottles | number }}</span>
+          <span class="text-[13px] text-muted-foreground">
+            produites sur {{ b.plannedBottles | number }} prévues · {{ (b.brokenBottles ?? 0) | number }} cassée(s)
+          </span>
+        } @else {
+          <span class="text-3xl font-semibold tracking-tight tabular-nums">{{ b.plannedBottles | number }}</span>
+          <span class="text-[13px] text-muted-foreground">prévues · {{ b.bottleVolumeCl }} cl</span>
+        }
+      </div>
+      <app-bottle-illustration class="h-28 shrink-0" [volumeCl]="b.bottleVolumeCl" [color]="wineColor()" />
     </section>
 
     <!-- Vin -->
-    <section class="flex flex-col gap-1.5 rounded-xl border bg-card p-5" [class]="wineShort() ? 'border-red-200' : 'border-border'">
-      <span class="text-sm font-medium text-muted-foreground">Vin</span>
-      <span class="text-3xl font-semibold tracking-tight tabular-nums">
-        {{ (b.wineUsedHl ?? b.wineNeededHl) | number: '1.0-2' }} <span class="text-base font-normal text-muted-foreground">hl</span>
-      </span>
-      @if (b.location === 'ON_SITE') {
-        <span class="text-[13px] text-muted-foreground">
-          {{ b.status === 'CLOSED' ? 'tirés de la' : 'à tirer de la' }}
-          <a [routerLink]="['/cuverie/cuves', b.sourceTankId]" class="font-medium text-foreground hover:underline">cuve {{ b.sourceTankCode }}</a>
-          @if (b.status === 'PLANNED' && b.tankVolumeHl !== null) { · {{ b.tankVolumeHl | number: '1.0-2' }} hl dedans }
+    <section class="flex items-center justify-between gap-4 rounded-xl border bg-card p-5" [class]="wineShort() ? 'border-red-200' : 'border-border'">
+      <div class="flex min-w-0 flex-col gap-1.5">
+        <span class="text-sm font-medium text-muted-foreground">Vin</span>
+        <span class="text-3xl font-semibold tracking-tight tabular-nums">
+          {{ (b.wineUsedHl ?? b.wineNeededHl) | number: '1.0-2' }} <span class="text-base font-normal text-muted-foreground">hl</span>
         </span>
-        @if (b.status === 'PLANNED' && b.wineLot; as lot) {
-          <span class="text-[13px]"><app-wine-label [lot]="lot" /></span>
+        @if (b.location === 'ON_SITE') {
+          <span class="text-[13px] text-muted-foreground">
+            {{ b.status === 'CLOSED' ? 'tirés de la' : 'à tirer de la' }}
+            <a [routerLink]="['/cuverie/cuves', b.sourceTankId]" class="font-medium text-foreground hover:underline">cuve {{ b.sourceTankCode }}</a>
+            @if (b.status === 'PLANNED' && b.tankVolumeHl !== null) { · {{ b.tankVolumeHl | number: '1.0-2' }} hl dedans }
+          </span>
+          @if (b.status === 'PLANNED' && b.wineLot; as lot) {
+            <span class="text-[13px]"><app-wine-label [lot]="lot" /></span>
+          }
+          @if (wineShort()) {
+            <span class="text-[13px] font-medium text-destructive">Pas assez de vin dans la cuve</span>
+          }
+        } @else {
+          <span class="text-[13px] text-muted-foreground">{{ b.wineDescription ?? 'Embouteillé chez le producteur' }}</span>
         }
-        @if (wineShort()) {
-          <span class="text-[13px] font-medium text-destructive">Pas assez de vin dans la cuve</span>
-        }
-      } @else {
-        <span class="text-[13px] text-muted-foreground">{{ b.wineDescription ?? 'Embouteillé chez le producteur' }}</span>
-      }
+      </div>
+      <app-wine-glass-illustration class="h-28 shrink-0" [color]="wineColor()" />
     </section>
 
     <!-- Lot -->

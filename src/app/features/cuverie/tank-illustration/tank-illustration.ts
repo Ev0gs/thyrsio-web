@@ -3,7 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { fillPercent, TankState, WineColor } from '../cuverie.models';
 
 /** Le vin dans la cuve : un dégradé, plus clair en surface, plus profond au fond, et un texte lisible dessus. */
-const WINE_SHADES: Record<WineColor, { top: string; bottom: string; text: string }> = {
+export const WINE_SHADES: Record<WineColor, { top: string; bottom: string; text: string }> = {
   RED: { top: '#a3284c', bottom: '#5a1027', text: '#ffffff' },
   WHITE: { top: '#f8e39a', bottom: '#e2b443', text: '#5c4310' },
   ROSE: { top: '#f8b3cb', bottom: '#df7099', text: '#5e1631' },

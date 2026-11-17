@@ -21,7 +21,10 @@ import { WineLabel } from '../../cuverie/wine-label/wine-label';
 import { BottlingForm } from '../bottling-form/bottling-form';
 import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge';
 import { FEATURES } from '../../../core/features';
+import { WineColor } from '../../cuverie/cuverie.models';
+import { BottleIllustration } from '../bottle-illustration/bottle-illustration';
 import { CloseForm } from '../close-form/close-form';
+import { WineGlassIllustration } from '../wine-glass-illustration/wine-glass-illustration';
 import { ProductionApi } from '../production-api';
 import { Bottling, BOTTLING_LOCATION_LABELS } from '../production.models';
 
@@ -36,8 +39,10 @@ type DialogKind = 'edit' | 'close' | 'cancel';
     RouterLink,
     NgIcon,
     BottlingForm,
+    BottleIllustration,
     BottlingStateBadge,
     CloseForm,
+    WineGlassIllustration,
     WineLabel,
     HlmBadgeImports,
     HlmButtonImports,
@@ -83,6 +88,20 @@ export class BottlingDetail {
   protected readonly canClose = computed(() => {
     const bottling = this.bottling();
     return !!bottling && bottling.status === 'PLANNED' && bottling.startDate <= todayLocal();
+  });
+
+  /**
+   * La couleur du vin, pour les dessins : celle du lot en cuve ; chez le producteur,
+   * devinée d'après la description du vin ou le nom du produit (« Bordeaux Blanc »…).
+   */
+  protected readonly wineColor = computed<WineColor>(() => {
+    const bottling = this.bottling();
+    if (bottling?.wineLot) {
+      return bottling.wineLot.color;
+    }
+    const text =
+      `${bottling?.wineDescription ?? ''} ${bottling?.finishedArticleLabel ?? ''}`.toLowerCase();
+    return /ros[ée]/.test(text) ? 'ROSE' : /blanc/.test(text) ? 'WHITE' : 'RED';
   });
 
   protected readonly wineShort = computed(() => {

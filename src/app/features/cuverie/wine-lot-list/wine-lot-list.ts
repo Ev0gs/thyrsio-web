@@ -12,6 +12,7 @@ import { Page } from '../../../core/api/page';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { WINE_COLOR_LABELS, WineLotRow } from '../cuverie.models';
 import { WineLabel } from '../wine-label/wine-label';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 const PAGE_SIZE = 20;
 
@@ -19,6 +20,7 @@ const PAGE_SIZE = 20;
 @Component({
   selector: 'app-wine-lot-list',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     RouterLink,

@@ -21,6 +21,7 @@ import { TankIllustration } from '../tank-illustration/tank-illustration';
 import { TankStateBadge } from '../tank-state-badge/tank-state-badge';
 import { TransferForm } from '../transfer-form/transfer-form';
 import { WineLabel } from '../wine-label/wine-label';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 type StateFilter = 'all' | 'inUse' | 'empty' | 'unavailable';
 type DialogKind = 'reception' | 'transfer' | 'tank';
@@ -43,6 +44,7 @@ const MATCHES: Record<StateFilter, (state: TankState) => boolean> = {
 @Component({
   selector: 'app-tank-overview',
   imports: [
+    PageIcon,
     DecimalPipe,
     RouterLink,
     NgIcon,

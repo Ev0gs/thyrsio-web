@@ -16,6 +16,7 @@ import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { OrderForm } from '../order-form/order-form';
 import { OrderStatusBadge } from '../order-status-badge/order-status-badge';
 import { Order, OrderRow } from '../sales.models';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 type View = 'open' | 'draft' | 'shipped' | 'cancelled' | 'all';
 
@@ -31,6 +32,7 @@ const VIEWS: { value: View; label: string }[] = [
 @Component({
   selector: 'app-order-list',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     RouterLink,

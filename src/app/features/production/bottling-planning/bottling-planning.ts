@@ -28,6 +28,7 @@ import {
   mondayOf,
   parseDay,
 } from '../production.models';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 interface PlanningDay {
   day: string;
@@ -42,6 +43,7 @@ interface PlanningDay {
 @Component({
   selector: 'app-bottling-planning',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     RouterLink,

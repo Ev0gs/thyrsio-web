@@ -13,6 +13,7 @@ import { Page } from '../../../core/api/page';
 import { MOVEMENT_TYPE_LABELS, MovementRow, MovementType, StockOverviewRow } from '../stock.models';
 import { startOfDay } from '../../../core/dates';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 const PAGE_SIZE = 25;
 
@@ -27,6 +28,7 @@ interface Filters {
 @Component({
   selector: 'app-stock-movements',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     NgIcon,

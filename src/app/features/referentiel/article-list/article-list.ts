@@ -16,12 +16,14 @@ import { ArticleForm } from '../article-form/article-form';
 import { ReferentielApi } from '../referentiel-api';
 import { ArticleRow, CategoryRow } from '../referentiel.models';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 const PAGE_SIZE = 25;
 
 @Component({
   selector: 'app-article-list',
   imports: [
+    PageIcon,
     DecimalPipe,
     NgIcon,
     ArticleForm,

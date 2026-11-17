@@ -15,6 +15,7 @@ import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { Tank, TANK_MOVEMENT_TYPE_LABELS, TankMovement, TankMovementType } from '../cuverie.models';
 import { WineLabel } from '../wine-label/wine-label';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 const PAGE_SIZE = 25;
 
@@ -29,6 +30,7 @@ interface Filters {
 @Component({
   selector: 'app-cuverie-movements',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     RouterLink,

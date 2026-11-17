@@ -1,6 +1,8 @@
 <header class="flex flex-wrap items-end justify-between gap-4">
   <div class="flex flex-col gap-1">
-    <h1 class="text-[28px] font-semibold tracking-tight">Commandes clients</h1>
+    <h1 class="flex items-center gap-3 text-[28px] font-semibold tracking-tight">
+      <app-page-icon name="lucideShoppingCart" />
+      Commandes clients</h1>
     <p class="text-sm text-muted-foreground">Ce que les clients attendent, et ce qui couvre chaque commande : stock, mises ou rien encore</p>
   </div>
   <button hlmBtn size="lg" (click)="dialogOpen.set(true)">

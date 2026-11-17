@@ -13,6 +13,7 @@ import { StockStatusBadge } from '../stock-status-badge/stock-status-badge';
 import { StockOverviewRow } from '../stock.models';
 import { MovementForm } from '../movement-form/movement-form';
 import { RouterLink } from '@angular/router';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 type StateFilter = 'all' | 'alert' | 'lotTracked';
 
@@ -29,6 +30,7 @@ const isAlert = (row: StockOverviewRow) => row.status !== 'OK';
 @Component({
   selector: 'app-stock-overview',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     NgIcon,

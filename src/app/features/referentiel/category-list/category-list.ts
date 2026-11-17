@@ -12,11 +12,13 @@ import { problemMessage } from '../../../core/api/problem';
 import { CategoryForm } from '../category-form/category-form';
 import { ReferentielApi } from '../referentiel-api';
 import { CategoryRow } from '../referentiel.models';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 /** Les catégories d'articles (Bouchon, Capsule CRD…) : leur unité par défaut et leur suivi par lot. */
 @Component({
   selector: 'app-category-list',
   imports: [
+    PageIcon,
     NgIcon,
     CategoryForm,
     HlmBadgeImports,

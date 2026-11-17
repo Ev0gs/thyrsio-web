@@ -3,10 +3,7 @@ import { DatePipe } from '@angular/common';
 import { httpResource } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-  lucidePlus,
-  lucideRotateCw,
-} from '@ng-icons/lucide';
+import { lucidePlus, lucideRotateCw } from '@ng-icons/lucide';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmDialogImports } from '@spartan-ng/helm/dialog';
 import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
@@ -16,10 +13,12 @@ import { InventoryCreateForm } from '../inventory-create-form/inventory-create-f
 import { InventoryStatusBadge } from '../inventory-status-badge/inventory-status-badge';
 import { Inventory, InventoryStatus, InventorySummary } from '../stock.models';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 @Component({
   selector: 'app-inventory-list',
   imports: [
+    PageIcon,
     DatePipe,
     NgIcon,
     RouterLink,
@@ -31,9 +30,7 @@ import { Pagination } from '../../../shared/ui/pagination/pagination';
     HlmTableImports,
     Pagination,
   ],
-  viewProviders: [
-    provideIcons({ lucidePlus, lucideRotateCw }),
-  ],
+  viewProviders: [provideIcons({ lucidePlus, lucideRotateCw })],
   templateUrl: './inventory-list.html',
 })
 export class InventoryList {

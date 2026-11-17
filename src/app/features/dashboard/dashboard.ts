@@ -14,12 +14,14 @@ import { BottlingStateBadge } from '../production/bottling-state-badge/bottling-
 import { addDays, BottlingRow, isoDay, mondayOf } from '../production/production.models';
 import { FEATURES } from '../../core/features';
 import { OrderRow } from '../sales/sales.models';
+import { PageIcon } from '../../shared/ui/page-icon/page-icon';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 @Component({
   selector: 'app-dashboard',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     RouterLink,

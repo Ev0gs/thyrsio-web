@@ -17,10 +17,12 @@ import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { ClientForm } from '../client-form/client-form';
 import { ReferentielApi } from '../referentiel-api';
 import { ClientRow } from '../referentiel.models';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 @Component({
   selector: 'app-client-list',
   imports: [
+    PageIcon,
     NgIcon,
     Pagination,
     ClientForm,

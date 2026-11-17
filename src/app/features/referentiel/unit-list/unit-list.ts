@@ -8,11 +8,13 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { UnitForm } from '../unit-form/unit-form';
 import { UnitRow } from '../referentiel.models';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 /** Les unités de mesure des articles et des quantités en stock (U, L, HL, KG…). */
 @Component({
   selector: 'app-unit-list',
   imports: [
+    PageIcon,
     NgIcon,
     UnitForm,
     HlmButtonImports,

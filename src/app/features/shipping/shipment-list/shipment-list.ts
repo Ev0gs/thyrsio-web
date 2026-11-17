@@ -12,6 +12,7 @@ import { countryName } from '../../../core/i18n/countries';
 import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { ShipmentStatusBadge } from '../shipment-status-badge/shipment-status-badge';
 import { ShipmentRow, ShipmentStatus } from '../shipping.models';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 type View = 'draft' | 'shipped' | 'all';
 
@@ -25,6 +26,7 @@ const VIEWS: { value: View; label: string }[] = [
 @Component({
   selector: 'app-shipment-list',
   imports: [
+    PageIcon,
     DatePipe,
     DecimalPipe,
     RouterLink,

@@ -15,10 +15,12 @@ import { Pagination } from '../../../shared/ui/pagination/pagination';
 import { ReferentielApi } from '../referentiel-api';
 import { SupplierDetail } from '../referentiel.models';
 import { SupplierForm } from '../supplier-form/supplier-form';
+import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
 @Component({
   selector: 'app-supplier-list',
   imports: [
+    PageIcon,
     NgIcon,
     LocationMap,
     Pagination,

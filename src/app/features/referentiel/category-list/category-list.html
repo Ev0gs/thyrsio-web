@@ -1,0 +1,95 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="text-[28px] font-semibold tracking-tight">Catégories</h1>
+    <p class="text-sm text-muted-foreground">Elles regroupent les articles et fixent leur unité par défaut et leur suivi par lot</p>
+  </div>
+  <button hlmBtn size="lg" (click)="open(null)">
+    <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvelle catégorie
+  </button>
+</header>
+
+<label class="mt-6 inline-flex items-center gap-2 text-sm">
+  <input type="checkbox" #arch [checked]="showArchived()" (change)="setShowArchived(arch.checked)"
+         class="size-4 accent-primary" />
+  Afficher les archivées
+</label>
+
+@if (actionError(); as message) {
+  <p role="alert" class="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+}
+
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (categories.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les catégories.</p>
+      <button hlmBtn variant="outline" (click)="categories.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="categories.isLoading()">
+      <table hlmTable class="min-w-[720px]">
+        <thead hlmTHead class="bg-muted/50">
+        <tr hlmTr>
+          <th hlmTh>Catégorie</th>
+          <th hlmTh>Unité par défaut</th>
+          <th hlmTh>Suivi par lot</th>
+          <th hlmTh>Réglementée</th>
+          <th hlmTh><span class="sr-only">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!categories.hasValue()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr hlmTr><td hlmTd colspan="5"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (category of rows(); track category.id) {
+              <tr hlmTr [class.text-muted-foreground]="!category.active">
+                <td hlmTd>
+                  <div class="flex items-center gap-2 font-medium">
+                    {{ category.label }}
+                    @if (!category.active) {
+                      <span hlmBadge variant="outline">Archivée</span>
+                    }
+                  </div>
+                  <div class="font-mono text-xs text-muted-foreground">{{ category.code }}</div>
+                </td>
+                <td hlmTd class="font-mono">{{ category.defaultUnitCode }}</td>
+                <td hlmTd>{{ category.lotTracked ? 'Oui' : '—' }}</td>
+                <td hlmTd>{{ category.regulated ? 'Oui' : '—' }}</td>
+                <td hlmTd class="text-right">
+                  <button hlmBtn variant="ghost" size="sm" (click)="open(category)"
+                          [attr.aria-label]="'Modifier la catégorie ' + category.label">Modifier</button>
+                  <button hlmBtn variant="ghost" size="sm" (click)="toggleActive(category)"
+                          [attr.aria-label]="(category.active ? 'Archiver ' : 'Réactiver ') + 'la catégorie ' + category.label">
+                    {{ category.active ? 'Archiver' : 'Réactiver' }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr hlmTr><td hlmTd colspan="5" class="py-10 text-center text-muted-foreground">Aucune catégorie.</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+<p class="mt-2 text-xs text-muted-foreground">
+  Une catégorie archivée n'est plus proposée pour les nouveaux articles ; ceux qui l'utilisent la gardent.
+</p>
+
+<hlm-dialog [state]="dialogState()" (closed)="dialogState.set('closed')">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">
+    <hlm-dialog-header>
+      <h3 hlmDialogTitle>{{ editing() ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}</h3>
+      @if (editing(); as category) {
+        <p hlmDialogDescription>{{ category.label }}</p>
+      }
+    </hlm-dialog-header>
+    <div class="dialog-scroll">
+      <app-category-form [category]="editing()" (saved)="ctx.close(); onSaved()" (cancelled)="ctx.close()" />
+    </div>
+  </hlm-dialog-content>
+</hlm-dialog>

@@ -15,6 +15,7 @@ import {
   lucideRuler,
   lucideShoppingCart,
   lucideTag,
+  lucideTags,
   lucideTruck,
   lucideUsers,
   lucideWine,
@@ -67,6 +68,7 @@ const visible = (groups: NavGroup[]): NavGroup[] =>
       lucideShoppingCart,
       lucideTruck,
       lucideTag,
+      lucideTags,
       lucideUsers,
       lucideFactory,
       lucideLogOut,
@@ -177,6 +179,12 @@ export class Sidebar {
           route: '/referentiel/clients',
           includeSubPaths: true,
           sales: true,
+        },
+        {
+          label: 'Catégories',
+          icon: 'lucideTags',
+          route: '/referentiel/categories',
+          includeSubPaths: true,
         },
         {
           label: 'Unités',

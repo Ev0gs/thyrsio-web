@@ -2,7 +2,11 @@
 
 export type StockStatus = 'OK' | 'BELOW_THRESHOLD' | 'OUT_OF_STOCK';
 
-/** GET /api/stock/overview : une ligne par article, tous lots confondus. */
+/**
+ * GET /api/stock/overview : une ligne par article.
+ * lotTracked et lotsInStock ne concernent que les produits finis (les lots des mises) :
+ * les matières sèches ne sont pas suivies par lot.
+ */
 export interface StockOverviewRow {
   articleId: string;
   articleCode: string;
@@ -19,7 +23,7 @@ export interface StockOverviewRow {
   active: boolean;
 }
 
-/** GET /api/stock/balances : un solde par article et par lot. */
+/** GET /api/stock/balances : un solde par article (et par lot pour un produit fini). */
 export interface BalanceRow {
   articleId: string;
   articleCode: string;
@@ -74,18 +78,6 @@ export interface CreateMovementRequest {
   occurredAt: string | null; // null : l'API prend l'heure actuelle
   reference: string | null;
   notes: string | null;
-}
-
-/** GET /api/stock/lots?articleId=... */
-export interface LotRow {
-  id: string;
-  articleId: string;
-  articleCode: string;
-  articleLabel: string;
-  lotNumber: string;
-  expiryDate: string | null;
-  notes: string | null;
-  createdAt: string;
 }
 
 export type InventoryStatus = 'DRAFT' | 'VALIDATED' | 'CANCELLED';

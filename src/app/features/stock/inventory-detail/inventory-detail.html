@@ -69,11 +69,10 @@
   <!-- Les lignes -->
   <section class="mt-4 overflow-hidden rounded-xl border border-border">
     <div hlmTableContainer [class.opacity-60]="busy()">
-      <table hlmTable class="min-w-[760px]">
+      <table hlmTable class="min-w-[680px]">
         <thead hlmTHead class="bg-muted/50">
         <tr hlmTr>
           <th hlmTh>Article</th>
-          <th hlmTh>Lot</th>
           <th hlmTh class="text-right">{{ isDraft() ? 'Stock théorique' : 'Théorique (à la validation)' }}</th>
           <th hlmTh class="text-right">Compté</th>
           <th hlmTh class="text-right">Écart</th>
@@ -87,9 +86,12 @@
             <tr hlmTr>
               <td hlmTd>
                 <div class="font-medium">{{ line.articleLabel }}</div>
-                <div class="font-mono text-xs text-muted-foreground">{{ line.articleCode }}</div>
+                <div class="font-mono text-xs text-muted-foreground">
+                  {{ line.articleCode }}
+                  <!-- Seuls les produits finis ont un lot : celui de leur mise -->
+                  @if (line.lotNumber) { · lot {{ line.lotNumber }} }
+                </div>
               </td>
-              <td hlmTd class="font-mono text-[13px] text-muted-foreground">{{ line.lotNumber ?? '—' }}</td>
               <td hlmTd class="text-right tabular-nums text-muted-foreground">
                 {{ line.theoreticalQuantity | number: '1.0-4' }} {{ line.unitCode }}
               </td>
@@ -125,7 +127,7 @@
             </tr>
           } @empty {
             <tr hlmTr>
-              <td hlmTd colspan="6" class="py-10 text-center text-muted-foreground">
+              <td hlmTd colspan="5" class="py-10 text-center text-muted-foreground">
                 Aucune ligne. Ajoute les articles comptés ci-dessous.
               </td>
             </tr>

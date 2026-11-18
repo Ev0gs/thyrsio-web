@@ -7,7 +7,6 @@ export interface ArticleRow {
   label: string;
   categoryCode: string;
   categoryLabel: string;
-  lotTracked: boolean;
   unitCode: string;
   mainSupplierId: string | null;
   mainSupplierName: string | null;
@@ -22,7 +21,6 @@ export interface CategoryRow {
   code: string;
   label: string;
   defaultUnitCode: string;
-  lotTracked: boolean;
   regulated: boolean;
   active: boolean;
 }
@@ -31,7 +29,6 @@ export interface CategoryRow {
 export interface UpdateCategoryRequest {
   label: string;
   defaultUnitCode: string;
-  lotTracked: boolean;
   regulated: boolean;
 }
 

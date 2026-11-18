@@ -23,7 +23,7 @@ function type(element: HTMLElement, selector: string, value: string) {
 }
 
 describe('CategoryForm', () => {
-  it('creates a category with its unit and lot tracking', async () => {
+  it('creates a category with its unit, without any lot tracking', async () => {
     const { http, fixture } = setup();
     let saved: CategoryRow | undefined;
     fixture.componentInstance.saved.subscribe((category) => (saved = category));
@@ -36,8 +36,11 @@ describe('CategoryForm', () => {
     const element: HTMLElement = fixture.nativeElement;
     type(element, '#cat-code', 'muselet');
     type(element, '#cat-label', 'Muselet');
-    const lot = element.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[0];
-    lot.click();
+    // Les matières sèches n'ont pas de lot : la seule case est « Réglementé »
+    const checkboxes = element.querySelectorAll<HTMLInputElement>('input[type="checkbox"]');
+    expect(checkboxes.length).toBe(1);
+    expect(element.textContent).not.toContain('Suivi par lot');
+    checkboxes[0].click();
     fixture.detectChanges();
     element.querySelector<HTMLButtonElement>('button:not([variant="outline"])')!.click();
     TestBed.tick();
@@ -47,16 +50,14 @@ describe('CategoryForm', () => {
       code: 'muselet',
       label: 'Muselet',
       defaultUnitCode: 'U',
-      lotTracked: true,
-      regulated: false,
+      regulated: true,
     });
     const created = {
       id: 'c9',
       code: 'MUSELET',
       label: 'Muselet',
       defaultUnitCode: 'U',
-      lotTracked: true,
-      regulated: false,
+      regulated: true,
       active: true,
     };
     request.flush(created);
@@ -72,7 +73,6 @@ describe('CategoryForm', () => {
       code: 'BOUCHON',
       label: 'Bouchon',
       defaultUnitCode: 'U',
-      lotTracked: true,
       regulated: false,
       active: true,
     });

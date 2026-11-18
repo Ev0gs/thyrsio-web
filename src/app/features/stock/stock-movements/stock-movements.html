@@ -64,13 +64,12 @@
   } @else {
     <!-- Pendant le chargement d'une autre page, l'ancienne reste visible mais estompée -->
     <div hlmTableContainer [class.opacity-60]="movements.isLoading()">
-      <table hlmTable class="min-w-[900px]">
+      <table hlmTable class="min-w-[800px]">
         <thead hlmTHead class="bg-muted/50">
         <tr hlmTr>
           <th hlmTh>Date</th>
           <th hlmTh>Type</th>
           <th hlmTh>Article</th>
-          <th hlmTh>Lot</th>
           <th hlmTh class="text-right">Quantité</th>
           <th hlmTh>Référence</th>
         </tr>
@@ -79,7 +78,7 @@
           @if (!movements.hasValue()) {
             @for (i of [1, 2, 3, 4, 5, 6]; track i) {
               <tr hlmTr>
-                <td hlmTd colspan="6"><div hlmSkeleton class="h-7 w-full"></div></td>
+                <td hlmTd colspan="5"><div hlmSkeleton class="h-7 w-full"></div></td>
               </tr>
             }
           } @else {
@@ -93,9 +92,12 @@
                 </td>
                 <td hlmTd>
                   <div class="font-medium">{{ movement.articleLabel }}</div>
-                  <div class="font-mono text-xs text-muted-foreground">{{ movement.articleCode }}</div>
+                  <div class="font-mono text-xs text-muted-foreground">
+                    {{ movement.articleCode }}
+                    <!-- Seuls les produits finis ont un lot : celui de leur mise -->
+                    @if (movement.lotNumber) { · lot {{ movement.lotNumber }} }
+                  </div>
                 </td>
-                <td hlmTd class="font-mono text-[13px] text-muted-foreground">{{ movement.lotNumber ?? '—' }}</td>
                 <td hlmTd class="text-right font-medium tabular-nums" [class.text-emerald-700]="movement.quantity > 0">
                   {{ movement.quantity > 0 ? '+' : '' }}{{ movement.quantity | number: '1.0-4' }}
                   <span class="text-xs font-normal text-muted-foreground">{{ movement.unitCode }}</span>
@@ -109,7 +111,7 @@
               </tr>
             } @empty {
               <tr hlmTr>
-                <td hlmTd colspan="6" class="py-10 text-center text-muted-foreground">
+                <td hlmTd colspan="5" class="py-10 text-center text-muted-foreground">
                   {{ hasFilters() ? 'Aucun mouvement ne correspond à ces filtres.' : 'Aucun mouvement pour l\'instant.' }}
                 </td>
               </tr>

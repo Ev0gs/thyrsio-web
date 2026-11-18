@@ -15,7 +15,7 @@ import { MovementForm } from '../movement-form/movement-form';
 import { RouterLink } from '@angular/router';
 import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
-type StateFilter = 'all' | 'alert' | 'lotTracked';
+type StateFilter = 'all' | 'alert';
 
 /** "Étiquette " → "etiquette" : la recherche ignore majuscules et accents. */
 const normalize = (text: string) =>
@@ -66,7 +66,6 @@ export class StockOverview {
   protected readonly stateFilters: { value: StateFilter; label: string }[] = [
     { value: 'all', label: 'Tous' },
     { value: 'alert', label: 'Sous le seuil' },
-    { value: 'lotTracked', label: 'Suivis par lot' },
   ];
 
   /** hasValue() d'abord : lire value() quand le chargement a échoué lève une erreur. */
@@ -94,12 +93,11 @@ export class StockOverview {
       (row) =>
         (!category || row.categoryCode === category) &&
         (state !== 'alert' || isAlert(row)) &&
-        (state !== 'lotTracked' || row.lotTracked) &&
         (!query || normalize(`${row.articleCode} ${row.articleLabel}`).includes(query)),
     );
   });
 
-  /** On ne déplie que les articles suivis par lot qui ont au moins un lot en stock. */
+  /** On ne déplie que les produits finis (suivis par lot : un lot par mise) qui ont un lot en stock. */
   protected canExpand(row: StockOverviewRow): boolean {
     return row.lotTracked && row.lotsInStock > 0;
   }

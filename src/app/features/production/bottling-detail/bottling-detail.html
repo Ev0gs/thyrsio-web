@@ -195,11 +195,10 @@
       <h2 class="text-base font-semibold">Matières réellement consommées</h2>
       <div class="mt-3 overflow-hidden rounded-xl border border-border">
         <div hlmTableContainer>
-          <table hlmTable class="min-w-[600px]">
+          <table hlmTable class="min-w-[480px]">
             <thead hlmTHead class="bg-muted/50">
             <tr hlmTr>
               <th hlmTh>Article</th>
-              <th hlmTh>Lot</th>
               <th hlmTh class="text-right">Quantité</th>
             </tr>
             </thead>
@@ -210,14 +209,13 @@
                     <div class="font-medium">{{ line.articleLabel }}</div>
                     <div class="font-mono text-xs text-muted-foreground">{{ line.articleCode }}</div>
                   </td>
-                  <td hlmTd class="font-mono text-[13px] text-muted-foreground">{{ line.lotNumber ?? '—' }}</td>
                   <td hlmTd class="text-right tabular-nums">
                     {{ line.quantity | number: '1.0-4' }} <span class="text-xs text-muted-foreground">{{ line.unitCode }}</span>
                   </td>
                 </tr>
               } @empty {
                 <tr hlmTr>
-                  <td hlmTd colspan="3" class="py-8 text-center text-muted-foreground">Aucune consommation enregistrée.</td>
+                  <td hlmTd colspan="2" class="py-8 text-center text-muted-foreground">Aucune consommation enregistrée.</td>
                 </tr>
               }
             </tbody>

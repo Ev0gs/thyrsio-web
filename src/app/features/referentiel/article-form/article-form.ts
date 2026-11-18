@@ -159,7 +159,7 @@ export class ArticleForm {
           this.saved.emit(saved);
           return undefined;
         } catch (error) {
-          // "Code déjà utilisé", "a déjà des lots ou du stock…" : affiché sur le formulaire
+          // "Code déjà utilisé", "a déjà du stock…" : affiché sur le formulaire
           return { fieldTree: this.articleForm, kind: 'server', message: problemMessage(error) };
         }
       },

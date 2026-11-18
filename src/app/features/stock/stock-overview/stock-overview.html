@@ -88,7 +88,10 @@
       <table hlmTable class="min-w-[860px]">
         <thead hlmTHead class="bg-muted/50">
         <tr hlmTr>
-          <th hlmTh class="w-12"><span class="sr-only">Détail des lots</span></th>
+          <!-- Le détail par lot : produits finis seulement, les matières sèches n'ont pas de lot -->
+          @if (finishedGoods()) {
+            <th hlmTh class="w-12"><span class="sr-only">Détail des lots</span></th>
+          }
           <th hlmTh>Article</th>
           <th hlmTh>Catégorie</th>
           <th hlmTh class="text-right">Stock</th>
@@ -102,12 +105,13 @@
             <!-- Premier chargement : des lignes grises animées -->
             @for (i of [1, 2, 3, 4, 5]; track i) {
               <tr hlmTr>
-                <td hlmTd colspan="7"><div hlmSkeleton class="h-7 w-full"></div></td>
+                <td hlmTd [attr.colspan]="finishedGoods() ? 7 : 6"><div hlmSkeleton class="h-7 w-full"></div></td>
               </tr>
             }
           } @else {
             @for (row of filtered(); track row.articleId) {
               <tr hlmTr [class.cursor-pointer]="canExpand(row)" (click)="toggle(row)">
+                @if (finishedGoods()) {
                 <td hlmTd>
                   @if (canExpand(row)) {
                     <button hlmBtn variant="ghost" size="icon-sm" type="button"
@@ -119,6 +123,7 @@
                     </button>
                   }
                 </td>
+                }
                 <td hlmTd>
                   <div class="font-medium">{{ row.articleLabel }}</div>
                   <div class="font-mono text-xs text-muted-foreground">{{ row.articleCode }}</div>
@@ -154,14 +159,14 @@
 
               @if (expandedId() === row.articleId) {
                 <tr class="border-b bg-muted/30">
-                  <td colspan="7" class="px-14 py-3">
+                  <td [attr.colspan]="finishedGoods() ? 7 : 6" class="px-14 py-3">
                     <app-article-lots [articleId]="row.articleId" [unitCode]="row.unitCode" />
                   </td>
                 </tr>
               }
             } @empty {
               <tr hlmTr>
-                <td hlmTd colspan="7" class="py-10 text-center text-muted-foreground">
+                <td hlmTd [attr.colspan]="finishedGoods() ? 7 : 6" class="py-10 text-center text-muted-foreground">
                   @if (rows().length === 0) {
                     Aucun article dans le référentiel pour l'instant.
                   } @else {

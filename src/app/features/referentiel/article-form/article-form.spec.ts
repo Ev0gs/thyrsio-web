@@ -10,7 +10,6 @@ const existing: ArticleRow = {
   label: 'Bouchon liège naturel 49×24',
   categoryCode: 'BOUCHON',
   categoryLabel: 'Bouchon',
-  lotTracked: true,
   unitCode: 'U',
   mainSupplierId: null,
   mainSupplierName: null,

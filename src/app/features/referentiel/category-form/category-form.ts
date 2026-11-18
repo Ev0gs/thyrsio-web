@@ -22,7 +22,6 @@ interface CategoryModel {
   code: string;
   label: string;
   defaultUnitCode: string;
-  lotTracked: boolean;
   regulated: boolean;
 }
 
@@ -30,7 +29,6 @@ const toModel = (category: CategoryRow | null): CategoryModel => ({
   code: category?.code ?? '',
   label: category?.label ?? '',
   defaultUnitCode: category?.defaultUnitCode ?? 'U',
-  lotTracked: category?.lotTracked ?? false,
   regulated: category?.regulated ?? false,
 });
 
@@ -89,7 +87,6 @@ export class CategoryForm {
         const fields = {
           label: value.label.trim(),
           defaultUnitCode: value.defaultUnitCode,
-          lotTracked: value.lotTracked,
           regulated: value.regulated,
         };
         try {
@@ -100,7 +97,7 @@ export class CategoryForm {
           this.saved.emit(saved);
           return undefined;
         } catch (error) {
-          // « Code déjà utilisé », « suivi par lot ne peut plus être modifié »… : affiché ici
+          // « Code déjà utilisé »… : affiché ici
           return { fieldTree: this.categoryForm, kind: 'server', message: problemMessage(error) };
         }
       },

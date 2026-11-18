@@ -3,7 +3,7 @@
     <h1 class="flex items-center gap-3 text-[28px] font-semibold tracking-tight">
       <app-page-icon name="lucideTags" />
       Catégories</h1>
-    <p class="text-sm text-muted-foreground">Elles regroupent les articles et fixent leur unité par défaut et leur suivi par lot</p>
+    <p class="text-sm text-muted-foreground">Elles regroupent les articles et fixent leur unité par défaut</p>
   </div>
   <button hlmBtn size="lg" (click)="open(null)">
     <ng-icon name="lucidePlus" aria-hidden="true" /> Nouvelle catégorie
@@ -30,12 +30,11 @@
     </div>
   } @else {
     <div hlmTableContainer [class.opacity-60]="categories.isLoading()">
-      <table hlmTable class="min-w-[720px]">
+      <table hlmTable class="min-w-[600px]">
         <thead hlmTHead class="bg-muted/50">
         <tr hlmTr>
           <th hlmTh>Catégorie</th>
           <th hlmTh>Unité par défaut</th>
-          <th hlmTh>Suivi par lot</th>
           <th hlmTh>Réglementée</th>
           <th hlmTh><span class="sr-only">Actions</span></th>
         </tr>
@@ -43,7 +42,7 @@
         <tbody hlmTBody>
           @if (!categories.hasValue()) {
             @for (i of [1, 2, 3, 4]; track i) {
-              <tr hlmTr><td hlmTd colspan="5"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
+              <tr hlmTr><td hlmTd colspan="4"><div hlmSkeleton class="h-7 w-full"></div></td></tr>
             }
           } @else {
             @for (category of rows(); track category.id) {
@@ -58,7 +57,6 @@
                   <div class="font-mono text-xs text-muted-foreground">{{ category.code }}</div>
                 </td>
                 <td hlmTd class="font-mono">{{ category.defaultUnitCode }}</td>
-                <td hlmTd>{{ category.lotTracked ? 'Oui' : '—' }}</td>
                 <td hlmTd>{{ category.regulated ? 'Oui' : '—' }}</td>
                 <td hlmTd class="text-right">
                   <button hlmBtn variant="ghost" size="sm" (click)="open(category)"
@@ -70,7 +68,7 @@
                 </td>
               </tr>
             } @empty {
-              <tr hlmTr><td hlmTd colspan="5" class="py-10 text-center text-muted-foreground">Aucune catégorie.</td></tr>
+              <tr hlmTr><td hlmTd colspan="4" class="py-10 text-center text-muted-foreground">Aucune catégorie.</td></tr>
             }
           }
         </tbody>

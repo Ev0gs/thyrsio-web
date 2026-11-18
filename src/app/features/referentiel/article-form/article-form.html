@@ -37,7 +37,6 @@
       @if (selectedCategory(); as category) {
         <p class="text-xs text-muted-foreground">
           Unité par défaut : {{ category.defaultUnitCode }}
-          @if (category.lotTracked) { · suivi par lot }
           @if (category.regulated) { · réglementé }
         </p>
       }

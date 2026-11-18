@@ -1,26 +1,16 @@
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-  untracked,
-} from '@angular/core';
-import { httpResource } from '@angular/common/http';
-import { applyWhen, form, FormField, hidden, min, required, submit } from '@angular/forms/signals';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { form, FormField, min, required, submit } from '@angular/forms/signals';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { problemMessage } from '../../../core/api/problem';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { SELECT_CLASS } from '../../../shared/ui/form-styles';
 import { StockApi } from '../stock-api';
-import { Inventory, LotRow, StockOverviewRow } from '../stock.models';
+import { Inventory, StockOverviewRow } from '../stock.models';
 
-const emptyLine = () => ({ articleId: '', lotId: '', countedQuantity: null as number | null });
+const emptyLine = () => ({ articleId: '', countedQuantity: null as number | null });
 
-/** Ajoute une ligne à un inventaire en brouillon : un article, ou un lot, absent du pré-remplissage. */
+/** Ajoute une ligne à un inventaire en brouillon : une matière sèche absente du pré-remplissage. */
 @Component({
   selector: 'app-inventory-add-line',
   imports: [FormField, FieldError, HlmButtonImports, HlmInputImports],
@@ -39,14 +29,6 @@ export class InventoryAddLine {
 
   protected readonly lineForm = form(this.model, (path) => {
     required(path.articleId, { message: 'Choisis un article' });
-    hidden(path.lotId, { when: ({ valueOf }) => !this.isLotTracked(valueOf(path.articleId)) });
-    applyWhen(
-      path.lotId,
-      ({ valueOf }) => this.isLotTracked(valueOf(path.articleId)),
-      (lotId) => {
-        required(lotId, { message: 'Choisis un lot' });
-      },
-    );
     min(path.countedQuantity, 0, { message: 'Une quantité comptée ne peut pas être négative' });
   });
 
@@ -56,27 +38,6 @@ export class InventoryAddLine {
       .sort((a, b) => a.articleLabel.localeCompare(b.articleLabel, 'fr')),
   );
 
-  private readonly selectedArticle = computed(() =>
-    this.articles().find((article) => article.articleId === this.lineForm.articleId().value()),
-  );
-
-  protected readonly lots = httpResource<LotRow[]>(() => {
-    const article = this.selectedArticle();
-    return article?.lotTracked ? { url: '/api/stock/lots', params: { articleId: article.articleId } } : undefined;
-  });
-
-  constructor() {
-    // Même règle que pour un mouvement : changer d'article vide le lot
-    effect(() => {
-      this.lineForm.articleId().value();
-      untracked(() => this.lineForm.lotId().value.set(''));
-    });
-  }
-
-  private isLotTracked(articleId: string): boolean {
-    return this.articles().find((article) => article.articleId === articleId)?.lotTracked ?? false;
-  }
-
   protected async add(): Promise<void> {
     await submit(this.lineForm, {
       action: async () => {
@@ -84,7 +45,7 @@ export class InventoryAddLine {
         try {
           const inventory = await this.api.addInventoryLine(this.inventoryId(), {
             articleId: value.articleId,
-            lotId: this.selectedArticle()?.lotTracked ? value.lotId : null,
+            lotId: null,
             countedQuantity: value.countedQuantity,
             notes: null,
           });

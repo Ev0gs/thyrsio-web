@@ -24,36 +24,9 @@
     @if (selectedArticle(); as article) {
       <p class="text-xs text-muted-foreground">
         En stock : {{ article.quantity | number: '1.0-4' }} {{ article.unitCode }}
-        @if (article.lotTracked) { · suivi par lot }
       </p>
     }
   </div>
-
-  <!-- Lot : seulement pour un article suivi par lot -->
-  @if (!movementForm.lotId().hidden()) {
-    <div class="flex flex-col gap-1.5">
-      <label for="mv-lot" class="text-sm font-medium">Lot</label>
-      <select id="mv-lot" [formField]="movementForm.lotId" [class]="selectClass">
-        <option value="">Choisir un lot…</option>
-        @for (lot of lotOptions(); track lot.id) {
-          <option [value]="lot.id">{{ lot.lotNumber }} · {{ lot.quantity | number: '1.0-4' }} en stock</option>
-        }
-        @if (movementForm.type().value() === 'RECEPTION') {
-          <option [value]="NEW_LOT">+ Nouveau lot…</option>
-        }
-      </select>
-      <app-field-error [state]="movementForm.lotId()" />
-    </div>
-  }
-
-  @if (!movementForm.newLotNumber().hidden()) {
-    <div class="flex flex-col gap-1.5">
-      <label for="mv-new-lot" class="text-sm font-medium">Numéro du nouveau lot</label>
-      <input id="mv-new-lot" hlmInput [formField]="movementForm.newLotNumber"
-             placeholder="Tel qu'il figure sur la livraison" />
-      <app-field-error [state]="movementForm.newLotNumber()" />
-    </div>
-  }
 
   <!-- Quantité et date -->
   <div class="grid gap-4 sm:grid-cols-2">

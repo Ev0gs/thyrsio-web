@@ -58,7 +58,6 @@ export interface MaterialLine {
   articleLabel: string;
   categoryLabel: string;
   unitCode: string;
-  lotTracked: boolean;
   plannedQuantity: number;
   stockQuantity: number | null;
   reservedBefore: number | null;
@@ -70,8 +69,6 @@ export interface ConsumptionLine {
   articleCode: string;
   articleLabel: string;
   unitCode: string;
-  lotId: string | null;
-  lotNumber: string | null;
   quantity: number;
 }
 
@@ -119,9 +116,9 @@ export interface AllocationRequest {
   quantity: number;
 }
 
+/** Une matière sèche consommée : pas de lot, les matières sèches n'en ont pas. */
 export interface ConsumptionRequest {
   articleId: string;
-  lotId: string | null;
   quantity: number;
 }
 

@@ -18,6 +18,8 @@ import {
   SupplierRequest,
   UpdateArticleRequest,
   UpdateClientRequest,
+  AppellationRequest,
+  AppellationRow,
 } from './referentiel.models';
 
 type ArchivableResource = 'articles' | 'categories' | 'suppliers' | 'clients';
@@ -114,6 +116,27 @@ export class ReferentielApi {
     const action = active ? 'reactivate' : 'archive';
     return firstValueFrom(
       this.http.post<void>(`${this.addressesUrl(clientId)}/${addressId}/${action}`, null),
+    );
+  }
+
+  // ---------- Appellations ----------
+
+  createAppellation(request: AppellationRequest): Promise<AppellationRow> {
+    return firstValueFrom(this.http.post<AppellationRow>(`${this.baseUrl}/appellations`, request));
+  }
+
+  updateAppellation(id: string, request: AppellationRequest): Promise<AppellationRow> {
+    return firstValueFrom(
+      this.http.put<AppellationRow>(`${this.baseUrl}/appellations/${id}`, request),
+    );
+  }
+
+  setAppellationActive(id: string, active: boolean): Promise<void> {
+    return firstValueFrom(
+      this.http.post<void>(
+        `${this.baseUrl}/appellations/${id}/${active ? 'restore' : 'archive'}`,
+        null,
+      ),
     );
   }
 }

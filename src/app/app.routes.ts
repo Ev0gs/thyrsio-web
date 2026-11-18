@@ -159,6 +159,14 @@ export const routes: Routes = [
           import('./features/referentiel/category-list/category-list').then((m) => m.CategoryList),
       },
       {
+        path: 'referentiel/appellations',
+        title: 'Appellations · Thyrsio',
+        loadComponent: () =>
+          import('./features/referentiel/appellation-list/appellation-list').then(
+            (m) => m.AppellationList,
+          ),
+      },
+      {
         path: 'referentiel/unites',
         title: 'Unités · Thyrsio',
         loadComponent: () =>

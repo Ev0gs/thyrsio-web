@@ -208,3 +208,17 @@ export function toAddressRequest(address: DeliveryAddress): DeliveryAddressReque
   const { id, clientId, active, createdAt, ...request } = address;
   return request;
 }
+
+/** GET /api/referentiel/appellations : une appellation et son sigle, qui entre dans les numéros de lot. */
+export interface AppellationRow {
+  id: string;
+  code: string;
+  name: string;
+  active: boolean;
+}
+
+/** POST et PUT /api/referentiel/appellations */
+export interface AppellationRequest {
+  code: string;
+  name: string;
+}

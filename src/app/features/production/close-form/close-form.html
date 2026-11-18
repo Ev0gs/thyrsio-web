@@ -6,7 +6,7 @@
       <div class="flex flex-col gap-1.5">
         <label for="cl-produced" class="text-sm font-medium">Bouteilles produites</label>
         <input id="cl-produced" hlmInput type="number" step="1" [formField]="closeForm.producedBottles" />
-        <span class="text-xs text-muted-foreground">Prévu : {{ bottling().plannedBottles | number }}</span>
+        <span class="text-xs text-muted-foreground">Prévu : {{ production().plannedBottles | number }}</span>
         <app-field-error [state]="closeForm.producedBottles()" />
       </div>
       <div class="flex flex-col gap-1.5">
@@ -16,18 +16,18 @@
       </div>
       @if (!closeForm.wineUsedHl().hidden()) {
         <div class="flex flex-col gap-1.5">
-          <label for="cl-wine" class="text-sm font-medium">Vin tiré de {{ bottling().sourceTankCode }} <span class="font-normal text-muted-foreground">(hl)</span></label>
+          <label for="cl-wine" class="text-sm font-medium">Vin tiré de {{ production().sourceTankCode }} <span class="font-normal text-muted-foreground">(hl)</span></label>
           <input id="cl-wine" hlmInput type="number" step="0.01" [formField]="closeForm.wineUsedHl" />
           <span class="text-xs text-muted-foreground">
-            Prévu : {{ bottling().wineNeededHl | number: '1.0-2' }} hl
-            @if (bottling().tankVolumeHl !== null) { · en cuve : {{ bottling().tankVolumeHl | number: '1.0-2' }} hl }
+            Prévu : {{ production().wineNeededHl | number: '1.0-2' }} hl
+            @if (production().tankVolumeHl !== null) { · en cuve : {{ production().tankVolumeHl | number: '1.0-2' }} hl }
           </span>
           <app-field-error [state]="closeForm.wineUsedHl()" />
         </div>
       }
     </div>
     <p class="text-xs text-muted-foreground">
-      Les bouteilles produites entrent en stock sous un nouveau numéro de lot, généré à l'enregistrement.
+      Les bouteilles produites entrent en stock sous le numéro de lot {{ production().lotNumber }}.
       La casse est notée pour l'historique : compte les bouteilles cassées dans la consommation de bouteilles.
     </p>
   </fieldset>

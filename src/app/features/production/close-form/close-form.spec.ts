@@ -1,36 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Bottling } from '../production.models';
+import { aBottling, aProduction } from '../production.testing';
 import { CloseForm } from './close-form';
 
-const bottling: Bottling = {
-  id: 'b1',
-  code: 'MB-26-001',
-  status: 'PLANNED',
-  location: 'AT_PRODUCER',
-  contractor: 'Château Exemple',
+const production = aProduction({
+  id: 'p1',
   startDate: '2026-11-10',
-  endDate: '2026-11-10',
-  finishedArticleId: 'pf1',
-  finishedArticleCode: 'PF-CDB22-75',
-  finishedArticleLabel: 'Côtes de Bourg 2022 · 75 cl',
-  plannedBottles: 3600,
-  producedBottles: null,
-  brokenBottles: null,
-  bottleVolumeCl: 75,
-  wineNeededHl: 27,
-  wineUsedHl: null,
   sourceTankId: null,
   sourceTankCode: null,
   tankVolumeHl: null,
-  wineLot: null,
-  wineDescription: 'Côtes de Bourg rouge 2022',
-  notes: null,
-  shortageCount: 0,
-  alert: false,
-  lotNumber: null,
-  allocations: [],
+  lotNumber: 'LCDB2201',
   materials: [
     {
       articleId: 'cork',
@@ -44,19 +24,15 @@ const bottling: Bottling = {
       shortageQuantity: 0,
     },
   ],
-  consumptions: [],
-  closedAt: null,
-  closedBy: null,
-  createdBy: 'u1',
-  createdAt: '2026-11-01T00:00:00Z',
-  updatedAt: '2026-11-01T00:00:00Z',
-};
+});
+const bottling = aBottling({ location: 'AT_PRODUCER', productions: [production] });
 
 function setup() {
   TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
   const http = TestBed.inject(HttpTestingController);
   const fixture = TestBed.createComponent(CloseForm);
   fixture.componentRef.setInput('bottling', bottling);
+  fixture.componentRef.setInput('production', production);
   fixture.detectChanges();
   return { http, fixture, element: fixture.nativeElement as HTMLElement };
 }
@@ -82,7 +58,10 @@ describe('CloseForm', () => {
     element.querySelector<HTMLButtonElement>('button[type=submit]')!.click();
     await fixture.whenStable();
 
-    const request = http.expectOne({ method: 'POST', url: '/api/production/bottlings/b1/close' });
+    const request = http.expectOne({
+      method: 'POST',
+      url: '/api/production/bottlings/b1/productions/p1/close',
+    });
     expect(request.request.body.consumptions).toEqual([{ articleId: 'cork', quantity: 3610 }]);
   });
 
@@ -96,6 +75,6 @@ describe('CloseForm', () => {
     fixture.detectChanges();
 
     expect(element.textContent).toContain("Il n'y en a que 3800 U en stock");
-    http.expectNone('/api/production/bottlings/b1/close');
+    http.expectNone('/api/production/bottlings/b1/productions/p1/close');
   });
 });

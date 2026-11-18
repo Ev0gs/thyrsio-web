@@ -18,7 +18,7 @@ import { HlmInputImports } from '@spartan-ng/helm/input';
 import { problemMessage } from '../../../core/api/problem';
 import { FieldError } from '../../../shared/ui/field-error/field-error';
 import { ProductionApi } from '../production-api';
-import { Bottling, MaterialLine } from '../production.models';
+import { Bottling, MaterialLine, Production } from '../production.models';
 
 /** Une matière sèche consommée : un article et sa quantité (les matières sèches n'ont pas de lot). */
 interface LineModel {
@@ -33,11 +33,11 @@ interface CloseModel {
   lines: LineModel[];
 }
 
-const toModel = (bottling: Bottling): CloseModel => ({
-  producedBottles: bottling.plannedBottles,
+const toModel = (bottling: Bottling, production: Production): CloseModel => ({
+  producedBottles: production.plannedBottles,
   brokenBottles: 0,
-  wineUsedHl: bottling.location === 'ON_SITE' ? bottling.wineNeededHl : null,
-  lines: bottling.materials.map((m) => ({
+  wineUsedHl: bottling.location === 'ON_SITE' ? production.wineNeededHl : null,
+  lines: production.materials.map((m) => ({
     articleId: m.articleId,
     quantity: m.plannedQuantity,
   })),
@@ -63,16 +63,18 @@ const toModel = (bottling: Bottling): CloseModel => ({
 })
 export class CloseForm {
   readonly bottling = input.required<Bottling>();
+  /** La production clôturée : la mise peut en compter plusieurs, chacune se clôture seule. */
+  readonly production = input.required<Production>();
   readonly saved = output<Bottling>();
   readonly cancelled = output<void>();
 
   private readonly api = inject(ProductionApi);
 
   private readonly materialsById = computed(
-    () => new Map(this.bottling().materials.map((material) => [material.articleId, material])),
+    () => new Map(this.production().materials.map((material) => [material.articleId, material])),
   );
 
-  protected readonly model = linkedSignal(() => toModel(this.bottling()));
+  protected readonly model = linkedSignal(() => toModel(this.bottling(), this.production()));
 
   protected readonly closeForm = form(this.model, (path) => {
     required(path.producedBottles, { message: 'Indique les bouteilles produites' });
@@ -91,7 +93,7 @@ export class CloseForm {
     });
     validate(path.wineUsedHl, ({ value }) => {
       const wine = value();
-      const inTank = this.bottling().tankVolumeHl;
+      const inTank = this.production().tankVolumeHl;
       if (wine === null || this.bottling().location !== 'ON_SITE') {
         return undefined;
       }
@@ -101,7 +103,7 @@ export class CloseForm {
       return inTank !== null && wine > inTank
         ? {
             kind: 'tank',
-            message: `La cuve ${this.bottling().sourceTankCode} ne contient que ${inTank} hl`,
+            message: `La cuve ${this.production().sourceTankCode} ne contient que ${inTank} hl`,
           }
         : undefined;
     });
@@ -137,7 +139,7 @@ export class CloseForm {
       action: async () => {
         const value = this.model();
         try {
-          const closed = await this.api.closeBottling(this.bottling().id, {
+          const closed = await this.api.closeProduction(this.bottling().id, this.production().id, {
             producedBottles: value.producedBottles!,
             brokenBottles: value.brokenBottles,
             wineUsedHl: this.bottling().location === 'ON_SITE' ? value.wineUsedHl : null,

@@ -10,6 +10,7 @@ import {
   lucideGrape,
   lucideLayoutDashboard,
   lucideLogOut,
+  lucideMapPin,
   lucidePackage,
   lucidePackageCheck,
   lucideRuler,
@@ -72,6 +73,7 @@ const visible = (groups: NavGroup[]): NavGroup[] =>
       lucideUsers,
       lucideFactory,
       lucideLogOut,
+      lucideMapPin,
     }),
   ],
   templateUrl: './sidebar.html',
@@ -184,6 +186,12 @@ export class Sidebar {
           label: 'Catégories',
           icon: 'lucideTags',
           route: '/referentiel/categories',
+          includeSubPaths: true,
+        },
+        {
+          label: 'Appellations',
+          icon: 'lucideMapPin',
+          route: '/referentiel/appellations',
           includeSubPaths: true,
         },
         {

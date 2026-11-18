@@ -3,7 +3,7 @@
     <h1 class="flex items-center gap-3 text-[28px] font-semibold tracking-tight">
       <app-page-icon name="lucideWine" />
       Mises en bouteille</h1>
-    <p class="text-sm text-muted-foreground">Le planning de la semaine · les manquants en matières sont vérifiés pour chaque mise</p>
+    <p class="text-sm text-muted-foreground">Le planning de la semaine · les manquants en matières sont vérifiés pour chaque production</p>
   </div>
   <button hlmBtn size="lg" (click)="plan(null)">
     <ng-icon name="lucidePlus" aria-hidden="true" /> Planifier une mise
@@ -15,13 +15,13 @@
   <section role="alert" class="mt-6 flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50/60 p-4">
     <div class="flex items-center gap-2 text-sm font-semibold text-red-800">
       <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
-      {{ alerts().length }} mise(s) dans les 10 prochains jours manquent de matières sèches
+      {{ alerts().length }} production(s) dans les 10 prochains jours manquent de matières sèches
     </div>
     <ul class="flex flex-col gap-1 text-sm">
-      @for (alert of alerts(); track alert.id) {
+      @for (alert of alerts(); track alert.production.id) {
         <li>
-          <a [routerLink]="['/production/mises', alert.id]" class="font-medium text-red-900 hover:underline">{{ alert.code }}</a>
-          <span class="text-red-900/80"> · {{ alert.startDate | date: 'EEEE d MMMM' }} · {{ alert.finishedArticleLabel }} · {{ alert.shortageCount }} matière(s) en manque</span>
+          <a [routerLink]="['/production/mises', alert.bottling.id]" class="font-medium text-red-900 hover:underline">{{ alert.bottling.code }}</a>
+          <span class="text-red-900/80"> · {{ alert.production.startDate | date: 'EEEE d MMMM' }} · {{ alert.production.finishedArticleLabel }} · {{ alert.production.shortageCount }} matière(s) en manque</span>
         </li>
       }
     </ul>
@@ -96,37 +96,45 @@
           @if (!week.hasValue()) {
             <div hlmSkeleton class="h-28 w-full rounded-lg"></div>
           } @else {
-            @for (entry of d.bottlings; track entry.bottling.id) {
+            @for (entry of d.entries; track entry.production.id) {
               <a [routerLink]="['/production/mises', entry.bottling.id]"
                  class="flex flex-col gap-2 rounded-lg border bg-card p-3 shadow-xs transition-colors hover:border-primary/40"
-                 [class]="entry.bottling.alert ? 'border-red-200' : 'border-border'">
+                 [class]="entry.production.alert ? 'border-red-200' : 'border-border'">
                 <!-- Le badge passe à la ligne plutôt que de déborder de la carte -->
                 <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                   <span class="min-w-0 font-mono text-[11px] text-muted-foreground">
                     {{ entry.bottling.code }}
                     @if (entry.dayCount > 1) { · jour {{ entry.dayIndex }}/{{ entry.dayCount }} }
                   </span>
-                  <app-bottling-state-badge [bottling]="entry.bottling" />
+                  <app-bottling-state-badge [bottling]="entry.production" />
                 </div>
-                <span class="text-sm font-semibold leading-snug">{{ entry.bottling.finishedArticleLabel }}</span>
+                @if (entry.production.slot !== 'FULL_DAY') {
+                  <span class="w-fit rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {{ slotLabels[entry.production.slot] }}
+                  </span>
+                }
+                <span class="text-sm font-semibold leading-snug">{{ entry.production.finishedArticleLabel }}</span>
                 <div class="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-[13px]">
                   <span class="whitespace-nowrap font-medium tabular-nums">
-                    {{ (entry.bottling.producedBottles ?? entry.bottling.plannedBottles) | number }} bt
+                    {{ (entry.production.producedBottles ?? entry.production.plannedBottles) | number }} bt
                   </span>
                   <span class="min-w-0 truncate text-muted-foreground">
                     @if (entry.bottling.location === 'ON_SITE') {
-                      Cuve {{ entry.bottling.sourceTankCode }}
+                      Cuve {{ entry.production.sourceTankCode }}
                     } @else {
                       Chez le producteur
                     }
                   </span>
                 </div>
-                @if (sales && entry.bottling.allocations.length > 0) {
-                  <span class="truncate text-xs text-sky-700">Pour {{ orderCodes(entry.bottling) }}</span>
+                @if (entry.production.lotNumber) {
+                  <span class="font-mono text-xs text-muted-foreground">Lot {{ entry.production.lotNumber }}</span>
                 }
-                @if (entry.bottling.shortageCount > 0 && entry.bottling.status === 'PLANNED') {
+                @if (sales && entry.production.allocations.length > 0) {
+                  <span class="truncate text-xs text-sky-700">Pour {{ orderCodes(entry.production) }}</span>
+                }
+                @if (entry.production.shortageCount > 0 && entry.production.status === 'PLANNED') {
                   <span class="rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700">
-                    {{ entry.bottling.shortageCount }} matière(s) en manque
+                    {{ entry.production.shortageCount }} matière(s) en manque
                   </span>
                 }
               </a>
@@ -147,7 +155,7 @@
 <section class="mt-6 flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
   <div class="flex flex-col gap-0.5">
     <h2 class="text-base font-semibold">À venir</h2>
-    <span class="text-[13px] text-muted-foreground">Toutes les mises planifiées, dans l'ordre où elles consommeront le stock</span>
+    <span class="text-[13px] text-muted-foreground">Toutes les mises qui restent à faire, dans l'ordre où elles consommeront le stock</span>
   </div>
   @if (!upcoming.hasValue()) {
     @for (i of [1, 2, 3]; track i) {
@@ -163,14 +171,14 @@
               @if (row.endDate !== row.startDate) { → {{ row.endDate | date: 'EEE d' }} }
             </span>
             <span class="w-24 shrink-0 font-mono text-[13px] text-muted-foreground">{{ row.code }}</span>
-            <span class="min-w-48 flex-1 font-medium">{{ row.finishedArticleLabel }}</span>
+            <span class="min-w-48 flex-1 font-medium">{{ title(row) }}</span>
             <span class="w-24 text-right tabular-nums">{{ row.plannedBottles | number }} bt</span>
-            <span class="w-36 truncate text-muted-foreground">{{ row.location === 'ON_SITE' ? 'Cuve ' + row.sourceTankCode : 'Chez le producteur' }}</span>
+            <span class="w-36 truncate text-muted-foreground">{{ source(row) }}</span>
             <app-bottling-state-badge [bottling]="row" />
           </a>
         </li>
       } @empty {
-        <li class="py-2.5 text-sm text-muted-foreground">Aucune mise planifiée.</li>
+        <li class="py-2.5 text-sm text-muted-foreground">Aucune mise à venir.</li>
       }
     </ul>
   }
@@ -180,7 +188,7 @@
   <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-3xl">
     <hlm-dialog-header>
       <h3 hlmDialogTitle>Planifier une mise</h3>
-      <p hlmDialogDescription>Les manquants sont calculés dès l'enregistrement, en tenant compte des mises déjà planifiées avant.</p>
+      <p hlmDialogDescription>Une ou plusieurs productions : chacune reçoit son numéro de lot à l'enregistrement. Les manquants tiennent compte des productions déjà planifiées avant.</p>
     </hlm-dialog-header>
     <div class="dialog-scroll">
       <app-bottling-form [day]="newDay()" [prefill]="prefill()" (saved)="ctx.close(); onSaved($event)" (cancelled)="ctx.close()" />

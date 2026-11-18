@@ -11,7 +11,14 @@ import { StockStatusBadge } from '../stock/stock-status-badge/stock-status-badge
 import { MOVEMENT_TYPE_LABELS, MovementRow, StockOverviewRow } from '../stock/stock.models';
 import { roundHl, Tank } from '../cuverie/cuverie.models';
 import { BottlingStateBadge } from '../production/bottling-state-badge/bottling-state-badge';
-import { addDays, BottlingRow, isoDay, mondayOf } from '../production/production.models';
+import {
+  addDays,
+  Bottling,
+  bottlingSource,
+  bottlingTitle,
+  isoDay,
+  mondayOf,
+} from '../production/production.models';
 import { FEATURES } from '../../core/features';
 import { OrderRow } from '../sales/sales.models';
 import { PageIcon } from '../../shared/ui/page-icon/page-icon';
@@ -59,23 +66,25 @@ export class Dashboard {
       ).length,
   );
 
-  /** Les mises clôturées depuis le 1er du mois : les bouteilles produites ce mois-ci. */
-  protected readonly closedThisMonth = httpResource<Page<BottlingRow>>(() => ({
-    url: '/api/production/bottlings',
-    params: {
-      status: 'CLOSED',
-      from: isoDay(new Date(this.today.getFullYear(), this.today.getMonth(), 1)),
-      size: 200,
-    },
-  }));
-  protected readonly bottlesThisMonth = computed(() =>
-    (this.closedThisMonth.hasValue() ? this.closedThisMonth.value().content : []).reduce(
-      (sum, bottling) => sum + (bottling.producedBottles ?? 0),
-      0,
-    ),
+  private readonly firstOfMonth = isoDay(
+    new Date(this.today.getFullYear(), this.today.getMonth(), 1),
   );
-  protected readonly bottlingsClosedThisMonth = computed(() =>
-    this.closedThisMonth.hasValue() ? this.closedThisMonth.value().content.length : 0,
+
+  /** Les mises depuis le 1er du mois : leurs productions clôturées font les bouteilles produites ce mois-ci. */
+  protected readonly closedThisMonth = httpResource<Page<Bottling>>(() => ({
+    url: '/api/production/bottlings',
+    params: { status: 'IN_PROGRESS,CLOSED', from: this.firstOfMonth, size: 200 },
+  }));
+  private readonly productionsClosedThisMonth = computed(() =>
+    (this.closedThisMonth.hasValue() ? this.closedThisMonth.value().content : [])
+      .flatMap((bottling) => bottling.productions)
+      .filter((p) => p.status === 'CLOSED' && p.endDate >= this.firstOfMonth),
+  );
+  protected readonly bottlesThisMonth = computed(() =>
+    this.productionsClosedThisMonth().reduce((sum, p) => sum + (p.producedBottles ?? 0), 0),
+  );
+  protected readonly bottlingsClosedThisMonth = computed(
+    () => this.productionsClosedThisMonth().length,
   );
 
   // ---------- Les appels à l'API, lancés en parallèle ----------
@@ -89,11 +98,14 @@ export class Dashboard {
 
   protected readonly tanks = httpResource<Tank[]>(() => '/api/cuverie/tanks');
 
-  /** Toutes les mises planifiées, de la plus proche à la plus lointaine. */
-  protected readonly plannedBottlings = httpResource<Page<BottlingRow>>(() => ({
+  /** Toutes les mises qui restent à faire, de la plus proche à la plus lointaine. */
+  protected readonly plannedBottlings = httpResource<Page<Bottling>>(() => ({
     url: '/api/production/bottlings',
-    params: { status: 'PLANNED', size: 200 },
+    params: { status: 'PLANNED,IN_PROGRESS', size: 200 },
   }));
+
+  protected readonly bottlingTitle = bottlingTitle;
+  protected readonly bottlingSource = bottlingSource;
 
   private readonly since = new Date(Date.now() - 30 * DAY_MS).toISOString();
 

@@ -17,20 +17,33 @@ import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { problemMessage } from '../../../core/api/problem';
 import { todayLocal } from '../../../core/dates';
-import { WineLabel } from '../../cuverie/wine-label/wine-label';
-import { BottlingForm } from '../bottling-form/bottling-form';
-import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge';
 import { FEATURES } from '../../../core/features';
 import { WineColor } from '../../cuverie/cuverie.models';
+import { WineLabel } from '../../cuverie/wine-label/wine-label';
 import { BottleIllustration } from '../bottle-illustration/bottle-illustration';
+import { BottlingForm } from '../bottling-form/bottling-form';
+import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge';
 import { CloseForm } from '../close-form/close-form';
-import { WineGlassIllustration } from '../wine-glass-illustration/wine-glass-illustration';
 import { ProductionApi } from '../production-api';
-import { Bottling, BOTTLING_LOCATION_LABELS } from '../production.models';
+import {
+  Bottling,
+  BOTTLING_LOCATION_LABELS,
+  bottlingHeading,
+  Production,
+  PRODUCTION_SLOT_LABELS,
+} from '../production.models';
+import { WineGlassIllustration } from '../wine-glass-illustration/wine-glass-illustration';
 
-type DialogKind = 'edit' | 'close' | 'cancel';
+type Dialog =
+  | { kind: 'edit' }
+  | { kind: 'cancel' }
+  | { kind: 'close'; production: Production }
+  | { kind: 'cancelProduction'; production: Production };
 
-/** La fiche d'une mise : le planning, les matières et leurs manquants, puis le réel une fois clôturée. */
+/**
+ * La fiche d'une mise : ses productions, chacune avec son numéro de lot, son vin et ses matières
+ * (et leurs manquants), puis son réel une fois clôturée. Chaque production se clôture seule.
+ */
 @Component({
   selector: 'app-bottling-detail',
   imports: [
@@ -60,10 +73,12 @@ export class BottlingDetail {
 
   readonly id = input.required<string>();
 
-  /** La section « Commandes servies » : seulement si les ventes sont affichées. */
+  /** Les commandes servies : seulement si les ventes sont affichées. */
   protected readonly sales = FEATURES.sales;
 
   protected readonly locationLabels = BOTTLING_LOCATION_LABELS;
+  protected readonly slotLabels = PRODUCTION_SLOT_LABELS;
+  protected readonly title = bottlingHeading;
 
   protected readonly resource = httpResource<Bottling>(
     () => `/api/production/bottlings/${this.id()}`,
@@ -72,51 +87,51 @@ export class BottlingDetail {
     this.resource.hasValue() ? this.resource.value() : null,
   );
 
-  protected readonly dialog = signal<DialogKind | null>(null);
+  /** Planifiée ou en cours : il reste des productions à faire, la mise se modifie encore. */
+  protected readonly open = computed(() => {
+    const status = this.bottling()?.status;
+    return status === 'PLANNED' || status === 'IN_PROGRESS';
+  });
+
+  protected readonly dialog = signal<Dialog | null>(null);
   protected readonly actionError = signal<string | null>(null);
   protected readonly busy = signal(false);
 
-  /** Une mise ne se clôture qu'une fois commencée. */
-  /** Les bouteilles qui ne sont réservées à aucune commande. */
-  protected readonly allocatedFree = computed(() => {
-    const b = this.bottling();
-    if (!b) return 0;
-    const total = b.producedBottles ?? b.plannedBottles;
-    return Math.max(0, total - b.allocations.reduce((sum, a) => sum + a.quantity, 0));
-  });
-
-  protected readonly canClose = computed(() => {
-    const bottling = this.bottling();
-    return !!bottling && bottling.status === 'PLANNED' && bottling.startDate <= todayLocal();
-  });
+  /** Une production ne se clôture qu'une fois commencée. */
+  protected canClose(production: Production): boolean {
+    return production.status === 'PLANNED' && production.startDate <= todayLocal();
+  }
 
   /**
    * La couleur du vin, pour les dessins : celle du lot en cuve ; chez le producteur,
    * devinée d'après la description du vin ou le nom du produit (« Bordeaux Blanc »…).
    */
-  protected readonly wineColor = computed<WineColor>(() => {
-    const bottling = this.bottling();
-    if (bottling?.wineLot) {
-      return bottling.wineLot.color;
+  protected wineColor(production: Production): WineColor {
+    if (production.wineLot) {
+      return production.wineLot.color;
     }
     const text =
-      `${bottling?.wineDescription ?? ''} ${bottling?.finishedArticleLabel ?? ''}`.toLowerCase();
+      `${production.wineDescription ?? ''} ${production.finishedArticleLabel}`.toLowerCase();
     return /ros[ée]/.test(text) ? 'ROSE' : /blanc/.test(text) ? 'WHITE' : 'RED';
-  });
+  }
 
-  protected readonly wineShort = computed(() => {
-    const bottling = this.bottling();
+  protected wineShort(production: Production): boolean {
     return (
-      !!bottling &&
-      bottling.status === 'PLANNED' &&
-      bottling.tankVolumeHl !== null &&
-      bottling.tankVolumeHl < bottling.wineNeededHl
+      production.status === 'PLANNED' &&
+      production.tankVolumeHl !== null &&
+      production.tankVolumeHl < production.wineNeededHl
     );
-  });
+  }
 
-  protected open(kind: DialogKind): void {
+  /** Les bouteilles qui ne sont réservées à aucune commande. */
+  protected freeBottles(production: Production): number {
+    const total = production.producedBottles ?? production.plannedBottles;
+    return Math.max(0, total - production.allocations.reduce((sum, a) => sum + a.quantity, 0));
+  }
+
+  protected openDialog(dialog: Dialog): void {
     this.actionError.set(null);
-    this.dialog.set(kind);
+    this.dialog.set(dialog);
   }
 
   protected onSaved(): void {
@@ -125,9 +140,17 @@ export class BottlingDetail {
   }
 
   protected async cancel(): Promise<void> {
+    await this.run(() => this.api.cancelBottling(this.id()));
+  }
+
+  protected async cancelProduction(production: Production): Promise<void> {
+    await this.run(() => this.api.cancelProduction(this.id(), production.id));
+  }
+
+  private async run(action: () => Promise<unknown>): Promise<void> {
     this.busy.set(true);
     try {
-      await this.api.cancelBottling(this.id());
+      await action();
       this.dialog.set(null);
       this.resource.reload();
     } catch (error) {

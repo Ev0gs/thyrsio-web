@@ -23,10 +23,14 @@ import { BottlingStateBadge } from '../bottling-state-badge/bottling-state-badge
 import {
   addDays,
   Bottling,
-  BottlingRow,
+  bottlingSource,
+  bottlingTitle,
   isoWeekNumber,
   mondayOf,
   parseDay,
+  Production,
+  PRODUCTION_SLOT_LABELS,
+  SLOT_RANK,
 } from '../production.models';
 import { PageIcon } from '../../../shared/ui/page-icon/page-icon';
 
@@ -35,11 +39,16 @@ interface PlanningDay {
   date: Date;
   isToday: boolean;
   isWeekend: boolean;
-  bottlings: { bottling: BottlingRow; dayIndex: number; dayCount: number }[];
+  /** Les productions du jour, matin d'abord ; une production de 2 jours apparaît les 2 jours. */
+  entries: { bottling: Bottling; production: Production; dayIndex: number; dayCount: number }[];
   totalBottles: number;
 }
 
-/** Le planning des mises : une semaine à la fois (?semaine=AAAA-MM-JJ, le lundi), et les mises à venir. */
+/**
+ * Le planning des mises : une semaine à la fois (?semaine=AAAA-MM-JJ, le lundi), et les mises à venir.
+ * Chaque jour montre ses productions : une mise qui fait un produit le matin et un autre l'après-midi
+ * y apparaît deux fois, dans l'ordre de la journée.
+ */
 @Component({
   selector: 'app-bottling-planning',
   imports: [
@@ -72,6 +81,9 @@ export class BottlingPlanning {
   readonly semaine = input<string>();
 
   protected readonly describeWine = describeWine;
+  protected readonly slotLabels = PRODUCTION_SLOT_LABELS;
+  protected readonly title = bottlingTitle;
+  protected readonly source = bottlingSource;
   protected readonly today = todayLocal();
 
   protected readonly monday = computed(() => mondayOf(this.semaine() || this.today));
@@ -80,15 +92,15 @@ export class BottlingPlanning {
   protected readonly isCurrentWeek = computed(() => this.monday() === mondayOf(this.today));
 
   /** Les mises qui touchent la semaine affichée. */
-  protected readonly week = httpResource<Page<BottlingRow>>(() => ({
+  protected readonly week = httpResource<Page<Bottling>>(() => ({
     url: '/api/production/bottlings',
     params: { from: this.monday(), to: this.sunday(), size: 200 },
   }));
 
-  /** Toutes les mises planifiées, quelle que soit la semaine : pour la liste « À venir » et les alertes. */
-  protected readonly upcoming = httpResource<Page<BottlingRow>>(() => ({
+  /** Tout ce qui reste à faire, quelle que soit la semaine : pour la liste « À venir » et les alertes. */
+  protected readonly upcoming = httpResource<Page<Bottling>>(() => ({
     url: '/api/production/bottlings',
-    params: { status: 'PLANNED', size: 200 },
+    params: { status: 'PLANNED,IN_PROGRESS', size: 200 },
   }));
 
   /** Les lignes de commande que ni le stock ni les mises ne couvrent : des mises à planifier. */
@@ -104,40 +116,52 @@ export class BottlingPlanning {
   protected readonly upcomingRows = computed(() =>
     this.upcoming.hasValue() ? this.upcoming.value().content : [],
   );
-  protected readonly alerts = computed(() => this.upcomingRows().filter((row) => row.alert));
+  /** Les productions en alerte : des manquants, et elles commencent dans moins de 10 jours. */
+  protected readonly alerts = computed(() =>
+    this.upcomingRows().flatMap((bottling) =>
+      bottling.productions
+        .filter((production) => production.alert)
+        .map((production) => ({ bottling, production })),
+    ),
+  );
 
-  /** Les 7 jours de la semaine, chacun avec les mises qui s'y déroulent (une mise de 2 jours apparaît 2 fois). */
+  /** Les 7 jours de la semaine, chacun avec les productions qui s'y déroulent. */
   protected readonly days = computed<PlanningDay[]>(() => {
-    const rows = (this.week.hasValue() ? this.week.value().content : []).filter(
-      (row) => row.status !== 'CANCELLED',
+    const productions = (this.week.hasValue() ? this.week.value().content : []).flatMap(
+      (bottling) =>
+        bottling.productions
+          .filter((production) => production.status !== 'CANCELLED')
+          .map((production) => ({ bottling, production })),
     );
+    const daysBetween = (from: string, to: string) =>
+      Math.round((parseDay(to).getTime() - parseDay(from).getTime()) / 86_400_000);
     return Array.from({ length: 7 }, (_, offset) => {
       const day = addDays(this.monday(), offset);
-      const bottlings = rows
-        .filter((row) => row.startDate <= day && day <= row.endDate)
-        .map((bottling) => ({
+      const entries = productions
+        .filter(({ production }) => production.startDate <= day && day <= production.endDate)
+        .sort(
+          (a, b) =>
+            SLOT_RANK[a.production.slot] - SLOT_RANK[b.production.slot] ||
+            a.bottling.code.localeCompare(b.bottling.code),
+        )
+        .map(({ bottling, production }) => ({
           bottling,
-          dayIndex:
-            Math.round(
-              (parseDay(day).getTime() - parseDay(bottling.startDate).getTime()) / 86_400_000,
-            ) + 1,
-          dayCount:
-            Math.round(
-              (parseDay(bottling.endDate).getTime() - parseDay(bottling.startDate).getTime()) /
-                86_400_000,
-            ) + 1,
+          production,
+          dayIndex: daysBetween(production.startDate, day) + 1,
+          dayCount: daysBetween(production.startDate, production.endDate) + 1,
         }));
       return {
         day,
         date: parseDay(day),
         isToday: day === this.today,
         isWeekend: offset >= 5,
-        bottlings,
-        // Une mise sur plusieurs jours n'est comptée que le premier jour
-        totalBottles: bottlings
+        entries,
+        // Une production sur plusieurs jours n'est comptée que le premier jour
+        totalBottles: entries
           .filter((entry) => entry.dayIndex === 1)
           .reduce(
-            (sum, entry) => sum + (entry.bottling.producedBottles ?? entry.bottling.plannedBottles),
+            (sum, entry) =>
+              sum + (entry.production.producedBottles ?? entry.production.plannedBottles),
             0,
           ),
       };
@@ -148,8 +172,8 @@ export class BottlingPlanning {
   protected readonly newDay = signal<string | null>(null);
   protected readonly prefill = signal<BottlingPrefill | null>(null);
 
-  protected orderCodes(row: BottlingRow): string {
-    return [...new Set(row.allocations.map((a) => a.orderCode))].join(', ');
+  protected orderCodes(production: Production): string {
+    return [...new Set(production.allocations.map((a) => a.orderCode))].join(', ');
   }
 
   protected goToWeek(offsetWeeks: number): void {

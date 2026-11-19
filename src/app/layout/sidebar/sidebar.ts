@@ -4,6 +4,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeftRight,
   lucideArrowUpDown,
+  lucideBarcode,
   lucideClipboardList,
   lucideContainer,
   lucideFactory,
@@ -74,6 +75,7 @@ const visible = (groups: NavGroup[]): NavGroup[] =>
       lucideFactory,
       lucideLogOut,
       lucideMapPin,
+      lucideBarcode,
     }),
   ],
   templateUrl: './sidebar.html',
@@ -173,6 +175,12 @@ export class Sidebar {
           label: 'Articles',
           icon: 'lucideTag',
           route: '/referentiel/articles',
+          includeSubPaths: true,
+        },
+        {
+          label: 'Gencodes',
+          icon: 'lucideBarcode',
+          route: '/referentiel/gencodes',
           includeSubPaths: true,
         },
         {

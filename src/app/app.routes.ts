@@ -159,6 +159,11 @@ export const routes: Routes = [
           import('./features/referentiel/category-list/category-list').then((m) => m.CategoryList),
       },
       {
+        path: 'referentiel/gencodes',
+        title: 'Gencodes · Thyrsio',
+        loadComponent: () => import('./features/gs1/gtin-list/gtin-list').then((m) => m.GtinList),
+      },
+      {
         path: 'referentiel/appellations',
         title: 'Appellations · Thyrsio',
         loadComponent: () =>

@@ -1,0 +1,246 @@
+<header class="flex flex-wrap items-end justify-between gap-4">
+  <div class="flex flex-col gap-1">
+    <h1 class="flex items-center gap-3 text-[28px] font-semibold tracking-tight">
+      <app-page-icon name="lucideBarcode" />
+      Gencodes
+    </h1>
+    <p class="text-sm text-muted-foreground">
+      Les codes-barres GS1 des produits finis : une bouteille, ou un groupé (carton, caisse bois…). Un gencode ne sert qu'une fois.
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button hlmBtn variant="outline" size="lg" (click)="open({ kind: 'record' })">Saisir un gencode existant</button>
+    <button hlmBtn size="lg" (click)="open({ kind: 'generate' })" [disabled]="!canGenerate()"
+            [title]="canGenerate() ? '' : 'Ajoute d\'abord un préfixe GS1 qui a encore de la place'">
+      <ng-icon name="lucidePlus" aria-hidden="true" /> Générer un gencode
+    </button>
+  </div>
+</header>
+
+<!-- ===== Les préfixes GS1 ===== -->
+@if (prefixes.hasValue()) {
+  @if (prefixRows().length === 0) {
+    <section class="mt-6 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+      <div class="flex flex-col gap-0.5">
+        <h2 class="text-sm font-semibold text-amber-900">Pour générer des gencodes, ajoute le préfixe entreprise GS1</h2>
+        <span class="text-[13px] text-amber-900/80">Il figure sur le certificat d'adhésion GS1 France (souvent 376 suivi de 6 ou 7 chiffres).</span>
+      </div>
+      <app-prefix-manager [prefixes]="prefixRows()" (changed)="onPrefixesChanged()" />
+    </section>
+  } @else {
+    <section class="mt-6 flex flex-wrap items-center gap-3">
+      @for (prefix of prefixRows(); track prefix.id) {
+        <div class="flex min-w-64 flex-col gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5" [class.opacity-60]="!prefix.active">
+          <div class="flex items-baseline justify-between gap-3 text-sm">
+            <span class="font-mono font-semibold">{{ prefix.prefix }}</span>
+            <span class="text-xs text-muted-foreground">{{ prefix.remaining | number }} restants sur {{ prefix.capacity | number }}</span>
+          </div>
+          <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div class="h-full rounded-full" [class]="prefix.remaining < prefix.capacity * 0.1 ? 'bg-red-500' : 'bg-primary'"
+                 [style.width.%]="(prefix.used / prefix.capacity) * 100"></div>
+          </div>
+        </div>
+      }
+      <button hlmBtn variant="ghost" (click)="open({ kind: 'prefixes' })">
+        <ng-icon name="lucideSettings2" aria-hidden="true" /> Préfixes GS1
+      </button>
+    </section>
+  }
+}
+
+<!-- ===== Filtres ===== -->
+<div class="mt-6 flex flex-wrap items-center gap-3">
+  <label class="relative min-w-64 flex-1 sm:max-w-96">
+    <span class="sr-only">Rechercher un gencode</span>
+    <ng-icon name="lucideSearch" size="16" aria-hidden="true"
+             class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+    <input hlmInput type="search" #query (input)="setFilter(() => search.set(query.value))"
+           placeholder="Chiffres du gencode, produit, libellé…" class="pl-8" />
+  </label>
+  <select #pack (change)="setFilter(() => packaging.set($any(pack.value)))" [class]="filterClass" aria-label="Conditionnement">
+    <option value="">Tous les conditionnements</option>
+    @for (p of packagings; track p) {
+      <option [value]="p">{{ packagingLabels[p] }}</option>
+    }
+  </select>
+  <select #state (change)="setFilter(() => status.set($any(state.value)))" [class]="filterClass" aria-label="Statut">
+    <option value="ACTIVE" selected>Actifs</option>
+    <option value="RETIRED">Retirés</option>
+    <option value="">Tous</option>
+  </select>
+</div>
+
+<!-- ===== Les gencodes ===== -->
+<section class="mt-4 overflow-hidden rounded-xl border border-border">
+  @if (gtins.error()) {
+    <div class="flex flex-col items-center gap-3 p-10 text-center">
+      <p class="text-sm font-medium">Impossible de charger les gencodes.</p>
+      <button hlmBtn variant="outline" (click)="gtins.reload()">
+        <ng-icon name="lucideRotateCw" aria-hidden="true" /> Réessayer
+      </button>
+    </div>
+  } @else {
+    <div hlmTableContainer [class.opacity-60]="gtins.isLoading()">
+      <table hlmTable class="min-w-[960px]">
+        <thead hlmTHead class="bg-muted/50">
+          <tr hlmTr>
+            <th hlmTh class="w-32"><span class="sr-only">Code-barres</span></th>
+            <th hlmTh>Gencode</th>
+            <th hlmTh>Produit fini</th>
+            <th hlmTh>Conditionnement</th>
+            <th hlmTh>Libellé</th>
+            <th hlmTh>Créé le</th>
+          </tr>
+        </thead>
+        <tbody hlmTBody>
+          @if (!gtins.hasValue()) {
+            @for (i of [1, 2, 3, 4]; track i) {
+              <tr hlmTr><td hlmTd colspan="6"><div hlmSkeleton class="h-9 w-full"></div></td></tr>
+            }
+          } @else {
+            @for (gtin of rows(); track gtin.id) {
+              <tr hlmTr class="cursor-pointer" [class.text-muted-foreground]="gtin.status === 'RETIRED'"
+                  (click)="open({ kind: 'detail', gtin })">
+                <td hlmTd><app-ean13-barcode class="h-8" [gtin]="gtin.gtin" [digits]="false" /></td>
+                <td hlmTd>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-mono text-[15px] font-medium tracking-wide">{{ formatGtin(gtin.gtin) }}</span>
+                    <button hlmBtn variant="ghost" size="icon-sm" type="button" (click)="copy(gtin.gtin); $event.stopPropagation()"
+                            [attr.aria-label]="'Copier le gencode ' + gtin.gtin">
+                      <ng-icon [name]="copied() === gtin.gtin ? 'lucideCheck' : 'lucideCopy'" aria-hidden="true" />
+                    </button>
+                  </div>
+                  @if (gtin.status === 'RETIRED') {
+                    <span hlmBadge variant="outline">Retiré</span>
+                  }
+                </td>
+                <td hlmTd class="max-w-72 whitespace-normal">
+                  @if (gtin.finishedArticleId) {
+                    <div class="font-medium">{{ gtin.finishedArticleLabel }}</div>
+                    <div class="font-mono text-xs text-muted-foreground">{{ gtin.finishedArticleCode }}</div>
+                  } @else {
+                    <span hlmBadge variant="secondary" class="bg-amber-50 text-amber-800">Réservé</span>
+                  }
+                </td>
+                <td hlmTd>{{ describePackaging(gtin.packaging, gtin.unitsPerPack) }}</td>
+                <td hlmTd class="max-w-56 truncate text-muted-foreground">{{ gtin.description ?? '—' }}</td>
+                <td hlmTd class="tabular-nums text-muted-foreground">{{ gtin.createdAt | date: 'd MMM y' }}</td>
+              </tr>
+            } @empty {
+              <tr hlmTr>
+                <td hlmTd colspan="6" class="py-10 text-center text-muted-foreground">
+                  {{ hasFilters() ? 'Aucun gencode ne correspond à ces filtres.' : 'Aucun gencode pour l\'instant : génère le premier, ou saisis ceux de l\'ancien tableur.' }}
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (pageInfo(); as info) {
+      <app-pagination [page]="page()" [totalPages]="info.totalPages" [totalElements]="info.totalElements"
+                      itemLabel="gencode(s)" (pageChange)="page.set($event)" />
+    }
+  }
+</section>
+
+<hlm-dialog [state]="dialog() ? 'open' : 'closed'" (closed)="dialog.set(null)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" [class]="dialog()?.kind === 'retire' ? 'sm:max-w-md' : 'sm:max-w-xl'">
+    @if (dialog(); as d) {
+      @switch (d.kind) {
+        @case ('generate') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Générer un gencode</h3>
+            <p hlmDialogDescription>Le gencode suivant du préfixe, avec sa clé de contrôle. Il désigne un produit et un conditionnement, définitivement.</p>
+          </hlm-dialog-header>
+          <div class="dialog-scroll">
+            <app-gtin-form mode="generate" [prefixes]="prefixRows()" (saved)="onCreated($event)" (cancelled)="ctx.close()" />
+          </div>
+        }
+        @case ('record') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Saisir un gencode existant</h3>
+            <p hlmDialogDescription>Un gencode créé avant Thyrsio, par exemple dans l'ancien tableur. Sa clé de contrôle est vérifiée.</p>
+          </hlm-dialog-header>
+          <div class="dialog-scroll">
+            <app-gtin-form mode="record" [prefixes]="prefixRows()" (saved)="onCreated($event)" (cancelled)="ctx.close()" />
+          </div>
+        }
+        @case ('prefixes') {
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Préfixes GS1</h3>
+            <p hlmDialogDescription>Quand un préfixe est plein, ajoute le nouveau donné par GS1 : les gencodes suivants y seront pris.</p>
+          </hlm-dialog-header>
+          <app-prefix-manager [prefixes]="prefixRows()" (changed)="onPrefixesChanged()" />
+        }
+        @case ('detail') {
+          @if (d.kind === 'detail') {
+            <hlm-dialog-header>
+              <h3 hlmDialogTitle>{{ d.created ? 'Gencode créé' : 'Gencode' }}</h3>
+              <p hlmDialogDescription>{{ d.gtin.finishedArticleLabel ?? 'Réservé, attribué à aucun produit' }} · {{ describePackaging(d.gtin.packaging, d.gtin.unitsPerPack) }}</p>
+            </hlm-dialog-header>
+            <div class="flex flex-col items-center gap-3 rounded-lg border border-border bg-white p-5">
+              <app-ean13-barcode id="gtin-detail-barcode" class="h-32" [gtin]="d.gtin.gtin" />
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xl font-semibold tracking-wider">{{ d.gtin.gtin }}</span>
+                <button hlmBtn variant="outline" size="sm" type="button" (click)="copy(d.gtin.gtin)">
+                  <ng-icon [name]="copied() === d.gtin.gtin ? 'lucideCheck' : 'lucideCopy'" aria-hidden="true" />
+                  {{ copied() === d.gtin.gtin ? 'Copié' : 'Copier' }}
+                </button>
+                <button hlmBtn variant="outline" size="sm" type="button" (click)="download(d.gtin)">
+                  <ng-icon name="lucideDownload" aria-hidden="true" /> Télécharger (SVG)
+                </button>
+              </div>
+            </div>
+            <dl class="grid grid-cols-[9rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+              <dt class="text-muted-foreground">Produit fini</dt>
+              <dd>{{ d.gtin.finishedArticleLabel ?? '—' }} <span class="font-mono text-xs text-muted-foreground">{{ d.gtin.finishedArticleCode }}</span></dd>
+              <dt class="text-muted-foreground">Conditionnement</dt>
+              <dd>{{ describePackaging(d.gtin.packaging, d.gtin.unitsPerPack) }}</dd>
+              @if (d.gtin.description) {
+                <dt class="text-muted-foreground">Libellé</dt>
+                <dd>{{ d.gtin.description }}</dd>
+              }
+              <dt class="text-muted-foreground">Préfixe GS1</dt>
+              <dd class="font-mono">{{ d.gtin.prefix ?? 'hors de nos préfixes' }}</dd>
+              <dt class="text-muted-foreground">Créé le</dt>
+              <dd>{{ d.gtin.createdAt | date: 'd MMMM y, HH:mm' }}</dd>
+              @if (d.gtin.retiredAt) {
+                <dt class="text-muted-foreground">Retiré le</dt>
+                <dd>{{ d.gtin.retiredAt | date: 'd MMMM y' }}</dd>
+              }
+              @if (d.gtin.notes) {
+                <dt class="text-muted-foreground">Notes</dt>
+                <dd class="whitespace-pre-line">{{ d.gtin.notes }}</dd>
+              }
+            </dl>
+            <hlm-dialog-footer>
+              @if (d.gtin.status === 'ACTIVE') {
+                <button hlmBtn variant="ghost" type="button" (click)="open({ kind: 'retire', gtin: d.gtin })">Retirer ce gencode</button>
+              }
+              <button hlmBtn type="button" (click)="ctx.close()">Fermer</button>
+            </hlm-dialog-footer>
+          }
+        }
+        @case ('retire') {
+          @if (d.kind === 'retire') {
+            <hlm-dialog-header>
+              <h3 hlmDialogTitle>Retirer le gencode {{ d.gtin.gtin }} ?</h3>
+              <p hlmDialogDescription>
+                Il ne désignera plus rien et ne sera jamais redonné : un produit déjà étiqueté avec ce code
+                ne doit plus être vendu sous ce code. Le produit pourra recevoir un nouveau gencode.
+              </p>
+            </hlm-dialog-header>
+            @if (actionError(); as message) {
+              <p role="alert" class="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{{ message }}</p>
+            }
+            <hlm-dialog-footer>
+              <button hlmBtn variant="outline" type="button" (click)="open({ kind: 'detail', gtin: d.gtin })">Garder</button>
+              <button hlmBtn variant="destructive" type="button" [disabled]="busy()" (click)="retire(d.gtin)">Retirer</button>
+            </hlm-dialog-footer>
+          }
+        }
+      }
+    }
+  </hlm-dialog-content>
+</hlm-dialog>
